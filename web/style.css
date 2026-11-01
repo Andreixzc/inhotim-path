@@ -11,12 +11,8 @@
   --muted: #69706a;
   --faint: #b9beba;
   --line: #ecedea;
-  --accent: #0d6b47;
-  --on-accent: #ffffff;
   --danger: #b42318;
   --danger-bg: #fdeceb;
-  --warn: #8a5300;
-  --warn-bg: #fff3df;
   --focus: #2563eb;
   --lift: 0 1px 3px rgb(15 20 16 / 12%), 0 1px 1px rgb(15 20 16 / 6%);
   --shadow: 0 10px 34px rgb(15 20 16 / 14%);
@@ -35,12 +31,8 @@
     --muted: #9aa39c;
     --faint: #4c544e;
     --line: #20251f;
-    --accent: #5ed29a;
-    --on-accent: #06130c;
     --danger: #ff9a8c;
     --danger-bg: #3b1613;
-    --warn: #ffc46b;
-    --warn-bg: #33250d;
     --focus: #7aa7ff;
     --lift: 0 1px 2px rgb(0 0 0 / 50%);
     --shadow: 0 10px 34px rgb(0 0 0 / 55%);
@@ -319,33 +311,6 @@ h1 {
   color: var(--muted);
 }
 
-.hero__clock {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 14px 0 0;
-  font-weight: 650;
-  font-variant-numeric: tabular-nums;
-}
-
-.hero__clock[hidden] {
-  display: none;
-}
-
-.hero__clock svg {
-  color: var(--muted);
-}
-
-.hero__clock input {
-  min-height: 36px;
-  padding: 4px 10px;
-  border: 0;
-  border-radius: 12px;
-  background: var(--surface);
-  font-weight: 650;
-  font-variant-numeric: tabular-nums;
-}
-
 /* ------------------------------------------------------------------ controls */
 
 .controls {
@@ -421,42 +386,6 @@ h1 {
 .segmented input:focus-visible + span {
   outline: 2px solid var(--focus);
   outline-offset: 1px;
-}
-
-.stepper {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 4px;
-  border-radius: 999px;
-  background: var(--surface);
-}
-
-.round {
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background: var(--thumb);
-  box-shadow: var(--lift);
-}
-
-.round:disabled {
-  opacity: 0.35;
-  box-shadow: none;
-  cursor: default;
-}
-
-.stepper output {
-  flex: 1;
-  font-size: 1.0625rem;
-  font-weight: 700;
-  text-align: center;
-  font-variant-numeric: tabular-nums;
 }
 
 .search {
@@ -547,8 +476,7 @@ h1 {
   max-width: 100%;
   padding: 5px 5px 5px 14px;
   border-radius: 999px;
-  background: var(--text);
-  color: var(--bg);
+  background: var(--surface-strong);
   font-size: 0.875rem;
   font-weight: 600;
 }
@@ -593,11 +521,6 @@ h1 {
   font-size: 0.9rem;
 }
 
-.notice--warn {
-  background: var(--warn-bg);
-  color: var(--warn);
-}
-
 .notice--info {
   background: var(--surface);
   color: var(--muted);
@@ -635,16 +558,15 @@ h1 {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: var(--text);
-  color: var(--bg);
+  background: #555; /* the stop's kind color, set by app.js */
+  color: #fff;
   font-size: 0.875rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 
 .badge--end {
-  background: var(--accent);
-  color: var(--on-accent);
+  background: #1d5c45;
 }
 
 .stop__text {
@@ -661,10 +583,6 @@ h1 {
   line-clamp: 2;
 }
 
-.star {
-  color: var(--accent);
-}
-
 .stop__meta {
   display: block;
   margin-top: 1px;
@@ -673,12 +591,6 @@ h1 {
   font-size: 0.8125rem;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.stop__time {
-  flex: none;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
 }
 
 .walk {
@@ -764,16 +676,6 @@ h1 {
 
 .chip-button:hover {
   background: var(--surface-strong);
-}
-
-.chip-button--dark {
-  background: var(--text);
-  color: var(--bg);
-}
-
-.chip-button--dark:hover {
-  background: var(--text);
-  opacity: 0.85;
 }
 
 .footer {

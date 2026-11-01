@@ -1,10 +1,10 @@
 // The planner page: the settings, the itinerary and the map, wired together. Routes are planned
 // in a worker (worker.js) so the page stays responsive; where workers can't start, on the main
-// thread.
+// thread. No times anywhere (ADR 0010): the route is the shortest walk through what's chosen.
 
-import { clock, distance, duration, nowRounded, parseClock } from "./format.js";
+import { distance } from "./format.js";
 import { detect, lang, setLang, t } from "./i18n.js";
-import { FLAG, RouteMap } from "./map.js";
+import { FLAG, KIND_COLOR, RouteMap } from "./map.js";
 import { MAX_SNAP_M, Park } from "./plan.js";
 import * as settings from "./state.js";
 
@@ -45,10 +45,9 @@ function icon(markup) {
   return template.content.firstChild;
 }
 
-/** A pill button that does `action` when pressed; `dark` for the main action. */
-function chip(label, action, dark = false) {
-  const className = dark ? "chip-button chip-button--dark" : "chip-button";
-  return h("button", { type: "button", class: className, onclick: action }, label);
+/** A pill button that does `action` when pressed. */
+function chip(label, action) {
+  return h("button", { type: "button", class: "chip-button", onclick: action }, label);
 }
 
 function storage(key, value) {
@@ -121,7 +120,7 @@ const app = {
   alert: null, // a location problem until dismissed: {kind: "outside", meters} or {kind: "geo"}
   latest: 0,
   timer: 0,
-  open: {}, // which "left out" lists are expanded
+  open: {}, // which lists under the route are expanded
 };
 
 // ----------------------------------------------------------------------------- start up
@@ -161,9 +160,6 @@ function wireEvents() {
   const form = $("#form");
   form.addEventListener("submit", (event) => event.preventDefault());
   form.addEventListener("change", onFormChange);
-  $("#start-time").addEventListener("change", onStartTime);
-  $("#less").addEventListener("click", () => stepBudget(-1));
-  $("#more").addEventListener("click", () => stepBudget(1));
   $("#must-search").addEventListener("input", renderResults);
   $("#must-search").addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
@@ -211,7 +207,7 @@ function request() {
     kinds: settings.SEE[s.see],
     must: s.must,
     exclude: s.exclude,
-    budgetMin: s.budgetMin,
+    budgetMin: null, // no time limit: every stop, by the shortest walk
     start: s.from === "here" && app.here ? app.here : undefined,
   };
 }
@@ -274,12 +270,10 @@ function locate() {
       const here = [position.coords.longitude, position.coords.latitude];
       const away = app.park.network.snap(here).distance;
       if (away > MAX_SNAP_M) {
-        locationFailed({ kind: "outside", meters: away }); // their start time stays as it was
+        locationFailed({ kind: "outside", meters: away });
         return;
       }
       app.here = here;
-      app.state.startTime = nowRounded();
-      $("#start-time").value = app.state.startTime;
       changed({ fit: true, now: true });
     },
     () => {
@@ -303,28 +297,45 @@ function locationFailed(alert) {
 
 // ----------------------------------------------------------------------------- actions
 
+/** Whether "what to see" already puts this POI on the route. */
+function covered(poi) {
+  return settings.SEE[app.state.see].includes(poi.kind);
+}
+
+/** The POIs added on top of what "what to see" covers: a chip each. */
+function added() {
+  return app.state.must.map((id) => app.park.byId.get(id)).filter((poi) => poi && !covered(poi));
+}
+
+/** Take a stop off the route. */
 function skip(id) {
   app.map?.close();
   app.state.must = app.state.must.filter((other) => other !== id);
-  if (!app.state.exclude.includes(id)) app.state.exclude.push(id);
+  if (covered(app.park.byId.get(id)) && !app.state.exclude.includes(id)) {
+    app.state.exclude.push(id);
+  }
   renderChips();
   changed({ now: true });
 }
 
+/** Put a skipped stop back. */
 function restore(id) {
+  app.map?.close();
   app.state.exclude = app.state.exclude.filter((other) => other !== id);
   changed({ fit: true, now: true });
 }
 
-function makeMust(id) {
+/** Put a POI on the route: back if it was skipped, added if "what to see" leaves it out. */
+function include(id) {
   app.map?.close();
   app.state.exclude = app.state.exclude.filter((other) => other !== id);
-  if (!app.state.must.includes(id)) app.state.must.push(id);
+  if (!covered(app.park.byId.get(id)) && !app.state.must.includes(id)) app.state.must.push(id);
   renderChips();
   changed({ fit: true, now: true });
 }
 
-function unmakeMust(id) {
+/** Undo `include` for an added POI (its chip's button). */
+function unadd(id) {
   app.map?.close();
   app.state.must = app.state.must.filter((other) => other !== id);
   renderChips();
@@ -348,16 +359,6 @@ function highlight(index) {
   item.scrollIntoView({ block: "nearest", behavior: "smooth" });
 }
 
-function stepBudget(step) {
-  const budgets = settings.BUDGETS;
-  const index = budgets.indexOf(app.state.budgetMin);
-  const next = budgets[Math.min(budgets.length - 1, Math.max(0, index + step))];
-  if (next === app.state.budgetMin) return;
-  app.state.budgetMin = next;
-  renderStepper();
-  changed({ fit: true });
-}
-
 function onFormChange(event) {
   const s = app.state;
   const target = event.target;
@@ -373,16 +374,9 @@ function onFormChange(event) {
     }
   } else if (target.name === "see") {
     s.see = target.value;
+    renderChips();
     changed({ fit: true });
   }
-}
-
-function onStartTime(event) {
-  if (parseClock(event.target.value) === null) return;
-  app.state.startTime = event.target.value;
-  settings.save(app.state);
-  history.replaceState(null, "", `#${settings.toHash(app.state)}`);
-  render(); // times of day only: no need to plan again
 }
 
 // ----------------------------------------------------------------------------- settings
@@ -412,11 +406,6 @@ function labelSheetToggle() {
   $("#sheet").setAttribute("aria-expanded", String(!collapsed));
 }
 
-function budgetLabel(minutes) {
-  if (minutes === null) return t("noLimit");
-  return minutes % 60 ? duration(minutes * 60) : t("hours", { h: minutes / 60 });
-}
-
 /** The gate is "Portaria" (the museum's map calls it the reception); other POIs by name. */
 function nameOf(poi) {
   return poi.id === app.data.defaults.start ? t("gate") : poi.name;
@@ -426,24 +415,11 @@ function buildForm() {
   const s = app.state;
   $(`#from input[value="${s.from}"]`).checked = true;
   $(`#see input[value="${s.see}"]`).checked = true;
-  $("#start-time").value = s.startTime;
-  renderStepper();
   renderChips();
 }
 
-function renderStepper() {
-  const budgets = settings.BUDGETS;
-  const index = budgets.indexOf(app.state.budgetMin);
-  $("#budget").textContent = budgetLabel(app.state.budgetMin);
-  $("#less").disabled = index <= 0;
-  $("#more").disabled = index >= budgets.length - 1;
-}
-
 function renderChips() {
-  const chips = app.state.must
-    .map((id) => app.park.byId.get(id))
-    .filter(Boolean)
-    .map((poi) =>
+  const chips = added().map((poi) =>
       h(
         "li",
         { class: "chip" },
@@ -453,7 +429,7 @@ function renderChips() {
           {
             type: "button",
             "aria-label": t("remove", { name: poi.name }),
-            onclick: () => unmakeMust(poi.id),
+            onclick: () => unadd(poi.id),
           },
           icon(CLOSE_ICON),
         ),
@@ -472,16 +448,31 @@ function renderResults() {
     return;
   }
   const start = app.data.defaults.start;
+  const chips = new Set(added().map((poi) => poi.id));
   const matches = app.park
     .search(query)
-    .filter((poi) => poi.node !== null && poi.id !== start && !app.state.must.includes(poi.id))
+    .filter((poi) => poi.node !== null && poi.id !== start && !chips.has(poi.id))
     .slice(0, SEARCH_LIMIT);
+  // Stops already on the route: picking one shows it instead of adding it again.
+  const visits = app.plan?.visits ?? [];
+  const stops = new Map();
+  visits.forEach((visit, index) => {
+    if (index > 0 && index < visits.length - 1) stops.set(visit.poi.id, index);
+  });
   const choose = (poi) => {
     input.value = "";
     renderResults();
-    makeMust(poi.id);
-    input.focus();
+    if (stops.has(poi.id)) {
+      pick(stops.get(poi.id));
+    } else {
+      include(poi.id);
+      input.focus();
+    }
   };
+  const about = (poi) =>
+    stops.has(poi.id)
+      ? `${t(`kind.${poi.kind}`)} · ${t("inRoute", { n: stops.get(poi.id) })}`
+      : t(`kind.${poi.kind}`);
   list.replaceChildren(
     ...(matches.length
       ? matches.map((poi) =>
@@ -492,7 +483,7 @@ function renderResults() {
               "button",
               { type: "button", onclick: () => choose(poi) },
               poi.name,
-              h("small", {}, t(`kind.${poi.kind}`)),
+              h("small", {}, about(poi)),
             ),
           ),
         )
@@ -502,10 +493,6 @@ function renderResults() {
 }
 
 // ----------------------------------------------------------------------------- results
-
-function startMinutes() {
-  return parseClock(app.state.startTime) ?? 570;
-}
 
 function render() {
   renderHero();
@@ -528,18 +515,10 @@ function renderHero() {
   if (!plan) {
     $("#total").textContent = "—";
     $("#meta").textContent = app.error ?? "";
-    $("#clock").hidden = true;
     return;
   }
-  $("#total").textContent = duration(plan.totalS);
-  $("#meta").textContent = [
-    t("stops", { n: plan.visits.length - 2 }),
-    t("walking", { distance: distance(plan.walkM, lang()) }),
-  ].join(" · ");
-  const end = clock(startMinutes(), plan.totalS);
-  $("#end-time").textContent = end;
-  $("#end-time").setAttribute("aria-label", t("endsAt", { time: end }));
-  $("#clock").hidden = false;
+  $("#total").textContent = distance(plan.walkM, lang());
+  $("#meta").textContent = t("stops", { n: plan.visits.length - 2 });
 }
 
 function renderAlert() {
@@ -568,23 +547,17 @@ function renderAlert() {
 
 function renderNotices(plan) {
   const notes = [];
-  if (plan && !plan.feasible) {
-    const budget = budgetLabel(app.state.budgetMin);
-    notes.push(["warn", t("infeasible", { budget, total: duration(plan.totalS) })]);
-  }
   if (plan?.unreachable.length) {
     const names = plan.unreachable.map((poi) => poi.name).join(", ");
-    notes.push(["info", t("unreachable", { names })]);
+    notes.push(t("unreachable", { names }));
   }
   $("#notices").replaceChildren(
-    ...notes.map(([kind, text]) => h("p", { class: `notice notice--${kind}` }, text)),
+    ...notes.map((text) => h("p", { class: "notice notice--info" }, text)),
   );
 }
 
 function renderItinerary(plan) {
-  const start = startMinutes();
   const last = plan.visits.length - 1;
-  const must = new Set(app.state.must);
   const items = plan.visits.map((visit, index) => {
     const ends = index === 0 || index === last;
     let name;
@@ -593,23 +566,18 @@ function renderItinerary(plan) {
       name = visit.poi ? nameOf(visit.poi) : t("youAreHere");
       meta = index === 0 ? t("start") : t("finish");
     } else {
-      const minutes = t("minutesHere", { min: Math.round(visit.dwellS / 60) });
       name = [h("span", { class: "visually-hidden" }, `${index}. `), visit.poi.name];
-      meta = [t(`kind.${visit.poi.kind}`), minutes, ...visit.poi.artists].join(" · ");
-      if (must.has(visit.poi.id)) {
-        name.push(
-          h(
-            "span",
-            { class: "star" },
-            h("span", { "aria-hidden": "true" }, " ★"),
-            h("span", { class: "visually-hidden" }, ` (${t("mustSee")})`),
-          ),
-        );
-      }
+      meta = [t(`kind.${visit.poi.kind}`), ...visit.poi.artists].join(" · ");
     }
+    // The same colors as the map's markers.
+    const color = ends ? null : (KIND_COLOR[visit.poi.kind] ?? KIND_COLOR.other);
     const badge = h(
       "span",
-      { class: ends ? "badge badge--end" : "badge", "aria-hidden": "true" },
+      {
+        class: ends ? "badge badge--end" : "badge",
+        style: color && `background: ${color}`,
+        "aria-hidden": "true",
+      },
       ends ? icon(FLAG) : String(index),
     );
     const row = h(
@@ -622,7 +590,6 @@ function renderItinerary(plan) {
         h("span", { class: "stop__name" }, name),
         h("span", { class: "stop__meta" }, meta),
       ),
-      h("span", { class: "stop__time" }, clock(start, visit.arriveS)),
     );
     const walk = index > 0 ? h("p", { class: "walk" }, walkLabel(visit)) : null;
     return h("li", { class: "stop", "data-index": String(index) }, walk, row);
@@ -630,7 +597,7 @@ function renderItinerary(plan) {
   $("#itinerary").replaceChildren(...items);
 }
 
-/** How far to the next stop. No minutes: walking pace is a guess (state.js). */
+/** How far it is from the stop before. */
 function walkLabel(visit) {
   return visit.walkM < 20 ? t("nextDoor") : distance(visit.walkM, lang());
 }
@@ -659,12 +626,10 @@ function renderExtras(plan) {
         ),
       ),
     );
-  if (plan?.skipped.length) {
-    const title = t("leftOut", { n: plan.skipped.length });
-    const add = (poi) => chip(t("add"), () => makeMust(poi.id));
-    blocks.push(block("leftOut", title, plan.skipped, add));
-  }
-  const excluded = app.state.exclude.map((id) => app.park.byId.get(id)).filter(Boolean);
+  // Only the skips that matter now: "Galleries only" doesn't miss a skipped garden.
+  const excluded = app.state.exclude
+    .map((id) => app.park.byId.get(id))
+    .filter((poi) => poi && covered(poi));
   if (excluded.length) {
     const title = t("skippedByYou", { n: excluded.length });
     const back = (poi) => chip(t("restore"), () => restore(poi.id));
@@ -697,23 +662,14 @@ function describe(poiId, index) {
   const isStop = visit !== null && !ends;
   box.append(h("strong", {}, isStop ? `${at}. ${nameOf(poi)}` : nameOf(poi)));
   box.append(h("p", {}, [t(`kind.${poi.kind}`), ...poi.artists].join(" · ")));
-  if (isStop) {
-    const start = startMinutes();
-    const from = clock(start, visit.arriveS);
-    const to = clock(start, visit.arriveS + visit.dwellS);
-    box.append(h("p", {}, `${from}–${to}`));
-  }
   const actions = h("div", { class: "popup__actions" });
-  const must = app.state.must.includes(poi.id);
-  const excluded = app.state.exclude.includes(poi.id);
   if (!ends && poi.id !== app.data.defaults.start) {
-    if (excluded) {
-      actions.append(chip(t("restore"), () => restore(poi.id), true));
-    } else if (must) {
-      actions.append(chip(t("removeMust"), () => unmakeMust(poi.id)));
+    if (isStop) {
+      actions.append(chip(t("skip"), () => skip(poi.id)));
+    } else if (app.state.exclude.includes(poi.id) && covered(poi)) {
+      actions.append(chip(t("restore"), () => restore(poi.id)));
     } else {
-      actions.append(chip(`★ ${t("addMust")}`, () => makeMust(poi.id), true));
-      if (isStop) actions.append(chip(t("skip"), () => skip(poi.id)));
+      actions.append(chip(t("add"), () => include(poi.id)));
     }
   }
   const link = officialLink(poi);

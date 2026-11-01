@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Inhotim route planner</title>
-<meta name="description" content="Plan your walk through Inhotim: the best route for the time you have, built from the museum's public map. An independent project.">
+<meta name="description" content="Plan your walk through Inhotim: the shortest route through what you want to see, built from the museum's public map. An independent project.">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0e110f" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -30,11 +30,6 @@
   <section class="hero" aria-live="polite">
     <p id="total" class="hero__total">—</p>
     <p id="meta" class="hero__meta">Loading the park map…</p>
-    <p id="clock" class="hero__clock" hidden>
-      <input id="start-time" type="time" step="300" required data-i18n-label="startTime">
-      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      <span id="end-time"></span>
-    </p>
   </section>
   <div id="sheet-body" class="sheet__body">
     <form id="form" class="controls" autocomplete="off">
@@ -53,19 +48,7 @@
         </div>
       </fieldset>
       <div class="control">
-        <span id="time-label" class="control__label" data-i18n="time">Time available</span>
-        <div class="stepper" role="group" aria-labelledby="time-label">
-          <button id="less" class="round" type="button" data-i18n-label="lessTime">
-            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 12h12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
-          </button>
-          <output id="budget" aria-live="polite"></output>
-          <button id="more" class="round" type="button" data-i18n-label="moreTime">
-            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 12h12M12 6v12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
-          </button>
-        </div>
-      </div>
-      <div class="control">
-        <label class="control__label" for="must-search" data-i18n="mustSees">Must-sees</label>
+        <label class="control__label" for="must-search" data-i18n="addStops">Add to the route</label>
         <div class="search">
           <svg class="search__icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="m16 16 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
           <input id="must-search" type="search" data-i18n-placeholder="searchPlaceholder"
@@ -80,7 +63,7 @@
     <ol id="itinerary" class="list"></ol>
     <div id="extras" class="extras"></div>
     <footer class="footer">
-      <p><span id="data-date"></span> <span data-i18n="disclaimer">Times are estimates. Check opening hours at inhotim.org.br.</span></p>
+      <p><span id="data-date"></span> <span data-i18n="disclaimer">Check opening hours at inhotim.org.br.</span></p>
       <p><span data-i18n="notAffiliated">An independent project, not affiliated with Inhotim.</span>
         <a href="https://github.com/Andreixzc/inhotim-path" data-i18n="sourceCode">Source code</a></p>
       <p id="attribution"></p>

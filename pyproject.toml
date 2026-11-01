@@ -1,0 +1,43 @@
+[project]
+name = "inhotim-path"
+version = "0.1.0"
+description = "Plan the shortest walking route through Inhotim from its live map (TSP / orienteering)."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Andrei" }]
+requires-python = ">=3.12"
+dependencies = [
+    "httpx>=0.28.1",
+    "networkx>=3.7",
+    "ortools>=9.15.6755",
+    "shapely>=2.2.0",
+    "svgelements>=1.9.6",
+]
+
+[project.urls]
+Repository = "https://github.com/Andreixzc/inhotim-path"
+
+[project.scripts]
+inhotim-path = "inhotim_path.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.12.13,<0.13.0"]
+build-backend = "uv_build"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+    "ruff>=0.17.3",
+]

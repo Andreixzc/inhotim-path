@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Inhotim route planner</title>
+<meta name="description" content="Plan your walk through Inhotim: the best route for the time you have, built from the museum's public map. An independent project.">
+<meta name="theme-color" content="#1d5c45">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/5.24.0/maplibre-gl.css"
+  integrity="sha512-KIMsMWIdnoG9OwZa+oaIafmbDonqck1UCmq+/zcUi2aaZ97N9QE6TqpTM+n36EO40HGh64hU/375zxtjx7WTyQ=="
+  crossorigin="anonymous">
+<link rel="stylesheet" href="style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/5.24.0/maplibre-gl.js"
+  integrity="sha512-rOFgoUgWaVi69JW1dzBu6PWF9xKW9rxYfY5u2SexFABHhWk0qUWkJoWNz4UuZRMvSXsNZG66+tU5B+HlwWF5kA=="
+  crossorigin="anonymous" defer></script>
+<script type="module" src="js/app.js"></script>
+</head>
+<body>
+<aside class="panel" aria-labelledby="title">
+  <header class="panel__head">
+    <div class="panel__title">
+      <h1 id="title" data-i18n="title">Inhotim route planner</h1>
+      <p class="tagline" data-i18n="tagline">The best walk for the time you have.</p>
+    </div>
+    <button id="lang" class="ghost" type="button">Português</button>
+  </header>
+  <div class="panel__status">
+    <p id="summary" class="summary" aria-live="polite">Loading the park map…</p>
+    <button id="sheet" class="ghost sheet-toggle" type="button" aria-controls="panel-body">Show map</button>
+  </div>
+  <div id="panel-body" class="panel__body">
+    <form id="form" class="form" autocomplete="off">
+      <div class="row">
+        <label class="field">
+          <span class="label" data-i18n="timeAvailable">Time available</span>
+          <select id="budget" name="budget"></select>
+        </label>
+        <label class="field">
+          <span class="label" data-i18n="startAt">Start at</span>
+          <input id="start-time" name="startTime" type="time" step="300" required>
+        </label>
+      </div>
+      <fieldset class="field">
+        <legend class="label" data-i18n="startFrom">Start from</legend>
+        <div id="from" class="segmented">
+          <label><input type="radio" name="from" value="reception"><span data-i18n="reception">Reception</span></label>
+          <label><input type="radio" name="from" value="here"><span data-i18n="myLocation">My location</span></label>
+        </div>
+      </fieldset>
+      <fieldset class="field">
+        <legend class="label" data-i18n="whatToSee">What to see</legend>
+        <div id="kinds" class="checks"></div>
+      </fieldset>
+      <div class="field">
+        <label class="label" for="must-search" data-i18n="mustSees">Must-sees</label>
+        <p class="hint" data-i18n="mustSeesHint">Always in the route, however short the time.</p>
+        <ul id="must-chips" class="chips"></ul>
+        <div class="search">
+          <input id="must-search" type="search" data-i18n-placeholder="searchPlaceholder"
+            aria-controls="must-results" enterkeyhint="done">
+          <ul id="must-results" class="results" hidden></ul>
+        </div>
+      </div>
+      <details class="more">
+        <summary data-i18n="moreOptions">More options</summary>
+        <label class="field">
+          <span class="label" data-i18n="pace">Walking pace</span>
+          <select id="pace" name="pace"></select>
+        </label>
+        <fieldset class="field">
+          <legend class="label" data-i18n="minutesAt">Minutes at each stop</legend>
+          <div id="dwell" class="dwell"></div>
+        </fieldset>
+      </details>
+    </form>
+    <div id="notices" class="notices" aria-live="polite"></div>
+    <ol id="itinerary" class="itinerary"></ol>
+    <div id="extras" class="extras"></div>
+    <footer class="footer">
+      <p id="data-date"></p>
+      <p data-i18n="disclaimer">Times are estimates. Check opening hours at inhotim.org.br.</p>
+      <p><span data-i18n="notAffiliated">An independent project, not affiliated with Inhotim.</span>
+        <a href="https://github.com/Andreixzc/inhotim-path" data-i18n="sourceCode">Source code</a></p>
+      <p id="attribution" class="attribution"></p>
+    </footer>
+  </div>
+</aside>
+<main id="map" class="map" aria-label="Map"></main>
+</body>
+</html>

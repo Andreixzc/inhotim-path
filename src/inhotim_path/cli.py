@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import re
 import sys
@@ -13,7 +14,7 @@ from pathlib import Path
 
 import httpx
 
-from inhotim_path import __version__, changes, export, planner, snapshots
+from inhotim_path import __version__, changes, export, planner, snapshots, webdata
 from inhotim_path.http import make_client
 from inhotim_path.models import Poi, PoiKind
 from inhotim_path.solver import RouteNotFoundError
@@ -123,6 +124,24 @@ def build_parser() -> argparse.ArgumentParser:
         "(default: $MAPTILER_API_KEY). The key is written into the page.",
     )
     route.set_defaults(handler=cmd_route)
+
+    web = commands.add_parser(
+        "web-data", help="export the park (POIs + walking network) for the web app in web/"
+    )
+    web.add_argument(
+        "--out",
+        type=Path,
+        default=Path("web/data/park.json"),
+        help="output file (default: %(default)s)",
+    )
+    web.add_argument(
+        "--satellite-key",
+        default=os.environ.get("MAPTILER_API_KEY"),
+        metavar="KEY",
+        help="MapTiler API key for the app's satellite view (default: $MAPTILER_API_KEY). "
+        "It is written into the file, so use a key restricted to the app's domain.",
+    )
+    web.set_defaults(handler=cmd_web_data)
     return parser
 
 
@@ -182,6 +201,31 @@ def cmd_route(args: argparse.Namespace) -> int:
         page = export.to_html(plan, args.start_time, satellite_key=args.satellite_key)
         args.html.write_text(page, encoding="utf-8")
         print(f"HTML map -> {args.html}" + (" (with satellite view)" if args.satellite_key else ""))
+    return 0
+
+
+def cmd_web_data(args: argparse.Namespace) -> int:
+    try:
+        data = planner.ParkData.load(args.data_dir)
+    except planner.PlanningError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    payload = webdata.build_web_data(
+        data,
+        generated_at=snapshots.iso_now(),
+        fetched_at=snapshots.read_json(args.data_dir / snapshots.POIS_FILE).get("fetched_at"),
+        satellite_key=args.satellite_key,
+    )
+    text = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+    args.out.parent.mkdir(parents=True, exist_ok=True)
+    args.out.write_text(text, encoding="utf-8")
+    routable = sum(1 for poi in payload["pois"] if poi["node"] is not None)
+    print(
+        f"web data -> {args.out}: {routable} of {len(payload['pois'])} POIs on the network, "
+        f"{len(payload['nodes'])} nodes, {len(payload['edges'])} edges, "
+        f"{len(text.encode()) / 1024:.0f} KB"
+        + (", satellite key set" if args.satellite_key else "")
+    )
     return 0
 
 

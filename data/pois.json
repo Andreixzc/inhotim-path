@@ -1,6 +1,6 @@
 {
   "source": "https://www.inhotim.org.br/wp-admin/admin-ajax.php?action=get_markers",
-  "fetched_at": "2026-11-01T05:25:50+00:00",
+  "fetched_at": "2026-11-01T05:47:04+00:00",
   "count": 150,
   "pois": [
     {
@@ -1396,7 +1396,7 @@
     },
     {
       "id": 3263,
-      "name": "sem título",
+      "name": "sem título",
       "kind": "outdoor_work",
       "lat": -20.12196351445226,
       "lng": -44.21993743410977,
@@ -1412,7 +1412,7 @@
     },
     {
       "id": 3498,
-      "name": "sem título",
+      "name": "sem título",
       "kind": "outdoor_work",
       "lat": -20.120621355214404,
       "lng": -44.220104813575745,
@@ -1423,22 +1423,6 @@
         "Amilcar de Castro"
       ],
       "url": "https://www.inhotim.org.br/item-do-acervo/sem-titulo-amilcar-de-castro/",
-      "main_view": true,
-      "flags": []
-    },
-    {
-      "id": 3267,
-      "name": "sem título; sem título; sem título",
-      "kind": "outdoor_work",
-      "lat": -20.122700523447186,
-      "lng": -44.218694818296306,
-      "axes": [
-        "rosa"
-      ],
-      "artists": [
-        "Edgard de Souza"
-      ],
-      "url": "https://www.inhotim.org.br/item-do-acervo/sem-titulo-edgard-de-souza/",
       "main_view": true,
       "flags": []
     },
@@ -1455,6 +1439,22 @@
         "Robert Irwin"
       ],
       "url": "https://www.inhotim.org.br/item-do-acervo/sem-titulo-robert-irwin/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3267,
+      "name": "sem título; sem título; sem título",
+      "kind": "outdoor_work",
+      "lat": -20.122700523447186,
+      "lng": -44.218694818296306,
+      "axes": [
+        "rosa"
+      ],
+      "artists": [
+        "Edgard de Souza"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/sem-titulo-edgard-de-souza/",
       "main_view": true,
       "flags": []
     },

@@ -26,7 +26,7 @@ Code shows *what* the project is. This folder explains *how it got there* and *w
 ## Index
 
 ### Sessions
-- [2026-11-01 #01: Kickoff, Phase 1, then the web app](sessions/2026-11-01-01-kickoff.md): idea refinement, data-source research, repo setup, then the whole CLI (fetch + route, CP-SAT solver, CI), then blocked map tiles fixed, a satellite view, a daily data refresh, and the web app (planning in the browser, benchmarked against CP-SAT), live on GitHub Pages, then made minimalist.
+- [2026-11-01 #01: Kickoff, Phase 1, then the web app](sessions/2026-11-01-01-kickoff.md): idea refinement, data-source research, repo setup, then the whole CLI (fetch + route, CP-SAT solver, CI), then blocked map tiles fixed, a satellite view, a daily data refresh, and the web app (planning in the browser, benchmarked against CP-SAT), live on GitHub Pages, then made minimalist, then without times or a time limit, on the original map.
 
 ### Decisions
 - [0001: Use the official map's marker feed as the POI source](decisions/0001-official-map-marker-feed-as-poi-source.md)
@@ -38,3 +38,4 @@ Code shows *what* the project is. This folder explains *how it got there* and *w
 - [0007: Keep the data fresh with a daily GitHub Actions refresh](decisions/0007-daily-data-refresh.md)
 - [0008: Satellite view from MapTiler, with the user's own key](decisions/0008-satellite-view-maptiler.md)
 - [0009: The web app is a static site that plans routes in the browser](decisions/0009-web-app-plans-in-the-browser.md)
+- [0010: The web app shows no times and sets no time limit](decisions/0010-web-app-without-times.md)

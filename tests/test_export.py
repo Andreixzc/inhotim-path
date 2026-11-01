@@ -106,3 +106,11 @@ def test_html_script_is_valid_javascript(tmp_path):
     path.write_text(script, encoding="utf-8")
     result = subprocess.run(["node", "--check", str(path)], capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
+
+
+def test_html_satellite_view_needs_a_key():
+    assert "const satelliteKey = null;" in to_html(make_plan())
+    page = to_html(make_plan(), satellite_key="abc123")
+    assert 'const satelliteKey = "abc123";' in page
+    assert "api.maptiler.com/tiles/satellite-v2" in page
+    assert '"<\\/script>"' in to_html(make_plan(), satellite_key="</script>")

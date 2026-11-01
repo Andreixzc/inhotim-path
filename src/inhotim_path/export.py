@@ -142,13 +142,16 @@ def to_geojson(plan: Plan, start_time: time | None = None) -> dict[str, Any]:
     }
 
 
-def to_html(plan: Plan, start_time: time | None = None) -> str:
+def to_html(plan: Plan, start_time: time | None = None, *, satellite_key: str | None = None) -> str:
+    """A standalone map page. With a MapTiler ``satellite_key`` it also gets a satellite view."""
     data = json.dumps(to_geojson(plan, start_time), ensure_ascii=False).replace("</", "<\\/")
     colors = json.dumps({kind.value: color for kind, color in KIND_COLOR.items()})
+    key = json.dumps(satellite_key).replace("</", "<\\/")
     return (
         _HTML_TEMPLATE.replace("__SUMMARY__", html.escape(summary(plan)))
         .replace("__ATTRIBUTION__", html.escape(ATTRIBUTION))
         .replace("__COLORS__", colors)
+        .replace("__SATELLITE_KEY__", key)
         .replace("__DATA__", data)
     )
 
@@ -176,6 +179,9 @@ _HTML_TEMPLATE = """<!doctype html>
   .stop { width: 24px; height: 24px; border-radius: 50%; color: #fff; font-weight: 600;
           font-size: 11px; display: flex; align-items: center; justify-content: center;
           border: 2px solid #fff; box-shadow: 0 0 3px rgba(0, 0, 0, .5); cursor: pointer; }
+  .maplibregl-ctrl-group button.layer-toggle { width: auto; padding: 0 10px;
+                                               font: 600 12px system-ui; }
+  .maptiler-logo { position: absolute; left: 10px; bottom: 10px; z-index: 1; display: none; }
 </style>
 </head>
 <body>
@@ -188,6 +194,7 @@ _HTML_TEMPLATE = """<!doctype html>
 const data = __DATA__;
 const colors = __COLORS__;
 const basemap = "https://tiles.openfreemap.org/styles/liberty";
+const satelliteKey = __SATELLITE_KEY__;
 // If the basemap can't load, the route still draws, on a plain background.
 const plain = {
   version: 8,
@@ -200,6 +207,61 @@ const bounds = new maplibregl.LngLatBounds();
 for (const f of data.features) {
   const g = f.geometry;
   for (const c of g.type === "Point" ? [g.coordinates] : g.coordinates) bounds.extend(c);
+}
+
+// Satellite imagery is optional: MapTiler's tiles need the user's own key (--satellite-key).
+// Nothing is requested from MapTiler until the button is first pressed.
+class SatelliteToggle {
+  onAdd(map) {
+    this.map = map;
+    this.visible = false;
+    this.button = document.createElement("button");
+    this.button.type = "button";
+    this.button.className = "layer-toggle";
+    this.button.textContent = "Satellite";
+    this.button.addEventListener("click", () => this.toggle());
+    this.box = document.createElement("div");
+    this.box.className = "maplibregl-ctrl maplibregl-ctrl-group";
+    this.box.append(this.button);
+    return this.box;
+  }
+
+  onRemove() {
+    this.box.remove();
+  }
+
+  toggle() {
+    const map = this.map;
+    if (!map.getSource("satellite")) {
+      const key = encodeURIComponent(satelliteKey);
+      map.addSource("satellite", {
+        type: "raster",
+        url: `https://api.maptiler.com/tiles/satellite-v2/tiles.json?key=${key}`,
+        tileSize: 512,
+      });
+      map.addLayer({ id: "satellite", type: "raster", source: "satellite" }, "legs-casing");
+      // A bad key fails on the tile index, not on a single tile: give up and say so.
+      map.on("error", (e) => e.sourceId === "satellite" && !e.tile && this.fail());
+      this.logo = document.createElement("a");
+      this.logo.className = "maptiler-logo";
+      this.logo.href = "https://www.maptiler.com/";
+      this.logo.target = "_blank";
+      this.logo.rel = "noopener";
+      this.logo.innerHTML =
+        '<img src="https://api.maptiler.com/resources/logo.svg" alt="MapTiler" height="24">';
+      map.getContainer().append(this.logo);
+    }
+    this.visible = !this.visible;
+    map.setLayoutProperty("satellite", "visibility", this.visible ? "visible" : "none");
+    this.button.textContent = this.visible ? "Map" : "Satellite";
+    this.logo.style.display = this.visible ? "block" : "none";
+  }
+
+  fail() {
+    if (this.visible) this.toggle();
+    this.button.disabled = true;
+    this.button.title = "Satellite imagery unavailable: check the MapTiler key";
+  }
 }
 
 function draw(style) {
@@ -222,6 +284,7 @@ function draw(style) {
       map.addLayer({ id, type: "line", source: "route", filter: legs, layout, paint }, labels);
     line("legs-casing", { "line-color": "#ffffff", "line-width": 7, "line-opacity": 0.8 });
     line("legs", { "line-color": "#e4572e", "line-width": 4 });
+    if (satelliteKey) map.addControl(new SatelliteToggle());
   });
   for (const f of data.features.filter((f) => f.properties.type === "stop")) {
     const p = f.properties;

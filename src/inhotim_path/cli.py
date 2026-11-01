@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import sys
 from collections import Counter
@@ -114,6 +115,13 @@ def build_parser() -> argparse.ArgumentParser:
     )
     route.add_argument("--geojson", type=Path, metavar="PATH", help="write the route as GeoJSON")
     route.add_argument("--html", type=Path, metavar="PATH", help="write a standalone map page")
+    route.add_argument(
+        "--satellite-key",
+        default=os.environ.get("MAPTILER_API_KEY"),
+        metavar="KEY",
+        help="MapTiler API key: adds a satellite view to the --html map "
+        "(default: $MAPTILER_API_KEY). The key is written into the page.",
+    )
     route.set_defaults(handler=cmd_route)
     return parser
 
@@ -171,8 +179,9 @@ def cmd_route(args: argparse.Namespace) -> int:
         print(f"\nGeoJSON  -> {args.geojson}")
     if args.html:
         args.html.parent.mkdir(parents=True, exist_ok=True)
-        args.html.write_text(export.to_html(plan, args.start_time), encoding="utf-8")
-        print(f"HTML map -> {args.html}")
+        page = export.to_html(plan, args.start_time, satellite_key=args.satellite_key)
+        args.html.write_text(page, encoding="utf-8")
+        print(f"HTML map -> {args.html}" + (" (with satellite view)" if args.satellite_key else ""))
     return 0
 
 

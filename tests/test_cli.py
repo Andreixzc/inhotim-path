@@ -115,3 +115,12 @@ def test_fetch_reports_whats_new_in_the_collection(tmp_path, monkeypatch, capsys
 
     assert main(fetch) == 0
     assert "(unchanged)" in capsys.readouterr().out
+
+
+def test_route_html_gets_the_satellite_key_from_the_environment(tmp_path, monkeypatch, capsys):
+    write_snapshots(tmp_path)
+    monkeypatch.setenv("MAPTILER_API_KEY", "key-from-env")
+    page = tmp_path / "map.html"
+    assert main(["--data-dir", str(tmp_path), "route", "--html", str(page)]) == 0
+    assert "(with satellite view)" in capsys.readouterr().out
+    assert 'const satelliteKey = "key-from-env";' in page.read_text("utf-8")

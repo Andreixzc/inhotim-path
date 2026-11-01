@@ -138,4 +138,4 @@ Why CP-SAT rather than the OR-Tools routing library: [ADR 0004](../history/decis
 - **Web app:** `node --test tests/web/*.test.mjs` checks the solver against brute force on small instances (both
   the exact and the heuristic paths), the network, the planner on the synthetic park's export, and the settings.
 - **CI:** ruff, pytest and the node tests on every push (GitHub Actions). After CI passes on `main`,
-  `pages.yml` publishes the web app (once Pages is switched on).
+  `pages.yml` publishes the web app on GitHub Pages (<https://andreixzc.github.io/inhotim-path/>).

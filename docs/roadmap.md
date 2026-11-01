@@ -45,10 +45,11 @@ session-by-session story lives in [`history/`](../history/).
 - [x] Scheduled data refresh (GitHub Actions cron) + "what's new" diff of the collection (ADR 0007)
 - [x] Satellite view on the map, with a MapTiler key (ADR 0008)
 - [x] Deploy workflow for GitHub Pages (`pages.yml`), republished after each data refresh
-- [ ] Switch GitHub Pages on (Settings > Pages > Source: GitHub Actions)
+- [x] Live on GitHub Pages: <https://andreixzc.github.io/inhotim-path/>
 - [ ] A MapTiler key restricted to the web app's domain (repository variable `MAPTILER_API_KEY`)
 - [ ] Try it on real phones: speed of the largest plans, the layout, GPS inside the park
 - [ ] Offline-capable PWA (cache the page, `park.json` and the basemap around the park)
+- [ ] A production-like environment later on (where to host it, staging before production: to decide)
 
 ## Phase 4: Live mode
 

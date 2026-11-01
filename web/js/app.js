@@ -1,16 +1,27 @@
-// The planner page: the form, the itinerary and the map, wired together. Routes are planned in a
-// worker (worker.js) so the page stays responsive; where workers can't start, on the main thread.
+// The planner page: the settings, the itinerary and the map, wired together. Routes are planned
+// in a worker (worker.js) so the page stays responsive; where workers can't start, on the main
+// thread.
 
 import { clock, distance, duration, nowRounded, parseClock } from "./format.js";
 import { detect, lang, setLang, t } from "./i18n.js";
-import { KIND_COLOR, RouteMap } from "./map.js";
-import { Park } from "./plan.js";
+import { FLAG, RouteMap } from "./map.js";
+import { MAX_SNAP_M, Park } from "./plan.js";
 import * as settings from "./state.js";
 
 const DATA_URL = "data/park.json";
 const LANG_KEY = "inhotim-path-lang";
 const SEARCH_LIMIT = 8;
 const BUSY_AFTER_MS = 150;
+
+const ALERT_ICON =
+  '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">' +
+  '<circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/>' +
+  '<path d="M12 7.5V13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>' +
+  '<circle cx="12" cy="16.5" r="1.25" fill="currentColor"/></svg>';
+const CLOSE_ICON =
+  '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">' +
+  '<path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.2" ' +
+  'stroke-linecap="round"/></svg>';
 
 const $ = (selector) => document.querySelector(selector);
 
@@ -21,15 +32,22 @@ function h(tag, props = {}, ...children) {
     if (value === null || value === undefined || value === false) continue;
     if (name.startsWith("on")) element.addEventListener(name.slice(2), value);
     else if (name === "class") element.className = value;
-    else if (name === "style") Object.assign(element.style, value);
     else element.setAttribute(name, value === true ? "" : value);
   }
   element.append(...children.flat().filter((child) => child !== null && child !== undefined));
   return element;
 }
 
-/** A small button that does `action` when pressed. */
-function button(label, action, className = "small") {
+/** An icon from the constant SVG markup in this file (never from data). */
+function icon(markup) {
+  const template = document.createElement("template");
+  template.innerHTML = markup;
+  return template.content.firstChild;
+}
+
+/** A pill button that does `action` when pressed; `dark` for the main action. */
+function chip(label, action, dark = false) {
+  const className = dark ? "chip-button chip-button--dark" : "chip-button";
   return h("button", { type: "button", class: className, onclick: action }, label);
 }
 
@@ -97,9 +115,10 @@ const app = {
   map: null,
   state: null,
   here: null, // [lng, lat] when the visit starts from the visitor's position
+  locating: false,
   plan: null,
   error: null, // why there is no plan
-  notice: null, // a one-off message (location problems)
+  alert: null, // a location problem until dismissed: {kind: "outside", meters} or {kind: "geo"}
   latest: 0,
   timer: 0,
   open: {}, // which "left out" lists are expanded
@@ -110,18 +129,18 @@ const app = {
 async function main() {
   setLang(detect(storage(LANG_KEY), navigator.languages ?? [navigator.language]));
   translatePage();
-  $("#summary").textContent = t("loading");
+  $("#meta").textContent = t("loading");
   try {
     const response = await fetch(DATA_URL);
     if (!response.ok) throw new Error(String(response.status));
     app.data = await response.json();
   } catch {
-    $("#summary").textContent = t("loadError");
+    $("#meta").textContent = t("loadError");
     return;
   }
   app.park = new Park(app.data);
   app.planner = new Planner(app.data, app.park);
-  app.state = settings.load(app.data.defaults, location.hash);
+  app.state = settings.load(location.hash);
   buildForm();
   renderFooter();
   wireEvents();
@@ -131,6 +150,7 @@ async function main() {
   }).then((map) => {
     app.map = map;
     map.describe = describe;
+    map.nameOf = nameOf;
     map.onPick = highlight;
     showOnMap(true);
   });
@@ -141,6 +161,9 @@ function wireEvents() {
   const form = $("#form");
   form.addEventListener("submit", (event) => event.preventDefault());
   form.addEventListener("change", onFormChange);
+  $("#start-time").addEventListener("change", onStartTime);
+  $("#less").addEventListener("click", () => stepBudget(-1));
+  $("#more").addEventListener("click", () => stepBudget(1));
   $("#must-search").addEventListener("input", renderResults);
   $("#must-search").addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
@@ -157,9 +180,16 @@ function wireEvents() {
     translatePage();
     buildForm();
     renderFooter();
+    renderAlert();
     app.map?.translate();
     render();
+    showOnMap(false);
   });
+  $("#sheet-body").addEventListener(
+    "scroll",
+    (event) => document.body.classList.toggle("scrolled", event.target.scrollTop > 4),
+    { passive: true },
+  );
   $("#sheet").addEventListener("click", () => {
     document.body.classList.toggle("collapsed");
     labelSheetToggle();
@@ -167,7 +197,7 @@ function wireEvents() {
   });
   addEventListener("hashchange", () => {
     if (location.hash === `#${settings.toHash(app.state)}`) return;
-    app.state = settings.load(app.data.defaults, location.hash);
+    app.state = settings.load(location.hash);
     buildForm();
     changed({ fit: true });
   });
@@ -178,17 +208,15 @@ function wireEvents() {
 function request() {
   const s = app.state;
   return {
-    kinds: s.kinds,
+    kinds: settings.SEE[s.see],
     must: s.must,
     exclude: s.exclude,
     budgetMin: s.budgetMin,
-    speedKmh: settings.PACES[s.pace],
-    dwellMin: s.dwellMin,
     start: s.from === "here" && app.here ? app.here : undefined,
   };
 }
 
-/** The settings changed: remember them, and plan again shortly (typing doesn't plan each key). */
+/** The settings changed: remember them, and plan again shortly (a burst of taps plans once). */
 function changed({ fit = false, now = false } = {}) {
   settings.save(app.state);
   history.replaceState(null, "", `#${settings.toHash(app.state)}`);
@@ -205,8 +233,7 @@ async function replan({ fit = false } = {}) {
   } catch (error) {
     if (id !== app.latest) return;
     if (error.code === "far" && app.here) {
-      const away = distance(app.park.network.snap(app.here).distance, lang());
-      locationFailed(t("farAway", { distance: away }));
+      locationFailed({ kind: "outside", meters: app.park.network.snap(app.here).distance });
       return;
     }
     app.plan = null;
@@ -235,27 +262,42 @@ function showOnMap(fit) {
 
 function locate() {
   if (!navigator.geolocation) {
-    locationFailed(t("geoFailed"));
+    locationFailed({ kind: "geo" });
     return;
   }
+  app.locating = true;
+  renderHero();
   navigator.geolocation.getCurrentPosition(
     (position) => {
-      app.here = [position.coords.longitude, position.coords.latitude];
-      app.notice = null;
+      app.locating = false;
+      if (app.state.from !== "here") return; // changed their mind while we waited
+      const here = [position.coords.longitude, position.coords.latitude];
+      const away = app.park.network.snap(here).distance;
+      if (away > MAX_SNAP_M) {
+        locationFailed({ kind: "outside", meters: away }); // their start time stays as it was
+        return;
+      }
+      app.here = here;
       app.state.startTime = nowRounded();
       $("#start-time").value = app.state.startTime;
       changed({ fit: true, now: true });
     },
-    () => locationFailed(t("geoFailed")),
+    () => {
+      app.locating = false;
+      if (app.state.from === "here") locationFailed({ kind: "geo" });
+      else renderHero();
+    },
     { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 },
   );
 }
 
-function locationFailed(message) {
+/** Starting from the visitor's position didn't work: say why, and start at the gate. */
+function locationFailed(alert) {
   app.here = null;
-  app.notice = message;
-  app.state.from = "reception";
-  $('#from input[value="reception"]').checked = true;
+  app.alert = alert;
+  app.state.from = "gate";
+  $('#from input[value="gate"]').checked = true;
+  renderAlert();
   changed({ fit: true, now: true });
 }
 
@@ -297,63 +339,53 @@ function pick(index) {
 }
 
 function highlight(index) {
-  for (const item of document.querySelectorAll(".visit.is-picked")) {
+  for (const item of document.querySelectorAll(".stop.is-picked")) {
     item.classList.remove("is-picked");
   }
-  const item = document.querySelector(`.visit[data-index="${index}"]`);
+  const item = document.querySelector(`.stop[data-index="${index}"]`);
   if (!item) return;
   item.classList.add("is-picked");
   item.scrollIntoView({ block: "nearest", behavior: "smooth" });
 }
 
+function stepBudget(step) {
+  const budgets = settings.BUDGETS;
+  const index = budgets.indexOf(app.state.budgetMin);
+  const next = budgets[Math.min(budgets.length - 1, Math.max(0, index + step))];
+  if (next === app.state.budgetMin) return;
+  app.state.budgetMin = next;
+  renderStepper();
+  changed({ fit: true });
+}
+
 function onFormChange(event) {
   const s = app.state;
   const target = event.target;
-  switch (target.name) {
-    case "budget":
-      s.budgetMin = target.value === "all" ? null : Number(target.value);
+  if (target.name === "from") {
+    s.from = target.value;
+    app.alert = null;
+    renderAlert();
+    if (s.from === "here") {
+      locate();
+    } else {
+      app.here = null;
       changed({ fit: true });
-      break;
-    case "startTime":
-      if (parseClock(target.value) !== null) {
-        s.startTime = target.value;
-        settings.save(s);
-        history.replaceState(null, "", `#${settings.toHash(s)}`);
-        render(); // times of day only: no need to plan again
-      }
-      break;
-    case "from":
-      s.from = target.value;
-      if (s.from === "here") {
-        locate();
-      } else {
-        app.here = null;
-        changed({ fit: true });
-      }
-      break;
-    case "kind":
-      s.kinds = [...document.querySelectorAll('input[name="kind"]:checked')].map((b) => b.value);
-      changed({ fit: true });
-      break;
-    case "pace":
-      s.pace = target.value;
-      changed();
-      break;
-    case "dwell": {
-      const minutes = Number(target.value);
-      if (target.value === "" || !(minutes >= 0 && minutes <= 240)) return;
-      if (minutes === app.data.defaults.dwell_min[target.dataset.kind]) {
-        delete s.dwellMin[target.dataset.kind];
-      } else {
-        s.dwellMin[target.dataset.kind] = minutes;
-      }
-      changed();
-      break;
     }
+  } else if (target.name === "see") {
+    s.see = target.value;
+    changed({ fit: true });
   }
 }
 
-// ----------------------------------------------------------------------------- form
+function onStartTime(event) {
+  if (parseClock(event.target.value) === null) return;
+  app.state.startTime = event.target.value;
+  settings.save(app.state);
+  history.replaceState(null, "", `#${settings.toHash(app.state)}`);
+  render(); // times of day only: no need to plan again
+}
+
+// ----------------------------------------------------------------------------- settings
 
 function translatePage() {
   document.documentElement.lang = lang();
@@ -364,86 +396,47 @@ function translatePage() {
   for (const element of document.querySelectorAll("[data-i18n-placeholder]")) {
     element.placeholder = t(element.dataset.i18nPlaceholder);
   }
-  $("#lang").textContent = t("language");
+  for (const element of document.querySelectorAll("[data-i18n-label]")) {
+    element.setAttribute("aria-label", t(element.dataset.i18nLabel));
+  }
+  const other = $("#lang");
+  other.textContent = t("language");
+  other.setAttribute("aria-label", t("languageName"));
+  other.lang = lang() === "en" ? "pt-BR" : "en";
   labelSheetToggle();
 }
 
 function labelSheetToggle() {
   const collapsed = document.body.classList.contains("collapsed");
-  $("#sheet").textContent = collapsed ? t("showPlan") : t("hidePlan");
+  $("#sheet-label").textContent = collapsed ? t("showPlan") : t("showMap");
   $("#sheet").setAttribute("aria-expanded", String(!collapsed));
 }
 
 function budgetLabel(minutes) {
-  if (minutes === null) return t("everything");
-  const [hours, rest] = [Math.floor(minutes / 60), minutes % 60];
-  if (hours === 0) return `${rest} min`;
-  if (!rest) return t("hours", { h: hours });
-  return t("hoursMinutes", { h: hours, m: String(rest).padStart(2, "0") });
+  if (minutes === null) return t("noLimit");
+  return minutes % 60 ? duration(minutes * 60) : t("hours", { h: minutes / 60 });
+}
+
+/** The gate is "Portaria" (the museum's map calls it the reception); other POIs by name. */
+function nameOf(poi) {
+  return poi.id === app.data.defaults.start ? t("gate") : poi.name;
 }
 
 function buildForm() {
   const s = app.state;
-  const budgets = settings.BUDGETS.includes(s.budgetMin)
-    ? settings.BUDGETS
-    : [...settings.BUDGETS, s.budgetMin]; // an unusual budget from a shared link
-  $("#budget").replaceChildren(
-    ...budgets.map((minutes) =>
-      h(
-        "option",
-        { value: minutes === null ? "all" : String(minutes), selected: minutes === s.budgetMin },
-        budgetLabel(minutes),
-      ),
-    ),
-  );
-  $("#start-time").value = s.startTime;
   $(`#from input[value="${s.from}"]`).checked = true;
-
-  const counts = {};
-  for (const poi of app.data.pois) {
-    if (poi.main_view && poi.node !== null) counts[poi.kind] = (counts[poi.kind] ?? 0) + 1;
-  }
-  $("#kinds").replaceChildren(
-    ...settings.KINDS.filter((kind) => counts[kind]).map((kind) =>
-      h(
-        "label",
-        { class: "check" },
-        h("input", {
-          type: "checkbox",
-          name: "kind",
-          value: kind,
-          checked: s.kinds.includes(kind),
-        }),
-        h("span", { class: "dot", style: { background: KIND_COLOR[kind] } }),
-        h("span", {}, t(`kinds.${kind}`), " ", h("small", {}, `(${counts[kind]})`)),
-      ),
-    ),
-  );
-  $("#pace").replaceChildren(
-    ...Object.keys(settings.PACES).map((pace) =>
-      h("option", { value: pace, selected: pace === s.pace }, t(pace)),
-    ),
-  );
-  $("#dwell").replaceChildren(
-    ...settings.KINDS.map((kind) =>
-      h(
-        "label",
-        { class: "dwell-field" },
-        h("span", {}, t(`kinds.${kind}`)),
-        h("input", {
-          type: "number",
-          name: "dwell",
-          "data-kind": kind,
-          min: "0",
-          max: "240",
-          step: "1",
-          inputmode: "numeric",
-          value: String(s.dwellMin[kind] ?? app.data.defaults.dwell_min[kind]),
-        }),
-      ),
-    ),
-  );
+  $(`#see input[value="${s.see}"]`).checked = true;
+  $("#start-time").value = s.startTime;
+  renderStepper();
   renderChips();
+}
+
+function renderStepper() {
+  const budgets = settings.BUDGETS;
+  const index = budgets.indexOf(app.state.budgetMin);
+  $("#budget").textContent = budgetLabel(app.state.budgetMin);
+  $("#less").disabled = index <= 0;
+  $("#more").disabled = index >= budgets.length - 1;
 }
 
 function renderChips() {
@@ -462,7 +455,7 @@ function renderChips() {
             "aria-label": t("remove", { name: poi.name }),
             onclick: () => unmakeMust(poi.id),
           },
-          "×",
+          icon(CLOSE_ICON),
         ),
       ),
     );
@@ -498,7 +491,7 @@ function renderResults() {
             h(
               "button",
               { type: "button", onclick: () => choose(poi) },
-              h("span", {}, poi.name),
+              poi.name,
               h("small", {}, t(`kind.${poi.kind}`)),
             ),
           ),
@@ -515,30 +508,66 @@ function startMinutes() {
 }
 
 function render() {
-  const plan = app.plan;
-  renderNotices(plan);
-  if (!plan) {
-    $("#summary").textContent = app.error ?? "";
+  renderHero();
+  renderNotices(app.plan);
+  if (!app.plan) {
     $("#itinerary").replaceChildren();
     renderExtras(null);
     return;
   }
-  const stops = t("stops", { n: plan.visits.length - 2 });
-  $("#summary").textContent =
-    t("summary", {
-      stops,
-      total: duration(plan.totalS),
-      walk: distance(plan.walkM, lang()),
-      walkTime: duration(plan.walkS),
-    }) + ` · ${t("endsAt", { time: clock(startMinutes(), plan.totalS) })}`;
-  renderItinerary(plan);
-  renderExtras(plan);
+  renderItinerary(app.plan);
+  renderExtras(app.plan);
+}
+
+function renderHero() {
+  if (app.locating) {
+    $("#meta").textContent = t("locating");
+    return;
+  }
+  const plan = app.plan;
+  if (!plan) {
+    $("#total").textContent = "—";
+    $("#meta").textContent = app.error ?? "";
+    $("#clock").hidden = true;
+    return;
+  }
+  $("#total").textContent = duration(plan.totalS);
+  $("#meta").textContent = [
+    t("stops", { n: plan.visits.length - 2 }),
+    t("walking", { distance: distance(plan.walkM, lang()) }),
+  ].join(" · ");
+  const end = clock(startMinutes(), plan.totalS);
+  $("#end-time").textContent = end;
+  $("#end-time").setAttribute("aria-label", t("endsAt", { time: end }));
+  $("#clock").hidden = false;
+}
+
+function renderAlert() {
+  const box = $("#alert");
+  const alert = app.alert;
+  if (!alert) {
+    box.hidden = true;
+    box.replaceChildren();
+    return;
+  }
+  const [title, body] =
+    alert.kind === "outside"
+      ? [t("outsideTitle"), t("outsideBody", { distance: distance(alert.meters, lang()) })]
+      : [t("geoFailedTitle"), t("geoFailedBody")];
+  const dismiss = () => {
+    app.alert = null;
+    renderAlert();
+  };
+  box.replaceChildren(
+    icon(ALERT_ICON),
+    h("div", { class: "alert__text" }, h("strong", {}, title), h("p", {}, body)),
+    h("button", { type: "button", "aria-label": t("dismiss"), onclick: dismiss }, icon(CLOSE_ICON)),
+  );
+  box.hidden = false;
 }
 
 function renderNotices(plan) {
   const notes = [];
-  if (app.notice) notes.push(["info", app.notice]);
-  if (app.error) notes.push(["warn", app.error]);
   if (plan && !plan.feasible) {
     const budget = budgetLabel(app.state.budgetMin);
     notes.push(["warn", t("infeasible", { budget, total: duration(plan.totalS) })]);
@@ -552,80 +581,58 @@ function renderNotices(plan) {
   );
 }
 
-function endLabel(visit, index, last) {
-  if (index === 0) return visit.poi ? `${t("start")}: ${visit.poi.name}` : t("youAreHere");
-  return index === last ? `${t("finish")}: ${visit.poi.name}` : visit.poi.name;
-}
-
-function officialLink(poi, compact) {
-  if (!/^https?:\/\//i.test(poi?.url ?? "")) return null;
-  return h(
-    "a",
-    {
-      href: poi.url,
-      target: "_blank",
-      rel: "noopener",
-      class: compact ? "icon-link" : null,
-      "aria-label": compact ? `${t("officialPage")}: ${poi.name}` : null,
-    },
-    compact ? "↗" : `${t("officialPage")} ↗`,
-  );
-}
-
 function renderItinerary(plan) {
   const start = startMinutes();
   const last = plan.visits.length - 1;
   const must = new Set(app.state.must);
   const items = plan.visits.map((visit, index) => {
     const ends = index === 0 || index === last;
-    const walk = index > 0 ? h("p", { class: "walk" }, walkLabel(visit)) : null;
-    const badge = h(
-      "button",
-      {
-        type: "button",
-        class: ends ? "badge badge--end" : "badge",
-        style: ends ? null : { background: KIND_COLOR[visit.poi.kind] ?? KIND_COLOR.other },
-        "aria-label": endLabel(visit, index, last),
-        onclick: () => pick(index),
-      },
-      ends ? "⚑" : String(index),
-    );
-    const name = button(endLabel(visit, index, last), () => pick(index), "name");
-    const time = clock(start, visit.arriveS);
-    const title = h("p", { class: "visit__title" }, h("span", { class: "time" }, time), " ", name);
-    if (!ends && must.has(visit.poi.id)) {
-      title.append(" ", h("span", { class: "tag" }, t("mustSee")));
+    let name;
+    let meta;
+    if (ends) {
+      name = visit.poi ? nameOf(visit.poi) : t("youAreHere");
+      meta = index === 0 ? t("start") : t("finish");
+    } else {
+      const minutes = t("minutesHere", { min: Math.round(visit.dwellS / 60) });
+      name = [h("span", { class: "visually-hidden" }, `${index}. `), visit.poi.name];
+      meta = [t(`kind.${visit.poi.kind}`), minutes, ...visit.poi.artists].join(" · ");
+      if (must.has(visit.poi.id)) {
+        name.push(
+          h(
+            "span",
+            { class: "star" },
+            h("span", { "aria-hidden": "true" }, " ★"),
+            h("span", { class: "visually-hidden" }, ` (${t("mustSee")})`),
+          ),
+        );
+      }
     }
-    const minutes = t("minutesHere", { min: Math.round(visit.dwellS / 60) });
-    const details = ends
-      ? null
-      : h(
-          "p",
-          { class: "visit__meta" },
-          [t(`kind.${visit.poi.kind}`), minutes, ...visit.poi.artists].join(" · "),
-        );
-    const actions = ends
-      ? null
-      : h(
-          "div",
-          { class: "visit__actions" },
-          officialLink(visit.poi, true),
-          must.has(visit.poi.id) ? null : button(t("skip"), () => skip(visit.poi.id)),
-        );
-    const main = h("div", { class: "visit__main" }, title, details);
-    return h(
-      "li",
-      { class: ends ? "visit visit--end" : "visit", "data-index": String(index) },
-      walk,
-      h("div", { class: "visit__row" }, badge, main, actions),
+    const badge = h(
+      "span",
+      { class: ends ? "badge badge--end" : "badge", "aria-hidden": "true" },
+      ends ? icon(FLAG) : String(index),
     );
+    const row = h(
+      "button",
+      { type: "button", class: "stop__row", onclick: () => pick(index) },
+      badge,
+      h(
+        "span",
+        { class: "stop__text" },
+        h("span", { class: "stop__name" }, name),
+        h("span", { class: "stop__meta" }, meta),
+      ),
+      h("span", { class: "stop__time" }, clock(start, visit.arriveS)),
+    );
+    const walk = index > 0 ? h("p", { class: "walk" }, walkLabel(visit)) : null;
+    return h("li", { class: "stop", "data-index": String(index) }, walk, row);
   });
   $("#itinerary").replaceChildren(...items);
 }
 
+/** How far to the next stop. No minutes: walking pace is a guess (state.js). */
 function walkLabel(visit) {
-  if (visit.walkM < 20) return t("nextDoor");
-  return t("walkLeg", { time: duration(visit.walkS), distance: distance(visit.walkM, lang()) });
+  return visit.walkM < 20 ? t("nextDoor") : distance(visit.walkM, lang());
 }
 
 function renderExtras(plan) {
@@ -642,24 +649,37 @@ function renderExtras(plan) {
       h(
         "ul",
         {},
-        pois.map((poi) => {
-          const name = h("span", {}, poi.name, " ", h("small", {}, t(`kind.${poi.kind}`)));
-          return h("li", {}, name, action(poi));
-        }),
+        pois.map((poi) =>
+          h(
+            "li",
+            {},
+            h("span", {}, poi.name, h("small", {}, t(`kind.${poi.kind}`))),
+            action(poi),
+          ),
+        ),
       ),
     );
   if (plan?.skipped.length) {
     const title = t("leftOut", { n: plan.skipped.length });
-    const add = (poi) => button(t("add"), () => makeMust(poi.id));
+    const add = (poi) => chip(t("add"), () => makeMust(poi.id));
     blocks.push(block("leftOut", title, plan.skipped, add));
   }
   const excluded = app.state.exclude.map((id) => app.park.byId.get(id)).filter(Boolean);
   if (excluded.length) {
     const title = t("skippedByYou", { n: excluded.length });
-    const back = (poi) => button(t("restore"), () => restore(poi.id));
+    const back = (poi) => chip(t("restore"), () => restore(poi.id));
     blocks.push(block("skipped", title, excluded, back));
   }
   $("#extras").replaceChildren(...blocks);
+}
+
+function officialLink(poi) {
+  if (!/^https?:\/\//i.test(poi?.url ?? "")) return null;
+  return h(
+    "a",
+    { href: poi.url, target: "_blank", rel: "noopener", class: "chip-button" },
+    `${t("officialPage")} ↗`,
+  );
 }
 
 /** What the map's popup shows for a POI, or for the start position when `poiId` is null. */
@@ -675,7 +695,7 @@ function describe(poiId, index) {
   const visit = at >= 0 ? visits[at] : null;
   const ends = visit !== null && (at === 0 || at === visits.length - 1);
   const isStop = visit !== null && !ends;
-  box.append(h("strong", {}, isStop ? `${at}. ${poi.name}` : poi.name));
+  box.append(h("strong", {}, isStop ? `${at}. ${nameOf(poi)}` : nameOf(poi)));
   box.append(h("p", {}, [t(`kind.${poi.kind}`), ...poi.artists].join(" · ")));
   if (isStop) {
     const start = startMinutes();
@@ -688,15 +708,15 @@ function describe(poiId, index) {
   const excluded = app.state.exclude.includes(poi.id);
   if (!ends && poi.id !== app.data.defaults.start) {
     if (excluded) {
-      actions.append(button(t("restore"), () => restore(poi.id)));
+      actions.append(chip(t("restore"), () => restore(poi.id), true));
     } else if (must) {
-      actions.append(button(t("removeMust"), () => unmakeMust(poi.id)));
+      actions.append(chip(t("removeMust"), () => unmakeMust(poi.id)));
     } else {
-      actions.append(button(t("addMust"), () => makeMust(poi.id)));
-      if (isStop) actions.append(button(t("skip"), () => skip(poi.id)));
+      actions.append(chip(`★ ${t("addMust")}`, () => makeMust(poi.id), true));
+      if (isStop) actions.append(chip(t("skip"), () => skip(poi.id)));
     }
   }
-  const link = officialLink(poi, false);
+  const link = officialLink(poi);
   if (link) actions.append(link);
   if (actions.childElementCount) box.append(actions);
   return box;

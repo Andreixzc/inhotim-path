@@ -15,10 +15,11 @@ order* to see them.
 - 🧭 **the shortest route to see everything**: a Traveling Salesman Problem (TSP) over real walking paths;
 - ⏱️ **the best route for the time you have**: an Orienteering Problem that maximizes your time with the art
   within a time budget, with your must-sees always included;
-- 📅 *(planned)* slope-aware walking times, opening hours, multi-day plans, a web app and live GPS re-routing.
+- 📱 **a web app** that does the same in your browser, at home or on site, even starting from where you are;
+- 📅 *(planned)* slope-aware walking times, opening hours, multi-day plans and live re-planning as you go.
 
 > **Status:** the command-line tool works end to end (Phase 1), and its data refreshes itself every day.
-> The goal is a simple web app to plan a visit, at home or on site. See the [roadmap](docs/roadmap.md).
+> The web app works locally and is ready to publish on GitHub Pages. See the [roadmap](docs/roadmap.md).
 
 <p align="center">
   <img src="docs/img/route-all.png" width="49%" alt="The optimal tour through all 58 stops">
@@ -110,12 +111,35 @@ uv run inhotim-path fetch                                   # refresh data/ from
 - **Assumptions:** flat ground (Inhotim is hilly: slope-aware times are planned) and guessed time per stop.
   Opening hours, queues and breaks aren't modeled yet.
 
+## Web app
+
+[`web/`](web/) is a static page that plans routes in your browser: no server, nothing to install
+([why and how](history/decisions/0009-web-app-plans-in-the-browser.md)). Pick the time you have, what to see and
+your must-sees, and the route appears on the map with a timed itinerary. You can skip or add stops, start from
+your current position (the route then ends at the reception), switch between Portuguese and English, and share
+a plan as a link. Your position stays on your phone.
+
+Run it locally:
+
+```bash
+uv run inhotim-path web-data              # writes web/data/park.json from data/
+python3 -m http.server -d web 8000        # then open http://localhost:8000
+```
+
+It plans with heuristics instead of CP-SAT. Routes with up to 12 stops are solved exactly. Larger ones matched
+CP-SAT's minutes at stops in 100 of 115 benchmark runs, and were never more than 2 minutes short, in about 0.1 s.
+`.github/workflows/pages.yml` publishes it on GitHub Pages after CI passes, once Pages is switched on for the
+repository. For the satellite view, set a repository variable `MAPTILER_API_KEY` with a MapTiler key restricted to
+the site's domain.
+
 ## Development
 
 ```bash
-uv run pytest               # tests (no network needed)
-uv run ruff check .         # lint
-uv run ruff format .        # format
+uv run pytest                        # tests (no network needed)
+uv run ruff check .                  # lint
+uv run ruff format .                 # format
+node --test tests/web/*.test.mjs     # web app tests
+uv run python scripts/benchmark_web_solver.py   # web planner vs CP-SAT on the real park (~10 min)
 ```
 
 CI runs all of this on every push. Code layout and design: [architecture](docs/architecture.md).
@@ -130,7 +154,7 @@ This repo keeps a running log of working sessions and decisions in [`history/`](
 Independent hobby project, **not affiliated with Instituto Inhotim**. Map data is fetched from the
 museum's public website, and only factual metadata (names, coordinates, categories, links) is stored:
 no photos or texts. Path data © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright) (ODbL).
-The HTML map's basemap is [OpenFreeMap](https://openfreemap.org/) © OpenMapTiles, data from OpenStreetMap.
+The maps' basemap is [OpenFreeMap](https://openfreemap.org/) © OpenMapTiles, data from OpenStreetMap.
 The optional satellite imagery is © [MapTiler](https://www.maptiler.com/copyright/).
 
 ## License

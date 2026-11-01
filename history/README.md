@@ -31,4 +31,6 @@ Code shows *what* the project is. This folder explains *how it got there* and *w
 ### Decisions
 - [0001: Use the official map's marker feed as the POI source](decisions/0001-official-map-marker-feed-as-poi-source.md)
 - [0002: Walking network = OpenStreetMap + official axes SVG](decisions/0002-walking-network-osm-plus-official-axes.md)
-- [0003: Python pipeline managed with uv, OR-Tools as solver](decisions/0003-python-uv-ortools.md)
+- [0003: Python pipeline managed with uv, OR-Tools as solver](decisions/0003-python-uv-ortools.md) (solver part superseded by 0004)
+- [0004: CP-SAT circuit model instead of the OR-Tools routing library](decisions/0004-cp-sat-circuit-solver.md)
+- [0005: A stop is worth its viewing minutes](decisions/0005-stop-value-is-viewing-time.md)

@@ -1,6 +1,6 @@
 # 0003: Python pipeline managed with uv, OR-Tools as the routing solver
 
-- **Status:** accepted
+- **Status:** accepted; the choice of the OR-Tools *routing library* is superseded by [0004](0004-cp-sat-circuit-solver.md) (OR-Tools CP-SAT)
 - **Date:** 2026-11-01
 
 ## Context

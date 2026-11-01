@@ -45,6 +45,8 @@ export function solve({ cost, stops, budget = null, seed = 1, effort = 1, exact 
 
 const EPSILON = 1e-6;
 const MAX_EXACT = 16; // 2^16 subsets x 16 endings x 8 bytes = 8 MB
+// Budget routes: tuned on the real park against CP-SAT (scripts/benchmark_web_solver.py, ADR 0009).
+const RUNS = 4; // independent searches: more robust than one search twice as long
 const ACCEPT_WORSE = 0.05; // chance to continue from a worse route, to wander off local optima
 const RESET_AFTER = 50; // iterations without a new best before going back to the best
 
@@ -176,16 +178,33 @@ function doubleBridge(rng, route) {
 
 // ----------------------------------------------------------------------------- orienteering
 
+/** Several independent searches from the same first route; the best one wins. */
 function orienteer(ctx, start, budget) {
+  const initial = improve(ctx, start.slice(), budget);
+  if (initial.length === ctx.n + 2) return polish(ctx, initial, budget); // everything fits
+  let best = initial;
+  const iterations = Math.round(ctx.effort * (100 + 2.5 * ctx.n));
+  for (let run = 0; run < RUNS; run++) {
+    const found = searchFrom(ctx, initial, budget, iterations);
+    if (better(ctx, found, best)) best = found;
+  }
+  return polish(ctx, best, budget);
+}
+
+/**
+ * Iterated local search: kick the route, repair it, and carry on from there if it's worth at
+ * least as much (or, now and then, anyway). Go back to the best route when stuck.
+ */
+function searchFrom(ctx, initial, budget, iterations) {
   const { rng } = ctx;
-  let current = improve(ctx, start.slice(), budget);
-  if (current.length === ctx.n + 2) return polish(ctx, current, budget); // everything fits
+  let current = initial;
   let best = current;
   let stale = 0;
-  const iterations = Math.round(ctx.effort * (200 + 5 * ctx.n));
   for (let iteration = 0; iteration < iterations; iteration++) {
     const candidate = improve(ctx, kick(ctx, current, budget), budget);
-    if (better(ctx, candidate, current) || rng() < ACCEPT_WORSE) current = candidate;
+    if (value(ctx, candidate) > value(ctx, current) - EPSILON || rng() < ACCEPT_WORSE) {
+      current = candidate;
+    }
     if (better(ctx, current, best)) {
       best = current;
       stale = 0;
@@ -193,7 +212,7 @@ function orienteer(ctx, start, budget) {
       current = best;
     }
   }
-  return polish(ctx, best, budget);
+  return best;
 }
 
 /** Shorten the route, fill the time left, and swap stops while that's worth more. */

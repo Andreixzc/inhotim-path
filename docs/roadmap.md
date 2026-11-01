@@ -10,19 +10,19 @@ session-by-session story lives in [`history/`](../history/).
 - [x] Refine the problem: TSP → orienteering → multi-day
 - [x] Repo, docs and project memory (`history/`)
 
-## Phase 1: CLI MVP
+## Phase 1: CLI MVP ✅ (2026-11-01)
 
-- [ ] Python project scaffold (uv, ruff, pytest, CLI entry point)
-- [ ] `fetch`: POIs → `data/pois.json`
-- [ ] `fetch`: official routes SVG → `data/axes.geojson`
-- [ ] `fetch`: OSM ways + park boundary → `data/osm.json`
-- [ ] Walking graph (OSM + SVG gap fill, clipped to the park) and POI snapping
-- [ ] Walking-time matrix
-- [ ] `route`: TSP over all stops from the reception
-- [ ] `route --budget 4h`: orienteering
-- [ ] Filters: `--must`, `--kinds`, `--include-botanical`
-- [ ] Outputs: itinerary text, GeoJSON, HTML map
-- [ ] CI (lint + tests)
+- [x] Python project scaffold (uv, ruff, pytest, CLI entry point)
+- [x] `fetch`: POIs → `data/pois.json`
+- [x] `fetch`: official routes SVG → `data/axes.geojson`
+- [x] `fetch`: OSM ways + park boundary → `data/osm.json`
+- [x] Walking graph (OSM + SVG gap fill, clipped to the park) and POI snapping
+- [x] Walking-time matrix
+- [x] `route`: TSP over all stops from the reception (58 stops: 14h47, proven optimal)
+- [x] `route --budget 4h`: orienteering (CP-SAT; a stop is worth its viewing minutes)
+- [x] Filters: `--must`, `--exclude`, `--kinds`, `--botanical`; settings: `--dwell`, `--speed`, `--start-time`
+- [x] Outputs: itinerary text, GeoJSON, HTML map
+- [x] CI (lint + tests + a CLI smoke run)
 
 ## Phase 2: Better estimates
 
@@ -32,6 +32,8 @@ session-by-session story lives in [`history/`](../history/).
 - [ ] Multi-day plans (`--days 2`)
 - [ ] Electric carts as optional faster edges
 - [ ] Lunch stop (restaurants)
+- [ ] Preferences on top of viewing minutes (e.g. favorite artists, "galleries first")
+- [ ] Calibrate the dwell defaults (visitor input, gallery sizes)
 
 ## Phase 3: Web app
 

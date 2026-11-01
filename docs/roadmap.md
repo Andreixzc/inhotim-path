@@ -39,13 +39,17 @@ session-by-session story lives in [`history/`](../history/).
 
 - [ ] Decide how routes are computed on the web: precomputed vs. API vs. in-browser heuristic (see ADR 0003)
 - [ ] Mobile-first map UI (MapLibre, as in the HTML map: ADR 0006), offline-capable PWA
-- [ ] Scheduled data refresh (GitHub Actions cron) + "what's new" diff of the collection
+- [x] Scheduled data refresh (GitHub Actions cron) + "what's new" diff of the collection (ADR 0007)
+- [x] Satellite view on the map, with a MapTiler key (ADR 0008)
+- [ ] A MapTiler key restricted to the web app's domain
 - [ ] Deploy (GitHub Pages or Vercel)
 
 ## Phase 4: Live mode
 
-- [ ] GPS "you are here" (on-device only)
-- [ ] Check off visited stops; re-route on the fly
+- [ ] GPS "you are here": MapLibre's `GeolocateControl` (HTTPS and the visitor's permission; the position never
+      leaves the phone)
+- [ ] Check off visited stops, automatically within ~25 m of one
+- [ ] Re-plan from the current position with the time left (needs routing in the browser or a small API)
 - [ ] Time-left and closing-time alerts
 
 ## Phase 5: Smart extras

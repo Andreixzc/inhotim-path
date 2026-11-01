@@ -5,6 +5,16 @@
 A route planner for Inhotim that reads the museum's **live map** and tells you **in which order to visit**:
 the whole collection, or the best of it for the time you have.
 
+## The goal: a simple web app
+
+Andrei (2026-11-01): *"make this a simple webapp to help people plan their routes before or when they are
+already there."* That means two moments, both on a phone:
+
+- **Before the visit**, at home: pick the time you have and your must-sees, then see the route on a map or on
+  satellite imagery.
+- **During the visit**, in the park: see where you are, tick off what you've seen, and re-plan with the time
+  left. Mobile signal may be patchy in a big park, so the app should keep working offline once it's loaded.
+
 ## The problem
 
 - **Inhotim is big and hilly.** Around 20 galleries, 30 outdoor works and 9 themed gardens are spread across
@@ -86,7 +96,8 @@ the same model.
 1. **CLI MVP:** fetch → graph → route, with output as a text itinerary, GeoJSON and an HTML map.
 2. **Better estimates:** elevation/slope (Tobler's hiking function), per-gallery dwell times, opening hours,
    electric carts, a lunch stop.
-3. **Web app (PWA):** mobile-first map, offline support, automatic data refresh, a "what's new" feed.
+3. **Web app (PWA):** mobile-first map with a satellite view, offline support and a "what's new" feed. The data
+   already refreshes itself daily ([ADR 0007](../history/decisions/0007-daily-data-refresh.md)).
 4. **Live mode:** GPS "you are here", check off visited stops, re-route on the fly, time-left alerts before closing.
 5. **Smart extras:** crowd/queue heuristics, weather-aware ordering (outdoor works while it's sunny), shareable plans.
 

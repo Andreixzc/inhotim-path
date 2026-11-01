@@ -11,8 +11,10 @@ import dataclasses
 import re
 from collections import Counter
 from collections.abc import Iterable, Mapping
+from dataclasses import dataclass
 from html.parser import HTMLParser
 from typing import Any
+from urllib.parse import urljoin
 
 import httpx
 
@@ -40,6 +42,32 @@ AXIS_ALIASES = {"orange": "laranja", "yellow": "amarelo", "pink": "rosa"}
 
 _REQUIRED_FIELDS = frozenset({"id", "lat", "lng", "content"})
 
+#: Overlay bounds (SW, NE) of the routes SVG as found in the theme bundle on 2026-11-01.
+#: Used only if they can't be parsed from the live bundle.
+FALLBACK_OVERLAY_BOUNDS: tuple[tuple[float, float], tuple[float, float]] = (
+    (-20.12903525, -44.22784743),
+    (-20.11823726, -44.21704688),
+)
+
+_DATA_AXIS_RE = re.compile(r'\bdata-axis="([^"]+)"')
+_THEME_SCRIPT_RE = re.compile(r'<script[^>]+src="([^"]*/themes/inhotim/[^"]*/main[^"/]*\.js)"')
+_LATLNG = r"new google\.maps\.LatLng\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*\)"
+_ASSIGN = r"\s*,\s*[\w$]+\s*=\s*"
+_OVERLAY_BOUNDS_RE = re.compile(
+    _LATLNG + _ASSIGN + _LATLNG + _ASSIGN + r"new google\.maps\.LatLngBounds\("
+)
+
+
+@dataclass(frozen=True)
+class MapAssets:
+    """Where the routes SVG lives and which geographic box it is stretched over."""
+
+    axes_svg_url: str
+    sw: tuple[float, float]
+    ne: tuple[float, float]
+    bounds_from: str
+    """"theme-js" when parsed from the live bundle, "fallback" otherwise."""
+
 
 # --------------------------------------------------------------------------- network
 
@@ -49,6 +77,26 @@ def fetch_markers(client: httpx.Client) -> list[dict[str, Any]]:
     response = client.get(MARKERS_URL)
     response.raise_for_status()
     return extract_markers(response.json())
+
+
+def fetch_map_assets(client: httpx.Client) -> MapAssets:
+    """Find the routes SVG URL (map page) and its overlay bounds (theme bundle). Two requests."""
+    page = client.get(MAP_PAGE_URL)
+    page.raise_for_status()
+    svg_url = urljoin(MAP_PAGE_URL, parse_axes_svg_url(page.text))
+    (sw, ne), bounds_from = FALLBACK_OVERLAY_BOUNDS, "fallback"
+    script_url = parse_theme_script_url(page.text)
+    if script_url:
+        bundle = client.get(urljoin(MAP_PAGE_URL, script_url))
+        if bundle.is_success and (parsed := parse_overlay_bounds(bundle.text)):
+            (sw, ne), bounds_from = parsed, "theme-js"
+    return MapAssets(axes_svg_url=svg_url, sw=sw, ne=ne, bounds_from=bounds_from)
+
+
+def fetch_text(client: httpx.Client, url: str) -> str:
+    response = client.get(url)
+    response.raise_for_status()
+    return response.text
 
 
 # --------------------------------------------------------------------------- parsing
@@ -67,6 +115,33 @@ def extract_markers(payload: Any) -> list[dict[str, Any]]:
             f"get_markers: {len(malformed)} markers lack one of {sorted(_REQUIRED_FIELDS)}"
         )
     return markers
+
+
+def parse_axes_svg_url(map_html: str) -> str:
+    match = _DATA_AXIS_RE.search(map_html)
+    if not match:
+        raise SourceError("map page: no #map[data-axis] attribute (routes SVG URL)")
+    return match.group(1)
+
+
+def parse_theme_script_url(map_html: str) -> str | None:
+    match = _THEME_SCRIPT_RE.search(map_html)
+    return match.group(1) if match else None
+
+
+def parse_overlay_bounds(
+    theme_js: str,
+) -> tuple[tuple[float, float], tuple[float, float]] | None:
+    """Extract ``(sw, ne)`` from ``new LatLng(..), x = new LatLng(..), y = new LatLngBounds(``."""
+    match = _OVERLAY_BOUNDS_RE.search(theme_js)
+    if not match:
+        return None
+    lat1, lng1, lat2, lng2 = map(float, match.groups())
+    sw = (min(lat1, lat2), min(lng1, lng2))
+    ne = (max(lat1, lat2), max(lng1, lng2))
+    if sw[0] == ne[0] or sw[1] == ne[1]:
+        return None
+    return sw, ne
 
 
 def parse_marker(raw: Mapping[str, Any]) -> Poi:

@@ -17,32 +17,43 @@ from inhotim_path.models import Poi
 
 DEFAULT_DATA_DIR = Path("data")
 POIS_FILE = "pois.json"
+AXES_FILE = "axes.geojson"
+
+
+def write_snapshot(path: Path, payload: dict[str, Any], *, content_key: str) -> bool:
+    """Write ``payload`` unless ``payload[content_key]`` equals what's already on disk.
+
+    Returns True when the file was (re)written.
+    """
+    if path.exists():
+        try:
+            if read_json(path)[content_key] == payload[content_key]:
+                return False
+        except (json.JSONDecodeError, KeyError, TypeError):
+            pass  # unreadable or different-shaped snapshot: overwrite it
+    write_json(path, payload)
+    return True
 
 
 def write_pois(
     path: Path, pois: Sequence[Poi], *, source: str, fetched_at: datetime | None = None
 ) -> bool:
-    """Write the POI snapshot. Returns False (and leaves the file alone) if nothing changed."""
     items = [p.to_dict() for p in pois]
-    if path.exists():
-        try:
-            if json.loads(path.read_text(encoding="utf-8")).get("pois") == items:
-                return False
-        except (json.JSONDecodeError, AttributeError):
-            pass  # unreadable snapshot: overwrite it
     payload = {
         "source": source,
-        "fetched_at": _iso(fetched_at),
+        "fetched_at": iso_now(fetched_at),
         "count": len(items),
         "pois": items,
     }
-    write_json(path, payload)
-    return True
+    return write_snapshot(path, payload, content_key="pois")
 
 
 def read_pois(path: Path) -> list[Poi]:
-    data = json.loads(path.read_text(encoding="utf-8"))
-    return [Poi.from_dict(item) for item in data["pois"]]
+    return [Poi.from_dict(item) for item in read_json(path)["pois"]]
+
+
+def read_json(path: Path) -> Any:
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def write_json(path: Path, payload: Any) -> None:
@@ -51,5 +62,5 @@ def write_json(path: Path, payload: Any) -> None:
     path.write_text(text, encoding="utf-8")
 
 
-def _iso(moment: datetime | None) -> str:
+def iso_now(moment: datetime | None = None) -> str:
     return (moment or datetime.now(UTC)).isoformat(timespec="seconds")

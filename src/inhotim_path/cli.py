@@ -7,9 +7,11 @@ from collections import Counter
 from collections.abc import Sequence
 from pathlib import Path
 
+import httpx
+
 from inhotim_path import __version__, snapshots
 from inhotim_path.http import make_client
-from inhotim_path.sources import inhotim
+from inhotim_path.sources import axes, inhotim
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -34,15 +36,39 @@ def build_parser() -> argparse.ArgumentParser:
 def cmd_fetch(args: argparse.Namespace) -> int:
     data_dir: Path = args.data_dir
     with make_client() as client:
-        raw = inhotim.fetch_markers(client)
+        _fetch_pois(client, data_dir)
+        _fetch_axes(client, data_dir)
+    return 0
+
+
+def _fetch_pois(client: httpx.Client, data_dir: Path) -> None:
+    raw = inhotim.fetch_markers(client)
     pois = inhotim.normalize_markers(raw)
     path = data_dir / snapshots.POIS_FILE
     changed = snapshots.write_pois(path, pois, source=inhotim.MARKERS_URL)
     kinds = Counter(p.kind.value for p in pois)
-    print(f"pois: {len(raw)} markers -> {len(pois)} unique POIs -> {path}")
+    print(f"pois: {len(raw)} markers -> {len(pois)} unique POIs -> {path} ({_status(changed)})")
     print("      " + ", ".join(f"{kind}={n}" for kind, n in kinds.most_common()))
-    print("      " + ("updated" if changed else "unchanged"))
-    return 0
+
+
+def _fetch_axes(client: httpx.Client, data_dir: Path) -> None:
+    assets = inhotim.fetch_map_assets(client)
+    svg_text = inhotim.fetch_text(client, assets.axes_svg_url)
+    lines, _ = axes.parse_axes_svg(svg_text, assets.sw, assets.ne)
+    collection = axes.to_feature_collection(lines, source=assets.axes_svg_url)
+    collection["overlay_bounds"] = {"sw": list(assets.sw), "ne": list(assets.ne)}
+    path = data_dir / snapshots.AXES_FILE
+    changed = snapshots.write_snapshot(path, collection, content_key="features")
+    km: Counter[str] = Counter()
+    for line in lines:
+        km[line.axis or "other"] += line.length_m / 1000
+    print(f"axes: {len(lines)} polylines -> {path} ({_status(changed)})")
+    print(f"      svg={assets.axes_svg_url.rsplit('/', 1)[-1]} bounds from {assets.bounds_from}")
+    print("      " + ", ".join(f"{axis}={length:.1f} km" for axis, length in km.most_common()))
+
+
+def _status(changed: bool) -> str:
+    return "updated" if changed else "unchanged"
 
 
 def main(argv: Sequence[str] | None = None) -> int:

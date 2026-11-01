@@ -90,3 +90,42 @@ def test_classify(group, url, expected):
 def test_rejects_unexpected_payloads(payload):
     with pytest.raises(SourceError):
         extract_markers(payload)
+
+
+# --------------------------------------------------------------------------- map assets
+
+MAP_HTML = (
+    '<div id="map" data-zoom="16" data-center-lat="-20.1242111" '
+    'data-axis="https://www.inhotim.org.br/wp-content/themes/inhotim/dist/images/eixos_5f2dbdef.svg">'
+    "</div>"
+    '<script src="https://www.inhotim.org.br/wp-includes/js/jquery/jquery.min.js?ver=3.7.1"></script>'
+    '<script src="https://www.inhotim.org.br/wp-content/themes/inhotim/dist/scripts/main_34271e46.js">'
+    "</script>"
+)
+THEME_JS = (
+    "f=new google.maps.Marker({position:{lat:1,lng:2}});var r=new google.maps.Map(e,c),"
+    "s=new google.maps.LatLng(-20.12903525,-44.22784743),"
+    "l=new google.maps.LatLng(-20.11823726,-44.21704688),h=new google.maps.LatLngBounds(s,l);"
+)
+
+
+def test_parse_axes_svg_url():
+    from inhotim_path.sources.inhotim import parse_axes_svg_url
+
+    assert parse_axes_svg_url(MAP_HTML).endswith("/images/eixos_5f2dbdef.svg")
+    with pytest.raises(SourceError):
+        parse_axes_svg_url("<div id='map'></div>")
+
+
+def test_parse_theme_script_url():
+    from inhotim_path.sources.inhotim import parse_theme_script_url
+
+    assert parse_theme_script_url(MAP_HTML).endswith("/dist/scripts/main_34271e46.js")
+    assert parse_theme_script_url("<html></html>") is None
+
+
+def test_parse_overlay_bounds():
+    from inhotim_path.sources.inhotim import FALLBACK_OVERLAY_BOUNDS, parse_overlay_bounds
+
+    assert parse_overlay_bounds(THEME_JS) == FALLBACK_OVERLAY_BOUNDS
+    assert parse_overlay_bounds("new google.maps.LatLng(1,2)") is None

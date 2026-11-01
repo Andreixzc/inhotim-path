@@ -1,0 +1,2253 @@
+{
+  "source": "https://www.inhotim.org.br/wp-admin/admin-ajax.php?action=get_markers",
+  "fetched_at": "2026-11-01T05:25:50+00:00",
+  "count": 150,
+  "pois": [
+    {
+      "id": 3964,
+      "name": "Agave-polvo",
+      "kind": "botanical",
+      "lat": -20.125939428941937,
+      "lng": -44.221309614989394,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/agave-polvo/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 17516,
+      "name": "Antúrio-ninho-de-passarinho",
+      "kind": "botanical",
+      "lat": -20.12648186273763,
+      "lng": -44.22206333042592,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/anturio-ninho-de-passarinho/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 4112,
+      "name": "Areca-dourada",
+      "kind": "botanical",
+      "lat": -20.122975264593997,
+      "lng": -44.22029759701382,
+      "axes": [
+        "amarelo"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/areca-dourada/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 17515,
+      "name": "Aricuri",
+      "kind": "botanical",
+      "lat": -20.122405880386022,
+      "lng": -44.22230107328708,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/aricuri/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 17518,
+      "name": "Ariri-mirim",
+      "kind": "botanical",
+      "lat": -20.125305540798927,
+      "lng": -44.22084017660777,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/ariri-mirim/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 4121,
+      "name": "Bromélia-imperial",
+      "kind": "botanical",
+      "lat": -20.123593161020764,
+      "lng": -44.22013160185242,
+      "axes": [
+        "rosa"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/bromelia-imperial/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 4251,
+      "name": "Buritirana",
+      "kind": "botanical",
+      "lat": -20.122558279147395,
+      "lng": -44.22185059301285,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/buritirana/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3953,
+      "name": "Canela-de-ema",
+      "kind": "botanical",
+      "lat": -20.125,
+      "lng": -44.221,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/canela-de-ema/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 4045,
+      "name": "Cica",
+      "kind": "botanical",
+      "lat": -20.123,
+      "lng": -44.218,
+      "axes": [
+        "amarelo"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/cica/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 4120,
+      "name": "Cipreste-do-brejo",
+      "kind": "botanical",
+      "lat": -20.120761380839745,
+      "lng": -44.219964249641194,
+      "axes": [
+        "amarelo"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/cipreste-do-brejo/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 4041,
+      "name": "Coité",
+      "kind": "botanical",
+      "lat": -20.122,
+      "lng": -44.22,
+      "axes": [
+        "amarelo"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/coite/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 4027,
+      "name": "Copaíba",
+      "kind": "botanical",
+      "lat": -20.127,
+      "lng": -44.22,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/copaiba/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 4036,
+      "name": "Corifa",
+      "kind": "botanical",
+      "lat": -20.124293926391765,
+      "lng": -44.220347780530396,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/corifa/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 17517,
+      "name": "Costela-de-adão",
+      "kind": "botanical",
+      "lat": -20.118616610512795,
+      "lng": -44.21854854841003,
+      "axes": [
+        "rosa"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/costela-de-adao/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 4070,
+      "name": "Filodendro",
+      "kind": "botanical",
+      "lat": -20.128,
+      "lng": -44.222,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/filodendro/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 4060,
+      "name": "Ipê-amarelo",
+      "kind": "botanical",
+      "lat": -20.119,
+      "lng": -44.218,
+      "axes": [
+        "rosa"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/ipe-amarelo/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 17514,
+      "name": "Ipê-felpudo",
+      "kind": "botanical",
+      "lat": -20.120765812406553,
+      "lng": -44.22746562543946,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/ipe-felpudo/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 4250,
+      "name": "Jacarandá-preto",
+      "kind": "botanical",
+      "lat": -20.123,
+      "lng": -44.225,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/jacaranda-preto/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 4015,
+      "name": "Jequitibá",
+      "kind": "botanical",
+      "lat": -20.125,
+      "lng": -44.22,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/jequitiba/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3959,
+      "name": "Macaúba",
+      "kind": "botanical",
+      "lat": -20.121725299152523,
+      "lng": -44.22575781539425,
+      "axes": [
+        "rosa"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/macauba/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 4001,
+      "name": "Palmeira-azul",
+      "kind": "botanical",
+      "lat": -20.1234331774173,
+      "lng": -44.2176115436554,
+      "axes": [
+        "rosa"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/palmeira-azul/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 4248,
+      "name": "Palmeira-juçara",
+      "kind": "botanical",
+      "lat": -20.12,
+      "lng": -44.22,
+      "axes": [
+        "amarelo"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/palmeira-jucara/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 4083,
+      "name": "Palmeira-ráfia",
+      "kind": "botanical",
+      "lat": -20.122,
+      "lng": -44.219,
+      "axes": [
+        "amarelo"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/palmeira-rafia/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3996,
+      "name": "Pata-de-elefante",
+      "kind": "botanical",
+      "lat": -20.122,
+      "lng": -44.219,
+      "axes": [
+        "amarelo"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/pata-de-elefante/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 4010,
+      "name": "Pau-Brasil",
+      "kind": "botanical",
+      "lat": -20.128,
+      "lng": -44.222,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/pau-brasil/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 4093,
+      "name": "Paxiúba",
+      "kind": "botanical",
+      "lat": -20.123,
+      "lng": -44.218,
+      "axes": [
+        "amarelo"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/paxiuba/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 4249,
+      "name": "Robellini Palm",
+      "kind": "botanical",
+      "lat": -20.122,
+      "lng": -44.219,
+      "axes": [
+        "amarelo"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/robellini-palm/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3968,
+      "name": "Samambaia-gigante",
+      "kind": "botanical",
+      "lat": -20.121,
+      "lng": -44.219,
+      "axes": [
+        "amarelo"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/samambaia-gigante/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 4075,
+      "name": "Tamareira-das-canárias",
+      "kind": "botanical",
+      "lat": -20.123,
+      "lng": -44.218,
+      "axes": [
+        "amarelo"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/tamareira-das-canarias/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3947,
+      "name": "Tamboril",
+      "kind": "botanical",
+      "lat": -20.1228594,
+      "lng": -44.21981110000001,
+      "axes": [
+        "amarelo"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/tamboril/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 17490,
+      "name": "Tataré",
+      "kind": "botanical",
+      "lat": -20.121106281346577,
+      "lng": -44.219244717893204,
+      "axes": [
+        "rosa"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/tatare/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 10015,
+      "name": "Arjan Martins",
+      "kind": "event",
+      "lat": -20.12501888801414,
+      "lng": -44.22532198424051,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/eventos/arjan-martins/",
+      "main_view": true,
+      "flags": [
+        "novas-obras-e-exposicoes"
+      ]
+    },
+    {
+      "id": 15384,
+      "name": "Ateliê Rubem Valentim | Galeria Lago",
+      "kind": "event",
+      "lat": -20.12304037030892,
+      "lng": -44.21779274940491,
+      "axes": [
+        "rosa"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/eventos/programacao-educativa-de-outubro-no-atelie-rubem-valentim/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 16299,
+      "name": "Ateliê Rubem Valentim | Galeria Lago",
+      "kind": "event",
+      "lat": -20.12304037030892,
+      "lng": -44.21779274940491,
+      "axes": [
+        "rosa"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/eventos/atelie-rubem-valentim-galeria-lago_fev/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 14844,
+      "name": "Encantado, um espetáculo de Lia Rodrigues no Inhotim",
+      "kind": "event",
+      "lat": -20.1241164,
+      "lng": -44.2195995,
+      "axes": [],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/eventos/encantado-um-espetaculo-de-lia-rodrigues-no-inhotim/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 16809,
+      "name": "Ensaios sobre paisagem",
+      "kind": "event",
+      "lat": -20.1241164,
+      "lng": -44.2195995,
+      "axes": [],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/eventos/ensaios-sobre-paisagem/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 15538,
+      "name": "Giro",
+      "kind": "event",
+      "lat": -20.1241164,
+      "lng": -44.2195995,
+      "axes": [],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/eventos/giro/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 16852,
+      "name": "Grada Kilomba, “O Barco” (2021)",
+      "kind": "event",
+      "lat": -20.1241164,
+      "lng": -44.2195995,
+      "axes": [],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/eventos/grada-kilomba-o-barco-2021/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 15389,
+      "name": "Inhotim exibe filmes do Coletivo Nacional Trovoa e de Jonathas de Andrade em outubro",
+      "kind": "event",
+      "lat": -20.124800775259562,
+      "lng": -44.218618869781494,
+      "axes": [
+        "amarelo"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/eventos/cinema-filmes-outubro-inhotim/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 10020,
+      "name": "Jaime Lauriano",
+      "kind": "event",
+      "lat": -20.124640677859237,
+      "lng": -44.21761974973995,
+      "axes": [
+        "rosa"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/eventos/ocupacao-inhotim-biblioteca/",
+      "main_view": true,
+      "flags": [
+        "novas-obras-e-exposicoes"
+      ]
+    },
+    {
+      "id": 17243,
+      "name": "O que é um rio?",
+      "kind": "event",
+      "lat": -20.1241164,
+      "lng": -44.2195995,
+      "axes": [],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/eventos/o-que-e-um-rio/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 16834,
+      "name": "Paulo Nazareth, “Esconjuro”",
+      "kind": "event",
+      "lat": -20.1241164,
+      "lng": -44.2195995,
+      "axes": [],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/eventos/paulo-nazareth-esconjuro/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 15488,
+      "name": "Quarto Ato – O Quilombismo: Documentos de uma Militância Pan-Africanista",
+      "kind": "event",
+      "lat": -20.149945,
+      "lng": -44.201111,
+      "axes": [],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/eventos/museu-de-arte-negra-quarto-ato-o-quilombismo-documentos-de-uma-militancia-pan-africanista/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 15508,
+      "name": "Sortilégio – Mistério Negro",
+      "kind": "event",
+      "lat": -20.1241164,
+      "lng": -44.2195995,
+      "axes": [],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/eventos/sortilegio-misterio-negro-no-inhotim/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 5097,
+      "name": "Visão Geral (2019)",
+      "kind": "exhibition",
+      "lat": -20.12077224641965,
+      "lng": -44.2203169342377,
+      "axes": [
+        "amarelo"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/exposicao-visao-geral/",
+      "main_view": false,
+      "flags": []
+    },
+    {
+      "id": 3416,
+      "name": "Claudia Andujar Maxita Yano",
+      "kind": "gallery",
+      "lat": -20.12049066056374,
+      "lng": -44.21777992024845,
+      "axes": [
+        "rosa"
+      ],
+      "artists": [
+        "Claudia Andujar"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/galeria-claudia-andujar/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3439,
+      "name": "Doris Salcedo",
+      "kind": "gallery",
+      "lat": -20.12105046801716,
+      "lng": -44.219052403053034,
+      "axes": [
+        "rosa"
+      ],
+      "artists": [
+        "Doris Salcedo"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/galeria-doris-salcedo/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3386,
+      "name": "Galeria Adriana Varejão",
+      "kind": "gallery",
+      "lat": -20.124489730951094,
+      "lng": -44.22061176074791,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Adriana Varejão"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/galeria-adriana-varejao-2/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3403,
+      "name": "Galeria Cildo Meireles",
+      "kind": "gallery",
+      "lat": -20.1234962,
+      "lng": -44.2200565,
+      "axes": [
+        "amarelo"
+      ],
+      "artists": [
+        "Cildo Meireles"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/galeria-cildo-meireles/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3425,
+      "name": "Galeria Cosmococa",
+      "kind": "gallery",
+      "lat": -20.122123,
+      "lng": -44.2228854,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Hélio Oiticica",
+        "Neville D’Almeida"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/galeria-cosmococa/",
+      "main_view": true,
+      "flags": [
+        "obras-e-galerias-reabertas"
+      ]
+    },
+    {
+      "id": 3856,
+      "name": "Galeria Fonte",
+      "kind": "gallery",
+      "lat": -20.123155954516253,
+      "lng": -44.22086346245908,
+      "axes": [
+        "amarelo"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/galeria-fonte/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3863,
+      "name": "Galeria Galpão",
+      "kind": "gallery",
+      "lat": -20.126891722633335,
+      "lng": -44.22216751712055,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/galeria-galpao/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3872,
+      "name": "Galeria Lago",
+      "kind": "gallery",
+      "lat": -20.12298741962985,
+      "lng": -44.21777383455364,
+      "axes": [
+        "rosa"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/galeria-lago/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3448,
+      "name": "Galeria Lygia Pape",
+      "kind": "gallery",
+      "lat": -20.12481085836375,
+      "lng": -44.21810927606519,
+      "axes": [
+        "rosa"
+      ],
+      "artists": [
+        "Lygia Pape"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/galeria-lygia-pape/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3879,
+      "name": "Galeria Marcenaria",
+      "kind": "gallery",
+      "lat": -20.12259610733355,
+      "lng": -44.21812524404229,
+      "axes": [
+        "rosa"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/galeria-marcenaria/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3885,
+      "name": "Galeria Mata",
+      "kind": "gallery",
+      "lat": -20.12077224641965,
+      "lng": -44.2203169342377,
+      "axes": [
+        "amarelo"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/galeria-mata/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3466,
+      "name": "Galeria Miguel Rio Branco",
+      "kind": "gallery",
+      "lat": -20.1186695,
+      "lng": -44.2189026,
+      "axes": [
+        "rosa"
+      ],
+      "artists": [
+        "Miguel Rio Branco"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/galeria-miguel-rio-branco/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3397,
+      "name": "Galeria Nascente",
+      "kind": "gallery",
+      "lat": -20.123986877588578,
+      "lng": -44.22508712482215,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/galeria-nascente/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3890,
+      "name": "Galeria Praça",
+      "kind": "gallery",
+      "lat": -20.124091148146423,
+      "lng": -44.21927245351691,
+      "axes": [
+        "amarelo"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/galeria-praca/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3472,
+      "name": "Galeria Psicoativa Tunga",
+      "kind": "gallery",
+      "lat": -20.127122712849594,
+      "lng": -44.21958527236161,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Tunga"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/galeria-psicoativa-tunga/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3476,
+      "name": "Galeria Rivane Neuenschwander",
+      "kind": "gallery",
+      "lat": -20.12383415350759,
+      "lng": -44.219951886645525,
+      "axes": [
+        "amarelo"
+      ],
+      "artists": [
+        "Rivane Neuenschwander"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/galeria-rivane-neuenschwander/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3456,
+      "name": "Matthew Barney",
+      "kind": "gallery",
+      "lat": -20.119499352689555,
+      "lng": -44.222851395606995,
+      "axes": [
+        "rosa"
+      ],
+      "artists": [
+        "Matthew Barney"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/galeria-matthew-barney/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3480,
+      "name": "True Rouge",
+      "kind": "gallery",
+      "lat": -20.1203431,
+      "lng": -44.2198554,
+      "axes": [
+        "amarelo"
+      ],
+      "artists": [
+        "Tunga"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/galeria-true-rouge/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3226,
+      "name": "Yayoi Kusama",
+      "kind": "gallery",
+      "lat": -20.1231955,
+      "lng": -44.2222224,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/yayoi-kusama/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3426,
+      "name": "Jardim de Todos os Sentidos",
+      "kind": "garden",
+      "lat": -20.128212,
+      "lng": -44.2219056,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/jardim-de-todos-os-sentidos-2/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3596,
+      "name": "Jardim de Transição",
+      "kind": "garden",
+      "lat": -20.1279547792385,
+      "lng": -44.22229701719665,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/jardim-de-transicao/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3568,
+      "name": "Jardim Desértico",
+      "kind": "garden",
+      "lat": -20.128559537832835,
+      "lng": -44.22182513372955,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/jardim-desertico/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3675,
+      "name": "Jardim Pictórico",
+      "kind": "garden",
+      "lat": -20.123168403201692,
+      "lng": -44.21895356877927,
+      "axes": [
+        "rosa"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/jardim-pictorico/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3686,
+      "name": "Jardim Sombra e Água Fresca",
+      "kind": "garden",
+      "lat": -20.122272505446507,
+      "lng": -44.22191659599232,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/jardim-sombra-e-agua-fresca/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3669,
+      "name": "Jardim Veredas",
+      "kind": "garden",
+      "lat": -20.122785767826244,
+      "lng": -44.221622272491445,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/jardim-veredas/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3681,
+      "name": "Largo das Orquídeas",
+      "kind": "garden",
+      "lat": -20.12337532728406,
+      "lng": -44.220324754714966,
+      "axes": [
+        "amarelo"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/largo-das-orquideas/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 10495,
+      "name": "Meliponário",
+      "kind": "garden",
+      "lat": -20.1241164,
+      "lng": -44.2195995,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/mepliponario/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3608,
+      "name": "Vandário",
+      "kind": "garden",
+      "lat": -20.125502859750743,
+      "lng": -44.220136622021,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/item-do-acervo/vandario/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3295,
+      "name": "Abre a porta; Rodoviária de Brumadinho",
+      "kind": "outdoor_work",
+      "lat": -20.124286394731158,
+      "lng": -44.21925896057927,
+      "axes": [
+        "amarelo"
+      ],
+      "artists": [
+        "John Ahearn & Rigoberto Torres"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/abre-a-porta-rodoviaria-de-brumadinho/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 19158,
+      "name": "Apenas depois da chuva",
+      "kind": "outdoor_work",
+      "lat": -20.120958272150872,
+      "lng": -44.219690029287364,
+      "axes": [
+        "amarelo"
+      ],
+      "artists": [
+        "Receba Carapiá"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/19158/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3236,
+      "name": "Beam Drop Inhotim",
+      "kind": "outdoor_work",
+      "lat": -20.1228348,
+      "lng": -44.22544980000001,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Chris Burden"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/beam-drop-inhotim-chris-burden/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3240,
+      "name": "Beehive Bunker",
+      "kind": "outdoor_work",
+      "lat": -20.1217257,
+      "lng": -44.2259896,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Chris Burden"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/beehive-bunker-chris-burden/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3250,
+      "name": "Bisected Triangle, Interior Curve",
+      "kind": "outdoor_work",
+      "lat": -20.123466679461856,
+      "lng": -44.21877001589288,
+      "axes": [
+        "rosa"
+      ],
+      "artists": [
+        "Dan Graham"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/bisected-triangle-interior-curve/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 5150,
+      "name": "By Means of a Sudden Intuitive Realization",
+      "kind": "outdoor_work",
+      "lat": -20.12158102933324,
+      "lng": -44.2196929008281,
+      "axes": [
+        "amarelo"
+      ],
+      "artists": [
+        "Olafur Eliasson"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/by-means-of-a-sudden-intuitive-realization/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3435,
+      "name": "Cristina Iglesias",
+      "kind": "outdoor_work",
+      "lat": -20.12305296268939,
+      "lng": -44.22318398952484,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Cristina Iglesias"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/galeria-cristina-iglesias/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3717,
+      "name": "Deleite",
+      "kind": "outdoor_work",
+      "lat": -20.121846221698036,
+      "lng": -44.22004523200397,
+      "axes": [
+        "amarelo"
+      ],
+      "artists": [
+        "Tunga"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/deleite-tunga/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3255,
+      "name": "Desert Park",
+      "kind": "outdoor_work",
+      "lat": -20.124850188446732,
+      "lng": -44.22110001764853,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Dominique Gonzalez-Foerster"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/desert-park-dominique-gonzalez-foerster/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3443,
+      "name": "Doug Aitken",
+      "kind": "outdoor_work",
+      "lat": -20.118542338204644,
+      "lng": -44.22425532084436,
+      "axes": [
+        "rosa"
+      ],
+      "artists": [
+        "Doug Aitken"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/galeria-doug-aitken/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3274,
+      "name": "Elevazione",
+      "kind": "outdoor_work",
+      "lat": -20.121429934370223,
+      "lng": -44.2246237336409,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Giuseppe Penone"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/elevazione-giuseppe-penone/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3899,
+      "name": "Equilíbrio Amarrado; Embrionário",
+      "kind": "outdoor_work",
+      "lat": -20.122084586143867,
+      "lng": -44.224027463208834,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Elisa Bracher"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/elisa-bracher-2/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3724,
+      "name": "Escultura para todos os materiais não transparentes",
+      "kind": "outdoor_work",
+      "lat": -20.122114476710973,
+      "lng": -44.219865206992544,
+      "axes": [
+        "amarelo"
+      ],
+      "artists": [
+        "Waltercio Caldas"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/waltercio-caldas-2/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3895,
+      "name": "Gui Tuo Bei",
+      "kind": "outdoor_work",
+      "lat": -20.122519044867634,
+      "lng": -44.21967566013336,
+      "axes": [
+        "amarelo"
+      ],
+      "artists": [
+        "Zhang Huan"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/gui-tuo-bei-zhang-huan/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3245,
+      "name": "Inmensa",
+      "kind": "outdoor_work",
+      "lat": -20.12242172526649,
+      "lng": -44.21925147421766,
+      "axes": [
+        "rosa"
+      ],
+      "artists": [
+        "Cildo Meireles"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/inmensa-cildo-meireles/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3279,
+      "name": "Invenção da Cor, Penetrável Magic Square #5, De Luxe",
+      "kind": "outdoor_work",
+      "lat": -20.123416330793162,
+      "lng": -44.21788476804675,
+      "axes": [
+        "rosa"
+      ],
+      "artists": [
+        "Hélio Oiticica"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/invencao-da-cor-penetravel-magic-square-5-de-luxe/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3452,
+      "name": "Marilá Dardot",
+      "kind": "outdoor_work",
+      "lat": -20.12520120795355,
+      "lng": -44.2255362868309,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Marilá Dardot"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/galeria-marila-dardot/",
+      "main_view": true,
+      "flags": [
+        "obras-e-galerias-reabertas"
+      ]
+    },
+    {
+      "id": 3728,
+      "name": "Narcissus Garden",
+      "kind": "outdoor_work",
+      "lat": -20.124739520137588,
+      "lng": -44.217521154797495,
+      "axes": [
+        "rosa"
+      ],
+      "artists": [
+        "Yayoi Kusama"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/narcissus-garden-yayoi-kusama/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 7101,
+      "name": "O espaço físico pode ser um lugar abstrato, complexo e em construção",
+      "kind": "outdoor_work",
+      "lat": -20.1222838715144,
+      "lng": -44.22221875021384,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Rommulo Vieira Conceição"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/o-espaco-fisico-pode-ser-um-lugar-abstrato-complexo-e-em-construcao/",
+      "main_view": true,
+      "flags": [
+        "novas-obras-e-exposicoes"
+      ]
+    },
+    {
+      "id": 3704,
+      "name": "Palm Pavilion",
+      "kind": "outdoor_work",
+      "lat": -20.12411629002594,
+      "lng": -44.22474316148741,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Rirkrit Tiravanija"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/palm-pavilion-rirkrit-tiravanija/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3700,
+      "name": "Pinocchio Block Head",
+      "kind": "outdoor_work",
+      "lat": -20.12186176901712,
+      "lng": -44.219864590316575,
+      "axes": [
+        "amarelo"
+      ],
+      "artists": [
+        "Paul McCarthy"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/pinocchio-block-head-paul-mccarthy/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 5144,
+      "name": "Piscina",
+      "kind": "outdoor_work",
+      "lat": -20.12452629058212,
+      "lng": -44.2247590969184,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Jorge Macchi"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/piscina-jorge-macchi/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3263,
+      "name": "sem título",
+      "kind": "outdoor_work",
+      "lat": -20.12196351445226,
+      "lng": -44.21993743410977,
+      "axes": [
+        "amarelo"
+      ],
+      "artists": [
+        "Edgard de Souza"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/sem-titulo-2001-edgard-de-souza/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3498,
+      "name": "sem título",
+      "kind": "outdoor_work",
+      "lat": -20.120621355214404,
+      "lng": -44.220104813575745,
+      "axes": [
+        "amarelo"
+      ],
+      "artists": [
+        "Amilcar de Castro"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/sem-titulo-amilcar-de-castro/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3267,
+      "name": "sem título; sem título; sem título",
+      "kind": "outdoor_work",
+      "lat": -20.122700523447186,
+      "lng": -44.218694818296306,
+      "axes": [
+        "rosa"
+      ],
+      "artists": [
+        "Edgard de Souza"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/sem-titulo-edgard-de-souza/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3708,
+      "name": "sem título",
+      "kind": "outdoor_work",
+      "lat": -20.120555634423653,
+      "lng": -44.22712055470205,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Robert Irwin"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/sem-titulo-robert-irwin/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3712,
+      "name": "The Mahogany Pavilion (Mobile Architecture nº1)",
+      "kind": "outdoor_work",
+      "lat": -20.122764560354394,
+      "lng": -44.219139531888416,
+      "axes": [
+        "amarelo"
+      ],
+      "artists": [
+        "Simon Starling"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/the-mahogany-pavilion-simon-starling/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3288,
+      "name": "Troca-troca",
+      "kind": "outdoor_work",
+      "lat": -20.12337532728406,
+      "lng": -44.220324754714966,
+      "axes": [
+        "amarelo"
+      ],
+      "artists": [
+        "Jarbas Lopes"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/troca-troca-jarbas-lopes/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3485,
+      "name": "Valeska Soares",
+      "kind": "outdoor_work",
+      "lat": -20.126603898436723,
+      "lng": -44.22092617198587,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Valeska Soares"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/galeria-valeska-soares/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 5158,
+      "name": "Viewing Machine",
+      "kind": "outdoor_work",
+      "lat": -20.12631766830779,
+      "lng": -44.2214890216854,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Olafur Eliasson"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/viewing-machine-olafur-eliasson/",
+      "main_view": true,
+      "flags": [
+        "obras-e-galerias-reabertas"
+      ]
+    },
+    {
+      "id": 4234,
+      "name": "Administrativo",
+      "kind": "service",
+      "lat": -20.122581992136233,
+      "lng": -44.21773870250363,
+      "axes": [],
+      "artists": [],
+      "url": null,
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 4235,
+      "name": "Ambulatório",
+      "kind": "service",
+      "lat": -20.127665534599704,
+      "lng": -44.21563024353981,
+      "axes": [],
+      "artists": [],
+      "url": null,
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 4238,
+      "name": "Educativo",
+      "kind": "service",
+      "lat": -20.1246033,
+      "lng": -44.2174439,
+      "axes": [],
+      "artists": [],
+      "url": null,
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 4239,
+      "name": "Espaço Igrejinha",
+      "kind": "service",
+      "lat": -20.1248024,
+      "lng": -44.21861429999999,
+      "axes": [],
+      "artists": [],
+      "url": null,
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 4240,
+      "name": "Espaço Tamboril",
+      "kind": "service",
+      "lat": -20.1221592,
+      "lng": -44.2198936,
+      "axes": [],
+      "artists": [],
+      "url": null,
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 4242,
+      "name": "Estacionamento",
+      "kind": "service",
+      "lat": -20.126314202601286,
+      "lng": -44.21578939419291,
+      "axes": [],
+      "artists": [],
+      "url": null,
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 33,
+      "name": "Loja",
+      "kind": "service",
+      "lat": -20.1258487,
+      "lng": -44.21643059999999,
+      "axes": [],
+      "artists": [],
+      "url": "https://www.inhotim.org.br/visite/loja/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 4241,
+      "name": "Recepção",
+      "kind": "service",
+      "lat": -20.1240764,
+      "lng": -44.2184546,
+      "axes": [],
+      "artists": [],
+      "url": null,
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 4237,
+      "name": "Viveiro Educador",
+      "kind": "service",
+      "lat": -20.127888358594017,
+      "lng": -44.221699392070406,
+      "axes": [],
+      "artists": [],
+      "url": null,
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 5683,
+      "name": "A Bela e a Fera",
+      "kind": "work_in_gallery",
+      "lat": -20.127122712849594,
+      "lng": -44.21958527236161,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Tunga"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/a-bela-e-a-fera-tunga/",
+      "main_view": false,
+      "flags": []
+    },
+    {
+      "id": 5015,
+      "name": "Através",
+      "kind": "work_in_gallery",
+      "lat": -20.1234962,
+      "lng": -44.2200565,
+      "axes": [
+        "amarelo"
+      ],
+      "artists": [
+        "Cildo Meireles"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/atraves/",
+      "main_view": false,
+      "flags": []
+    },
+    {
+      "id": 4686,
+      "name": "Carnívoras",
+      "kind": "work_in_gallery",
+      "lat": -20.124489730951094,
+      "lng": -44.22061176074791,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Adriana Varejão"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/carnivoras/",
+      "main_view": false,
+      "flags": []
+    },
+    {
+      "id": 4693,
+      "name": "Celacanto provoca maremoto",
+      "kind": "work_in_gallery",
+      "lat": -20.124489730951094,
+      "lng": -44.22061176074791,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Adriana Varejão"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/celacanto-provoca-maremoto/",
+      "main_view": false,
+      "flags": []
+    },
+    {
+      "id": 5701,
+      "name": "Cooking Crystals Expanded",
+      "kind": "work_in_gallery",
+      "lat": -20.127122712849594,
+      "lng": -44.21958527236161,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Tunga"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/cooking-crystals-expanded-tunga/",
+      "main_view": false,
+      "flags": []
+    },
+    {
+      "id": 5082,
+      "name": "Cosmococa/CC1 Trashiscapes",
+      "kind": "work_in_gallery",
+      "lat": -20.122123,
+      "lng": -44.2228854,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Hélio Oiticica",
+        "Neville D’Almeida"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/cosmococa-cc1-trashiscapes/",
+      "main_view": false,
+      "flags": []
+    },
+    {
+      "id": 5091,
+      "name": "Cosmococa/CC2 Onobject",
+      "kind": "work_in_gallery",
+      "lat": -20.122123,
+      "lng": -44.2228854,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Hélio Oiticica",
+        "Neville D’Almeida"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/cosmococa-cc2-onobject-helio-oiticica/",
+      "main_view": false,
+      "flags": []
+    },
+    {
+      "id": 6180,
+      "name": "Cosmococa/CC2 Onobject",
+      "kind": "work_in_gallery",
+      "lat": -20.122123,
+      "lng": -44.2228854,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Hélio Oiticica",
+        "Neville D’Almeida"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/cosmococa-cc2-onobject/",
+      "main_view": false,
+      "flags": []
+    },
+    {
+      "id": 5654,
+      "name": "Cosmococa/CC3 Maileryn",
+      "kind": "work_in_gallery",
+      "lat": -20.122123,
+      "lng": -44.2228854,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Hélio Oiticica",
+        "Neville D’Almeida"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/cosmococa-cc3-maileryn/",
+      "main_view": false,
+      "flags": []
+    },
+    {
+      "id": 5669,
+      "name": "Cosmococa/CC4 Nocagions",
+      "kind": "work_in_gallery",
+      "lat": -20.122123,
+      "lng": -44.2228854,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Hélio Oiticica",
+        "Neville D’Almeida"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/cosmococa-cc4-nocagions/",
+      "main_view": false,
+      "flags": []
+    },
+    {
+      "id": 5675,
+      "name": "Cosmococa/CC5 Hendrix-War",
+      "kind": "work_in_gallery",
+      "lat": -20.122123,
+      "lng": -44.2228854,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Hélio Oiticica",
+        "Neville D’Almeida"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/cosmococa-cc5-hendrix-war/",
+      "main_view": false,
+      "flags": []
+    },
+    {
+      "id": 3983,
+      "name": "De lama lâmina",
+      "kind": "work_in_gallery",
+      "lat": -20.12259610733355,
+      "lng": -44.21812524404229,
+      "axes": [
+        "rosa"
+      ],
+      "artists": [
+        "Matthew Barney"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/de-lama-lamina-matthew-barney/",
+      "main_view": false,
+      "flags": []
+    },
+    {
+      "id": 5021,
+      "name": "Desvio para o vermelho I, II, III",
+      "kind": "work_in_gallery",
+      "lat": -20.1234962,
+      "lng": -44.2200565,
+      "axes": [
+        "amarelo"
+      ],
+      "artists": [
+        "Cildo Meireles"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/desvio-para-o-vermelho/",
+      "main_view": false,
+      "flags": [
+        "obras-e-galerias-reabertas"
+      ]
+    },
+    {
+      "id": 3991,
+      "name": "Forty Part Motet",
+      "kind": "work_in_gallery",
+      "lat": -20.124091148146423,
+      "lng": -44.21927245351691,
+      "axes": [
+        "amarelo"
+      ],
+      "artists": [
+        "Janet Cardiff"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/forty-part-motet-janet-cardiff/",
+      "main_view": false,
+      "flags": []
+    },
+    {
+      "id": 5033,
+      "name": "Glove Trotter",
+      "kind": "work_in_gallery",
+      "lat": -20.1234962,
+      "lng": -44.2200565,
+      "axes": [
+        "amarelo"
+      ],
+      "artists": [
+        "Cildo Meireles"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/glove-trotter/",
+      "main_view": false,
+      "flags": []
+    },
+    {
+      "id": 3987,
+      "name": "La Intimidad de la Luz en St. Ives",
+      "kind": "work_in_gallery",
+      "lat": -20.12259610733355,
+      "lng": -44.21812524404229,
+      "axes": [
+        "rosa"
+      ],
+      "artists": [
+        "Victor Grippo"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/victor-grippo-2/",
+      "main_view": false,
+      "flags": []
+    },
+    {
+      "id": 5710,
+      "name": "Laboratório Nociferatu",
+      "kind": "work_in_gallery",
+      "lat": -20.127122712849594,
+      "lng": -44.21958527236161,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Tunga"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/laboratorio-nociferatu-tunga/",
+      "main_view": false,
+      "flags": []
+    },
+    {
+      "id": 4702,
+      "name": "Linda do Rosário",
+      "kind": "work_in_gallery",
+      "lat": -20.124489730951094,
+      "lng": -44.22061176074791,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Adriana Varejão"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/linda-do-rosario/",
+      "main_view": false,
+      "flags": []
+    },
+    {
+      "id": 5718,
+      "name": "Lézart V",
+      "kind": "work_in_gallery",
+      "lat": -20.127122712849594,
+      "lng": -44.21958527236161,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Tunga"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/lezart-v-tunga/",
+      "main_view": false,
+      "flags": []
+    },
+    {
+      "id": 7093,
+      "name": "Mediterranean",
+      "kind": "work_in_gallery",
+      "lat": -20.12372947716158,
+      "lng": -44.219391701912144,
+      "axes": [
+        "amarelo"
+      ],
+      "artists": [
+        "Aleksandra Mir"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/mediterranean-2007/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 5742,
+      "name": "Nociferatu Spectrum",
+      "kind": "work_in_gallery",
+      "lat": -20.127122712849594,
+      "lng": -44.21958527236161,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Tunga"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/nociferatu-spectrum-tunga/",
+      "main_view": false,
+      "flags": []
+    },
+    {
+      "id": 4715,
+      "name": "O colecionador",
+      "kind": "work_in_gallery",
+      "lat": -20.124489730951094,
+      "lng": -44.22061176074791,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Adriana Varejão"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/o-colecionador/",
+      "main_view": false,
+      "flags": []
+    },
+    {
+      "id": 5749,
+      "name": "Palíndromo Incesto",
+      "kind": "work_in_gallery",
+      "lat": -20.127122712849594,
+      "lng": -44.21958527236161,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Tunga"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/palindromo-incesto-tunga/",
+      "main_view": false,
+      "flags": []
+    },
+    {
+      "id": 3505,
+      "name": "Panacea Phantastica",
+      "kind": "work_in_gallery",
+      "lat": -20.124489730951094,
+      "lng": -44.22061176074791,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Adriana Varejão"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/panacea-phantastica-adriana-varejao/",
+      "main_view": false,
+      "flags": []
+    },
+    {
+      "id": 4722,
+      "name": "Passarinhos – de Inhotim a Demini",
+      "kind": "work_in_gallery",
+      "lat": -20.124489730951094,
+      "lng": -44.22061176074791,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Adriana Varejão"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/passarinhos-de-inhotim-a-demini/",
+      "main_view": false,
+      "flags": []
+    },
+    {
+      "id": 5761,
+      "name": "Prole do Bebê",
+      "kind": "work_in_gallery",
+      "lat": -20.127122712849594,
+      "lng": -44.21958527236161,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Tunga"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/prole-do-bebe-tunga/",
+      "main_view": false,
+      "flags": []
+    },
+    {
+      "id": 5756,
+      "name": "Psicopompo Cooking Crystal",
+      "kind": "work_in_gallery",
+      "lat": -20.127122712849594,
+      "lng": -44.21958527236161,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Tunga"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/psicopompo-cooking-crystal-tunga/",
+      "main_view": false,
+      "flags": []
+    },
+    {
+      "id": 5737,
+      "name": "sem título",
+      "kind": "work_in_gallery",
+      "lat": -20.127122712849594,
+      "lng": -44.21958527236161,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Tunga"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/sem-titulo-tunga/",
+      "main_view": false,
+      "flags": []
+    },
+    {
+      "id": 5767,
+      "name": "sem título",
+      "kind": "work_in_gallery",
+      "lat": -20.127122712849594,
+      "lng": -44.21958527236161,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Tunga"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/sem-titulo-tunga-2/",
+      "main_view": false,
+      "flags": []
+    },
+    {
+      "id": 5771,
+      "name": "sem título",
+      "kind": "work_in_gallery",
+      "lat": -20.127122712849594,
+      "lng": -44.21958527236161,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Tunga"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/sem-titulo-tunga-3/",
+      "main_view": false,
+      "flags": []
+    },
+    {
+      "id": 5798,
+      "name": "sem título, da série Marionettes",
+      "kind": "work_in_gallery",
+      "lat": -20.127122712849594,
+      "lng": -44.21958527236161,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Tunga"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/sem-titulo-serie-marionettes-tunga/",
+      "main_view": false,
+      "flags": []
+    },
+    {
+      "id": 5778,
+      "name": "Tereza",
+      "kind": "work_in_gallery",
+      "lat": -20.127122712849594,
+      "lng": -44.21958527236161,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Tunga"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/tereza-tunga/",
+      "main_view": false,
+      "flags": []
+    },
+    {
+      "id": 5784,
+      "name": "Toro Condensed; Toro Expanded",
+      "kind": "work_in_gallery",
+      "lat": -20.127122712849594,
+      "lng": -44.21958527236161,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Tunga"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/toro-condensed-toro-expanded-tunga/",
+      "main_view": false,
+      "flags": []
+    },
+    {
+      "id": 5789,
+      "name": "Vanguarda Viperina",
+      "kind": "work_in_gallery",
+      "lat": -20.127122712849594,
+      "lng": -44.21958527236161,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Tunga"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/vanguarda-viperina-tunga/",
+      "main_view": false,
+      "flags": []
+    },
+    {
+      "id": 5794,
+      "name": "X-estudo",
+      "kind": "work_in_gallery",
+      "lat": -20.127122712849594,
+      "lng": -44.21958527236161,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Tunga"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/x-estudo-tunga/",
+      "main_view": false,
+      "flags": []
+    },
+    {
+      "id": 5043,
+      "name": "Yano-a",
+      "kind": "work_in_gallery",
+      "lat": -20.12049066056374,
+      "lng": -44.21777992024845,
+      "axes": [
+        "rosa"
+      ],
+      "artists": [
+        "Claudia Andujar",
+        "Gisela Motta e Leandro Lima"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/yano-a/",
+      "main_view": false,
+      "flags": []
+    },
+    {
+      "id": 5689,
+      "name": "À la Lumière des Deux Mondes",
+      "kind": "work_in_gallery",
+      "lat": -20.127122712849594,
+      "lng": -44.21958527236161,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Tunga"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/a-la-lumiere-des-deux-mondes/",
+      "main_view": false,
+      "flags": []
+    },
+    {
+      "id": 5691,
+      "name": "Ão",
+      "kind": "work_in_gallery",
+      "lat": -20.127122712849594,
+      "lng": -44.21958527236161,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Tunga"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/ao-tunga/",
+      "main_view": false,
+      "flags": []
+    }
+  ]
+}

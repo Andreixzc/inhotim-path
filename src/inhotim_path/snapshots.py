@@ -18,16 +18,18 @@ from inhotim_path.models import Poi
 DEFAULT_DATA_DIR = Path("data")
 POIS_FILE = "pois.json"
 AXES_FILE = "axes.geojson"
+OSM_FILE = "osm.json"
 
 
-def write_snapshot(path: Path, payload: dict[str, Any], *, content_key: str) -> bool:
-    """Write ``payload`` unless ``payload[content_key]`` equals what's already on disk.
+def write_snapshot(path: Path, payload: dict[str, Any], *, content_keys: Sequence[str]) -> bool:
+    """Write ``payload`` unless its ``content_keys`` equal what's already on disk.
 
-    Returns True when the file was (re)written.
+    Metadata such as timestamps is ignored by the comparison. Returns True when written.
     """
     if path.exists():
         try:
-            if read_json(path)[content_key] == payload[content_key]:
+            current = read_json(path)
+            if all(current[key] == payload[key] for key in content_keys):
                 return False
         except (json.JSONDecodeError, KeyError, TypeError):
             pass  # unreadable or different-shaped snapshot: overwrite it
@@ -45,7 +47,7 @@ def write_pois(
         "count": len(items),
         "pois": items,
     }
-    return write_snapshot(path, payload, content_key="pois")
+    return write_snapshot(path, payload, content_keys=["pois"])
 
 
 def read_pois(path: Path) -> list[Poi]:

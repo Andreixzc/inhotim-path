@@ -1,7 +1,8 @@
 name: Refresh data
 
 # Once a day: read the museum's live map (and the OSM paths) into data/. When anything changed,
-# check that it still routes, then commit the new snapshots with fetch's "what's new" report.
+# check that it still routes, commit the new snapshots with fetch's "what's new" report, and
+# republish the web app (pages.yml) with them.
 on:
   schedule:
     - cron: "17 9 * * *" # 06:17 in Brasília, before the museum opens
@@ -9,6 +10,7 @@ on:
 
 permissions:
   contents: write
+  actions: write # to start pages.yml: pushes made with this workflow's token don't trigger it
 
 concurrency:
   group: refresh-data
@@ -24,6 +26,9 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: lts/* # the web app's tests, and the Python test that runs its planner
       - name: Install
         run: uv sync --locked
       - name: Fetch the museum's live map
@@ -59,6 +64,11 @@ jobs:
           git commit -F "$RUNNER_TEMP/message.txt"
           git pull --rebase origin main
           git push origin HEAD:main
+      - name: Republish the web app with the new data
+        if: steps.changes.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run pages.yml --ref main
       - name: Summary
         if: always()
         run: |

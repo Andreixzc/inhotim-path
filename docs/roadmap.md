@@ -40,8 +40,10 @@ session-by-session story lives in [`history/`](../history/).
 - [x] Decide how routes are computed on the web: in the browser, exact up to 12 stops, heuristics beyond,
       benchmarked against CP-SAT (ADR 0009)
 - [x] `inhotim-path web-data`: the park (POIs + walking network) as one JSON file for the browser
-- [x] Mobile-first planner page in `web/`: time available, kinds, must-sees, pace, skip/add stops, Portuguese and
-      English, shareable links
+- [x] Mobile-first planner page in `web/`: start at the Portaria or from your location, galleries only or
+      everything, time available, must-sees, skip/add stops, Portuguese and English, shareable links
+- [x] Minimalist redesign after Andrei's review: only what a visitor knows (no walking pace or minutes per stop),
+      an error when your location is outside the park, grey basemaps
 - [x] Scheduled data refresh (GitHub Actions cron) + "what's new" diff of the collection (ADR 0007)
 - [x] Satellite view on the map, with a MapTiler key (ADR 0008)
 - [x] Deploy workflow for GitHub Pages (`pages.yml`), republished after each data refresh

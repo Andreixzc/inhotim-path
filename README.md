@@ -117,10 +117,12 @@ uv run inhotim-path fetch                                   # refresh data/ from
 Use it at **<https://andreixzc.github.io/inhotim-path/>**, on a phone or a computer.
 
 [`web/`](web/) is a static page that plans routes in your browser: no server, nothing to install
-([why and how](history/decisions/0009-web-app-plans-in-the-browser.md)). Pick the time you have, what to see and
-your must-sees, and the route appears on the map with a timed itinerary. You can skip or add stops, start from
-your current position (the route then ends at the reception), switch between Portuguese and English, and share
-a plan as a link. Your position stays on your phone.
+([why and how](history/decisions/0009-web-app-plans-in-the-browser.md)). It only asks what you know: where you
+start (the Portaria, or where you are), what to see (galleries only, or everything), how much time you have,
+and your must-sees. The route appears on the map with a timed itinerary. You can skip or add stops, switch
+between Portuguese and English, and share a plan as a link. Starting from your position works inside the park
+only, and your position stays on your phone. Walking pace isn't a setting, since everyone walks differently:
+routes use a standard 4 km/h, and walks are shown as distances.
 
 Run it locally:
 

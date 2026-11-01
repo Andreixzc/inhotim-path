@@ -61,7 +61,7 @@ Plain ES modules with no build step; MapLibre GL comes from cdnjs, pinned with S
 | `solver.js` | Exact (Held-Karp) up to 12 stops; iterated local search beyond: TSP and orienteering, with must-sees |
 | `plan.js` | Mirror of `planner.py`: pick stops, walking-time matrix, solve, timeline, legs |
 | `worker.js` | Runs `plan.js` off the main thread |
-| `map.js` | Basemap with fallback, route, numbered stops, other POIs, locate button, satellite toggle |
+| `map.js` | Grey basemap (light or dark) with a plain fallback, route, numbered stops, other POIs, locate button, satellite toggle |
 | `app.js` | The form, the itinerary, popups, and the glue between them |
 | `state.js` · `format.js` · `i18n.js` | Settings (localStorage + URL fragment), formatting, Portuguese and English |
 

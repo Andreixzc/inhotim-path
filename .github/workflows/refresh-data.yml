@@ -1,0 +1,69 @@
+name: Refresh data
+
+# Once a day: read the museum's live map (and the OSM paths) into data/. When anything changed,
+# check that it still routes, then commit the new snapshots with fetch's "what's new" report.
+on:
+  schedule:
+    - cron: "17 9 * * *" # 06:17 in Brasília, before the museum opens
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-data
+
+defaults:
+  run:
+    shell: bash # runs with -eo pipefail, so "fetch | tee" fails when fetch fails
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+      - name: Install
+        run: uv sync --locked
+      - name: Fetch the museum's live map
+        run: uv run inhotim-path fetch --only pois axes | tee -a "$RUNNER_TEMP/fetch.log"
+      - name: Fetch OpenStreetMap paths
+        # Overpass mirrors are flaky. If they all fail, keep the last good snapshot.
+        continue-on-error: true
+        run: uv run inhotim-path fetch --only osm | tee -a "$RUNNER_TEMP/fetch.log"
+      - name: Look for changes
+        id: changes
+        run: |
+          if [ -n "$(git status --porcelain -- data)" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Check that the new data still routes
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          uv run pytest -q
+          uv run inhotim-path route --budget 4h --time-limit 3
+      - name: Commit and push
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add data
+          {
+            echo "data: refresh snapshots from the live map"
+            echo
+            cat "$RUNNER_TEMP/fetch.log"
+          } > "$RUNNER_TEMP/message.txt"
+          git commit -F "$RUNNER_TEMP/message.txt"
+          git pull --rebase origin main
+          git push origin HEAD:main
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo '```text'
+            cat "$RUNNER_TEMP/fetch.log" 2>/dev/null || echo "(no fetch output)"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

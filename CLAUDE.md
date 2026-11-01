@@ -32,7 +32,13 @@ uv run pytest                # tests
 uv run ruff check .          # lint
 uv run ruff format .         # format
 uv run inhotim-path --help   # CLI
+node --test tests/web/*.test.mjs                             # web app tests (node ≥ 20)
+uv run inhotim-path web-data && python3 -m http.server -d web 8000   # web app on localhost:8000
 ```
+
+The web app (`web/`) plans routes in the browser and mirrors `planner.py` in `web/js/plan.js` (ADR 0009). Change
+planning rules in both; `tests/test_web_planner.py` checks they agree. After changing the export or the synthetic
+park, regenerate the JS fixture with `uv run python -m tests.synthetic_park`.
 
 ## Data etiquette
 

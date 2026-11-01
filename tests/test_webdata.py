@@ -5,12 +5,14 @@ import json
 from inhotim_path.cli import main
 from inhotim_path.matrix import walking_matrix
 from inhotim_path.network import NetworkConfig, build_network
-from inhotim_path.webdata import build_web_data
-from tests.synthetic_park import POIS, park_data, write_snapshots
-
-
-def web_data():
-    return build_web_data(park_data(), generated_at="2026-11-01T00:00:00+00:00")
+from tests.synthetic_park import (
+    POIS,
+    WEB_FIXTURE,
+    park_data,
+    web_data,
+    web_fixture_text,
+    write_snapshots,
+)
 
 
 def dijkstra(data, source):
@@ -64,3 +66,8 @@ def test_cli_writes_compact_json(tmp_path, monkeypatch, capsys):
     data = json.loads(out.read_text("utf-8"))
     assert data["version"] == 1 and data["fetched_at"]
     assert ", " not in out.read_text("utf-8")[:200]  # compact separators
+
+
+def test_the_javascript_fixture_is_up_to_date():
+    # tests/web/ plan on this file; regenerate it with `uv run python -m tests.synthetic_park`.
+    assert WEB_FIXTURE.read_text("utf-8") == web_fixture_text()

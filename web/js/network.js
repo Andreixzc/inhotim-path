@@ -41,6 +41,16 @@ export class WalkNetwork {
     return { dist, via };
   }
 
+  /** The source node that the tree's walk to `target` starts from. */
+  rootOf(tree, target) {
+    let node = target;
+    while (tree.via[node] !== -1) {
+      const [u, v] = this.edges[tree.via[node]];
+      node = node === v ? u : v;
+    }
+    return node;
+  }
+
   /** `[lng, lat]` points from the tree's source to `target`, following each path's shape. */
   pathTo(tree, target) {
     const steps = [];

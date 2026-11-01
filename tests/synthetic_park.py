@@ -8,6 +8,7 @@
 ·1 Recepção  ·2 Praça (+6 inside)  ·3 Lago      (POIs sit 5 m south of the path)
 """
 
+import json
 from pathlib import Path
 
 from inhotim_path import snapshots
@@ -15,7 +16,12 @@ from inhotim_path.models import Poi, PoiKind
 from inhotim_path.planner import ParkData
 from inhotim_path.sources import axes, osm
 from inhotim_path.sources.osm import OsmPark
+from inhotim_path.webdata import build_web_data
 from tests.test_network import AXES, PARK, WAYS, at
+
+#: The park as the web app sees it, for the JavaScript tests (tests/web/). Regenerate it after
+#: changing the export or this park: ``uv run python -m tests.synthetic_park``.
+WEB_FIXTURE = Path(__file__).parent / "fixtures" / "synthetic_park.json"
 
 
 def poi(poi_id: int, name: str, kind: PoiKind, x: float, y: float, **extra) -> Poi:
@@ -48,3 +54,16 @@ def write_snapshots(data_dir: Path) -> None:
     snapshots.write_json(
         data_dir / snapshots.AXES_FILE, axes.to_feature_collection(list(data.axes), source="test")
     )
+
+
+def web_data() -> dict:
+    return build_web_data(park_data(), generated_at="2026-11-01T00:00:00+00:00")
+
+
+def web_fixture_text() -> str:
+    return json.dumps(web_data(), ensure_ascii=False, indent=1) + "\n"
+
+
+if __name__ == "__main__":
+    WEB_FIXTURE.write_text(web_fixture_text(), "utf-8")
+    print(f"wrote {WEB_FIXTURE}")

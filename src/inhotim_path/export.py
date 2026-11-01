@@ -1,4 +1,4 @@
-"""Render a plan: terminal itinerary, GeoJSON and a standalone HTML map (Leaflet)."""
+"""Render a plan: terminal itinerary, GeoJSON and a standalone HTML map (MapLibre GL)."""
 
 from __future__ import annotations
 
@@ -153,61 +153,99 @@ def to_html(plan: Plan, start_time: time | None = None) -> str:
     )
 
 
+# The basemap is OpenFreeMap's vector tiles drawn by MapLibre GL: free, no API key, and served
+# with CORS, so the page also works when opened straight from a file. OpenStreetMap's own tile
+# servers block that case (a local file sends no Referer header), and their policy discourages
+# apps relying on them. See history/decisions/0006-basemap-openfreemap.md.
 _HTML_TEMPLATE = """<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Inhotim route</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/5.24.0/maplibre-gl.css"
+  integrity="sha512-KIMsMWIdnoG9OwZa+oaIafmbDonqck1UCmq+/zcUi2aaZ97N9QE6TqpTM+n36EO40HGh64hU/375zxtjx7WTyQ=="
+  crossorigin="anonymous">
 <style>
   html, body, #map { height: 100%; margin: 0; }
   body { font: 14px/1.4 system-ui, sans-serif; }
-  .panel { position: absolute; top: 10px; left: 54px; right: 10px; z-index: 1000; max-width: 560px;
+  .panel { position: absolute; top: 10px; left: 10px; right: 50px; z-index: 1; max-width: 560px;
            background: #fff; padding: 8px 12px; border-radius: 8px;
            box-shadow: 0 1px 5px rgba(0, 0, 0, .3); }
   .panel small { color: #555; }
   .stop { width: 24px; height: 24px; border-radius: 50%; color: #fff; font-weight: 600;
           font-size: 11px; display: flex; align-items: center; justify-content: center;
-          border: 2px solid #fff; box-shadow: 0 0 3px rgba(0, 0, 0, .5); }
+          border: 2px solid #fff; box-shadow: 0 0 3px rgba(0, 0, 0, .5); cursor: pointer; }
 </style>
 </head>
 <body>
 <div id="map"></div>
 <div class="panel"><b>Inhotim route</b> · __SUMMARY__<br><small>__ATTRIBUTION__</small></div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/5.24.0/maplibre-gl.js"
+  integrity="sha512-rOFgoUgWaVi69JW1dzBu6PWF9xKW9rxYfY5u2SexFABHhWk0qUWkJoWNz4UuZRMvSXsNZG66+tU5B+HlwWF5kA=="
+  crossorigin="anonymous"></script>
 <script>
 const data = __DATA__;
 const colors = __COLORS__;
+const basemap = "https://tiles.openfreemap.org/styles/liberty";
+// If the basemap can't load, the route still draws, on a plain background.
+const plain = {
+  version: 8,
+  sources: {},
+  layers: [{ id: "background", type: "background", paint: { "background-color": "#eceee6" } }],
+};
 const escapeHtml = (s) => String(s).replace(/[&<>"']/g,
   (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"})[c]);
-const map = L.map("map");
-L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  maxZoom: 19,
-  attribution:
-    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-}).addTo(map);
-const legs = L.geoJSON(data, {
-  filter: (f) => f.properties.type === "leg",
-  style: { color: "#e4572e", weight: 4, opacity: 0.85 },
-}).addTo(map);
-for (const f of data.features.filter((f) => f.properties.type === "stop")) {
-  const p = f.properties;
-  const [lng, lat] = f.geometry.coordinates;
-  const icon = L.divIcon({
-    className: "",
-    html: `<div class="stop" style="background:${colors[p.kind] || "#555"}">${p.order}</div>`,
-    iconSize: [24, 24],
-    iconAnchor: [12, 12],
-  });
-  const link = p.url
-    ? `<br><a href="${encodeURI(p.url)}" target="_blank" rel="noopener">official page</a>`
-    : "";
-  const title = `<b>${p.order}. ${escapeHtml(p.name)}</b>`;
-  const details = `${escapeHtml(p.kind)} · ${escapeHtml(p.time)}`;
-  L.marker([lat, lng], { icon }).addTo(map).bindPopup(`${title}<br>${details}${link}`);
+const bounds = new maplibregl.LngLatBounds();
+for (const f of data.features) {
+  const g = f.geometry;
+  for (const c of g.type === "Point" ? [g.coordinates] : g.coordinates) bounds.extend(c);
 }
-map.fitBounds(legs.getBounds(), { padding: [24, 24] });
+
+function draw(style) {
+  const panelHeight = document.querySelector(".panel").offsetHeight;
+  const map = new maplibregl.Map({
+    container: "map",
+    style,
+    bounds,
+    fitBoundsOptions: { padding: { top: panelHeight + 24, right: 40, bottom: 40, left: 40 } },
+    maxZoom: 19,
+  });
+  map.addControl(new maplibregl.NavigationControl({ showCompass: false }));
+  map.on("load", () => {
+    map.addSource("route", { type: "geojson", data });
+    const legs = ["==", ["get", "type"], "leg"];
+    const layout = { "line-join": "round", "line-cap": "round" };
+    // Below the basemap's labels, so place names stay readable over the route.
+    const labels = map.getStyle().layers.find((layer) => layer.type === "symbol")?.id;
+    const line = (id, paint) =>
+      map.addLayer({ id, type: "line", source: "route", filter: legs, layout, paint }, labels);
+    line("legs-casing", { "line-color": "#ffffff", "line-width": 7, "line-opacity": 0.8 });
+    line("legs", { "line-color": "#e4572e", "line-width": 4 });
+  });
+  for (const f of data.features.filter((f) => f.properties.type === "stop")) {
+    const p = f.properties;
+    const marker = document.createElement("div");
+    marker.className = "stop";
+    marker.style.background = colors[p.kind] || "#555";
+    marker.textContent = p.order;
+    const link = /^https?:/i.test(p.url || "")
+      ? `<br><a href="${escapeHtml(p.url)}" target="_blank" rel="noopener">official page</a>`
+      : "";
+    const title = `<b>${p.order}. ${escapeHtml(p.name)}</b>`;
+    const details = `${escapeHtml(p.kind)} · ${escapeHtml(p.time)}`;
+    new maplibregl.Marker({ element: marker })
+      .setLngLat(f.geometry.coordinates)
+      .setPopup(new maplibregl.Popup({ offset: 14 }).setHTML(`${title}<br>${details}${link}`))
+      .addTo(map);
+  }
+}
+
+const timeout = AbortSignal.timeout ? AbortSignal.timeout(10000) : undefined;
+fetch(basemap, { signal: timeout })
+  .then((r) => (r.ok ? r.json() : Promise.reject(new Error(r.statusText))))
+  .catch(() => plain)
+  .then(draw);
 </script>
 </body>
 </html>

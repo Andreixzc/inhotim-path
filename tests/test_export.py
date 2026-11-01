@@ -83,5 +83,13 @@ def test_html_escapes_names():
     page = to_html(replace(plan, visits=(start, replace(gallery, poi=SNEAKY), back)))
     assert "</script><b>" not in page
     assert "<\\/script><b>x<\\/b>" in page  # still in the data, escaped for the script block
-    assert "leaflet/1.9.4" in page
+    assert "maplibre-gl/5.24.0" in page
     assert "OpenStreetMap" in page
+
+
+def test_html_basemap_works_from_a_local_file():
+    page = to_html(make_plan())
+    # OSM's own tile servers block pages opened from a file: they send no Referer header.
+    assert "tile.openstreetmap.org" not in page
+    assert "https://tiles.openfreemap.org/styles/" in page
+    assert page.count('integrity="sha512-') == 2  # MapLibre's script and stylesheet are pinned

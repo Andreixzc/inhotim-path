@@ -26,7 +26,7 @@ Code shows *what* the project is. This folder explains *how it got there* and *w
 ## Index
 
 ### Sessions
-- [2026-11-01 #01: Kickoff, then Phase 1](sessions/2026-11-01-01-kickoff.md): idea refinement, data-source research, repo setup, then the whole CLI (fetch + route, CP-SAT solver, CI), then blocked map tiles fixed, a satellite view, a daily data refresh and the web app goal.
+- [2026-11-01 #01: Kickoff, Phase 1, then the web app](sessions/2026-11-01-01-kickoff.md): idea refinement, data-source research, repo setup, then the whole CLI (fetch + route, CP-SAT solver, CI), then blocked map tiles fixed, a satellite view, a daily data refresh, and the web app (planning in the browser, benchmarked against CP-SAT).
 
 ### Decisions
 - [0001: Use the official map's marker feed as the POI source](decisions/0001-official-map-marker-feed-as-poi-source.md)

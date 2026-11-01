@@ -1,9 +1,10 @@
+import itertools
 import math
 
 import pytest
 
 from inhotim_path.matrix import WalkMatrix
-from inhotim_path.solver import InfeasibleRouteError, Stop, solve
+from inhotim_path.solver import InfeasibleRouteError, Stop, _polish, solve
 
 
 def euclidean_matrix(points):
@@ -75,3 +76,55 @@ def test_infeasible_mandatory_stops_raise():
     stops = [Stop(1, mandatory=True)]
     with pytest.raises(InfeasibleRouteError):
         solve(0, stops, euclidean_matrix(points), speed_mps=1.0, budget_s=100, time_limit_s=0.2)
+
+
+def test_far_mandatory_stop_still_leaves_room_for_optional_ones():
+    # Cheap optional stops cluster around the depot; a greedy start that fills the budget with
+    # them can't fit the far mandatory stop (this is what broke OR-Tools' PATH_CHEAPEST_ARC).
+    # Optimum: the 800 s round trip to stop 7 plus 4 of the 6 nearby stops (961 s); 5 need 1002 s.
+    points = {0: (0, 0), 7: (400, 0)}
+    points |= {i: (0, 10 * i) for i in (1, 2, 3)} | {i: (0, -10 * (i - 3)) for i in (4, 5, 6)}
+    stops = [Stop(i, dwell_s=30) for i in range(1, 7)] + [Stop(7, mandatory=True)]
+    route = solve(0, stops, euclidean_matrix(points), speed_mps=1.0, budget_s=980, time_limit_s=2)
+    assert 7 in route.order
+    assert len(set(route.order) - {0, 7}) == 4
+    assert route.total_s <= 980
+
+
+def test_nothing_fits_gives_an_empty_route():
+    points = {0: (0, 0), 1: (500, 0), 2: (-500, 0)}
+    stops = [Stop(1), Stop(2)]
+    route = solve(0, stops, euclidean_matrix(points), speed_mps=1.0, budget_s=100, time_limit_s=1)
+    assert route.order == (0, 0)
+    assert set(route.skipped) == {1, 2}
+    assert route.total_s == 0
+
+
+def test_no_stops_gives_an_empty_route():
+    route = solve(0, [], euclidean_matrix({0: (0, 0)}), speed_mps=1.0)
+    assert route.order == (0, 0)
+    assert route.optimal
+
+
+def test_small_instances_are_proven_optimal():
+    points = circle(6)
+    stops = [Stop(i) for i in range(1, 6)]
+    assert solve(0, stops, euclidean_matrix(points), speed_mps=1.0).optimal
+    assert solve(0, stops, euclidean_matrix(points), speed_mps=1.0, budget_s=10_000).optimal
+
+
+def test_polish_reorders_a_zigzag():
+    # Points on a line visited out of order: 0 -> 2 -> 1 -> 3 -> 0 walks 800; the best tours
+    # walk twice the span, 600.
+    xs = [0, 100, 200, 300]
+    cost = [[abs(a - b) for b in xs] for a in xs]
+    polished = _polish(cost, [0, 2, 1, 3, 0], time_limit_s=1, workers=2)
+    assert polished[0] == polished[-1] == 0
+    assert sorted(polished[1:-1]) == [1, 2, 3]
+    assert sum(cost[a][b] for a, b in itertools.pairwise(polished)) == 600
+
+
+def test_polish_keeps_an_already_optimal_order():
+    xs = [0, 100, 200, 300]
+    cost = [[abs(a - b) for b in xs] for a in xs]
+    assert _polish(cost, [0, 1, 2, 3, 0], time_limit_s=1, workers=2) == [0, 1, 2, 3, 0]

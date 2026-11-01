@@ -15,11 +15,12 @@ order* to see them.
 - 🧭 **the shortest route to see everything**: a Traveling Salesman Problem (TSP) over real walking paths;
 - ⏱️ **the best route for the time you have**: an Orienteering Problem that maximizes your time with the art
   within a time budget, with your must-sees always included;
-- 📱 **a web app** that does the same in your browser, at home or on site, even starting from where you are;
+- 📱 **[a web app](https://andreixzc.github.io/inhotim-path/)** that does the same in your browser, at home or on
+  site, even starting from where you are;
 - 📅 *(planned)* slope-aware walking times, opening hours, multi-day plans and live re-planning as you go.
 
 > **Status:** the command-line tool works end to end (Phase 1), and its data refreshes itself every day.
-> The web app works locally and is ready to publish on GitHub Pages. See the [roadmap](docs/roadmap.md).
+> The web app is live at **<https://andreixzc.github.io/inhotim-path/>**. See the [roadmap](docs/roadmap.md).
 
 <p align="center">
   <img src="docs/img/route-all.png" width="49%" alt="The optimal tour through all 58 stops">
@@ -113,6 +114,8 @@ uv run inhotim-path fetch                                   # refresh data/ from
 
 ## Web app
 
+Use it at **<https://andreixzc.github.io/inhotim-path/>**, on a phone or a computer.
+
 [`web/`](web/) is a static page that plans routes in your browser: no server, nothing to install
 ([why and how](history/decisions/0009-web-app-plans-in-the-browser.md)). Pick the time you have, what to see and
 your must-sees, and the route appears on the map with a timed itinerary. You can skip or add stops, start from
@@ -128,8 +131,8 @@ python3 -m http.server -d web 8000        # then open http://localhost:8000
 
 It plans with heuristics instead of CP-SAT. Routes with up to 12 stops are solved exactly. Larger ones matched
 CP-SAT's minutes at stops in 100 of 115 benchmark runs, and were never more than 2 minutes short, in about 0.1 s.
-`.github/workflows/pages.yml` publishes it on GitHub Pages after CI passes, once Pages is switched on for the
-repository. For the satellite view, set a repository variable `MAPTILER_API_KEY` with a MapTiler key restricted to
+`.github/workflows/pages.yml` publishes it on GitHub Pages after CI passes on `main`, and again after each data
+refresh. For the satellite view, set a repository variable `MAPTILER_API_KEY` with a MapTiler key restricted to
 the site's domain.
 
 ## Development

@@ -1,0 +1,100 @@
+# Vision: the idea, refined
+
+## One-liner
+
+A route planner for Inhotim that reads the museum's **live map** and tells you **in which order to visit**:
+the whole collection, or the best of it for the time you have.
+
+## The problem
+
+- **Inhotim is big and hilly.** Around 20 galleries, 30 outdoor works and 9 themed gardens are spread across
+  a large park and connected by winding paths. The only guidance is three colored routes ("eixos").
+- **The official map answers "where is X?", not "what should I see next?"** Visitors backtrack, miss a work
+  that was a few minutes away, or run out of time on the far side of the park.
+- **The collection changes.** Galleries reopen, works rotate, and temporary exhibitions come and go. Any static
+  guide or hand-made route goes stale.
+
+## From "shortest route" to "best route"
+
+**Original idea:** *generate the shortest route to visit everything in the least amount of time, reading the
+official map dynamically.*
+
+### 1. "Visit everything, minimum time" is a TSP
+
+Model the park as a **graph**: path junctions are nodes, and path segments are edges weighted by walking time.
+Visiting every attraction once and coming back to the reception in minimum time is the
+**Traveling Salesman Problem**. With ~60 stops it is NP-hard in theory but easy in practice: a solver like
+OR-Tools finds optimal or near-optimal tours in seconds.
+
+Two important details:
+
+- **Distances must come from real paths, not straight lines.** Two works facing each other across a lake can be
+  several times farther apart on foot. So we build a walking graph (OpenStreetMap + the official routes),
+  compute the shortest walking time between every pair of stops (a *distance matrix*), and only *then* solve
+  the TSP over that matrix.
+- **Dwell time doesn't change the optimal order when you visit everything**, because the sum is constant. It
+  still matters for the timeline (when you'll reach each stop) and for everything below.
+
+### 2. Reality check: "everything" probably doesn't fit in one day
+
+Back-of-the-envelope with the current map: ~20 galleries × 20 min + ~30 outdoor works × 8 min + 9 gardens × 10 min
+≈ **12 hours of looking, before walking a single meter**. The dwell times are assumptions; the engine will
+produce real numbers.
+
+### 3. So the useful question is "I have N hours: what should I see, and in what order?"
+
+That's the **Orienteering Problem** (also called the prize-collecting TSP). Every stop has a *value*, and the goal
+is to maximize the total value within a time budget, starting and ending at the reception. Two days means two
+tours that never repeat a stop: the **Team Orienteering Problem**.
+
+Values default by category (gallery > outdoor work > garden > botanical highlight) and the visitor can push them
+up: must-sees, favorite artists, "only what's new".
+
+### 4. One engine for all of it
+
+OR-Tools' routing solver supports optional stops with penalties (orienteering), a time dimension with a budget,
+time windows (opening hours) and multiple vehicles (= days). The original "see everything" TSP comes for free,
+and the more useful modes sit on top of it.
+
+## Who it's for
+
+| Visitor | What they ask | Mode |
+|---|---|---|
+| Completionist | "Everything, shortest route." | TSP |
+| First-timer, one day | "Best route for 6 hours?" | Orienteering |
+| Two-day visitor | "Split everything into two balanced days." | Team orienteering |
+| Returning visitor | "Only what's new since my last visit." | Filtered TSP |
+| Art or botany lover | "Only galleries." / "Gardens and botanical highlights." | Filtered TSP / orienteering |
+| Limited mobility *(later)* | "Avoid steep paths." | Slope-aware costs |
+
+## Product principles
+
+1. **Always fresh.** Data comes from the official live map and is refreshed automatically. No hand-maintained lists.
+2. **Honest estimates.** Walking times come from real paths (later also slope); dwell times are explicit and adjustable.
+3. **Works on site.** The final app should cope with poor connectivity: precomputed data, routes computed on the device.
+4. **Respectful of the source.** Polite, cached fetching, factual metadata only, clear attribution, and no
+   affiliation with Inhotim.
+
+## Where it goes
+
+1. **CLI MVP:** fetch → graph → route, with output as a text itinerary, GeoJSON and an HTML map.
+2. **Better estimates:** elevation/slope (Tobler's hiking function), per-gallery dwell times, opening hours,
+   electric carts, a lunch stop.
+3. **Web app (PWA):** mobile-first map, offline support, automatic data refresh, a "what's new" feed.
+4. **Live mode:** GPS "you are here", check off visited stops, re-route on the fly, time-left alerts before closing.
+5. **Smart extras:** crowd/queue heuristics, weather-aware ordering (outdoor works while it's sunny), shareable plans.
+
+The checklist lives in [roadmap.md](roadmap.md).
+
+## Non-goals (for now)
+
+- Replacing the official app, the audio guide or ticketing.
+- Indoor navigation inside galleries.
+- Tracking visitors. GPS is only ever used on the visitor's own device, for their own route.
+
+## Open questions
+
+- **Dwell times:** derive them from the number of works inside each gallery? Crowdsource them?
+- **Electric carts:** worth modeling? They're paid and stop at fixed points.
+- **Opening hours:** do some galleries have their own schedule? That would add time windows.
+- **Accessibility:** which paths are steep, unpaved or have stairs?

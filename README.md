@@ -15,8 +15,8 @@ order* to see them.
 - 🧭 **the shortest route to see everything**: a Traveling Salesman Problem (TSP) over real walking paths;
 - ⏱️ **the best route for the time you have**: an Orienteering Problem that maximizes your time with the art
   within a time budget, with your must-sees always included;
-- 📱 **[a web app](https://andreixzc.github.io/inhotim-path/)** that does the same in your browser, at home or on
-  site, even starting from where you are;
+- 📱 **[a web app](https://andreixzc.github.io/inhotim-path/)** that plans the shortest walk through what you choose,
+  in your browser, at home or on site, even starting from where you are;
 - 📅 *(planned)* slope-aware walking times, opening hours, multi-day plans and live re-planning as you go.
 
 > **Status:** the command-line tool works end to end (Phase 1), and its data refreshes itself every day.
@@ -117,12 +117,12 @@ uv run inhotim-path fetch                                   # refresh data/ from
 Use it at **<https://andreixzc.github.io/inhotim-path/>**, on a phone or a computer.
 
 [`web/`](web/) is a static page that plans routes in your browser: no server, nothing to install
-([why and how](history/decisions/0009-web-app-plans-in-the-browser.md)). It only asks what you know: where you
-start (the Portaria, or where you are), what to see (galleries only, or everything), how much time you have,
-and your must-sees. The route appears on the map with a timed itinerary. You can skip or add stops, switch
-between Portuguese and English, and share a plan as a link. Starting from your position works inside the park
-only, and your position stays on your phone. Walking pace isn't a setting, since everyone walks differently:
-routes use a standard 4 km/h, and walks are shown as distances.
+([why and how](history/decisions/0009-web-app-plans-in-the-browser.md)). It asks where you start (the Portaria,
+or where you are) and what to see (galleries only, or everything). Then it shows the shortest walk through all
+of it, on the map and as a list. It shows distances only: no time estimates and no time limit, since everyone
+walks and looks at their own pace ([ADR 0010](history/decisions/0010-web-app-without-times.md)). You can skip
+stops or add others, switch between Portuguese and English, and share a plan as a link. Starting from your
+position works inside the park only, and your position stays on your phone.
 
 Run it locally:
 
@@ -131,8 +131,8 @@ uv run inhotim-path web-data              # writes web/data/park.json from data/
 python3 -m http.server -d web 8000        # then open http://localhost:8000
 ```
 
-It plans with heuristics instead of CP-SAT. Routes with up to 12 stops are solved exactly. Larger ones matched
-CP-SAT's minutes at stops in 100 of 115 benchmark runs, and were never more than 2 minutes short, in about 0.1 s.
+It plans with heuristics instead of CP-SAT. Routes with up to 12 stops are solved exactly. In the benchmark, its
+tours through everything (58 and 89 stops) were as short as CP-SAT's proven optimum, in about 0.1 s.
 `.github/workflows/pages.yml` publishes it on GitHub Pages after CI passes on `main`, and again after each data
 refresh. For the satellite view, set a repository variable `MAPTILER_API_KEY` with a MapTiler key restricted to
 the site's domain.

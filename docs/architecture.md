@@ -51,7 +51,9 @@ The work is split into two stages with very different rhythms:
 
 ## Web app (`web/`)
 
-A static page that plans in the browser ([ADR 0009](../history/decisions/0009-web-app-plans-in-the-browser.md)).
+A static page that plans in the browser ([ADR 0009](../history/decisions/0009-web-app-plans-in-the-browser.md)):
+the shortest walk through every stop chosen, with no time limit and no times shown
+([ADR 0010](../history/decisions/0010-web-app-without-times.md)).
 Plain ES modules with no build step; MapLibre GL comes from cdnjs, pinned with SRI. The page reads
 `web/data/park.json`, written by `inhotim-path web-data` (not committed; the Pages workflow builds it).
 
@@ -61,9 +63,9 @@ Plain ES modules with no build step; MapLibre GL comes from cdnjs, pinned with S
 | `solver.js` | Exact (Held-Karp) up to 12 stops; iterated local search beyond: TSP and orienteering, with must-sees |
 | `plan.js` | Mirror of `planner.py`: pick stops, walking-time matrix, solve, timeline, legs |
 | `worker.js` | Runs `plan.js` off the main thread |
-| `map.js` | Grey basemap (light or dark) with a plain fallback, route, numbered stops, other POIs, locate button, satellite toggle |
+| `map.js` | OpenFreeMap liberty basemap with a plain fallback (light in dark mode too), route, stops and other POIs in kind colors, locate button, satellite toggle |
 | `app.js` | The form, the itinerary, popups, and the glue between them |
-| `state.js` · `format.js` · `i18n.js` | Settings (localStorage + URL fragment), formatting, Portuguese and English |
+| `state.js` · `format.js` · `i18n.js` | Settings (localStorage + URL fragment), distances, Portuguese and English |
 
 The modules without DOM code (`network`, `solver`, `plan`, `state`, `format`) are tested under node
 (`tests/web/`). `tests/test_web_planner.py` runs `scripts/web_plan.mjs` to check that the JavaScript planner agrees

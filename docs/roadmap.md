@@ -41,9 +41,11 @@ session-by-session story lives in [`history/`](../history/).
       benchmarked against CP-SAT (ADR 0009)
 - [x] `inhotim-path web-data`: the park (POIs + walking network) as one JSON file for the browser
 - [x] Mobile-first planner page in `web/`: start at the Portaria or from your location, galleries only or
-      everything, time available, must-sees, skip/add stops, Portuguese and English, shareable links
-- [x] Minimalist redesign after Andrei's review: only what a visitor knows (no walking pace or minutes per stop),
-      an error when your location is outside the park, grey basemaps
+      everything, skip/add stops, Portuguese and English, shareable links
+- [x] Minimalist redesign after Andrei's review: only what a visitor knows, an error when your location is outside
+      the park
+- [x] No times and no time limit: the shortest walk through what you choose, shown as distances (ADR 0010). The
+      original map is back, and stays light in dark mode
 - [x] Scheduled data refresh (GitHub Actions cron) + "what's new" diff of the collection (ADR 0007)
 - [x] Satellite view on the map, with a MapTiler key (ADR 0008)
 - [x] Deploy workflow for GitHub Pages (`pages.yml`), republished after each data refresh
@@ -57,10 +59,10 @@ session-by-session story lives in [`history/`](../history/).
 
 - [x] GPS "you are here": MapLibre's `GeolocateControl` (HTTPS and the visitor's permission; the position never
       leaves the phone)
-- [x] Plan from the current position, starting now, ending at the reception
+- [x] Plan from the current position, ending at the Portaria
 - [ ] Check off visited stops, automatically within ~25 m of one
-- [ ] Re-plan the rest of the visit as you go (keep what's been seen, use the time left)
-- [ ] Time-left and closing-time alerts
+- [ ] Re-plan the rest of the visit as you go (keep what's been seen)
+- ~~Time-left and closing-time alerts~~: dropped, the web app shows no times (ADR 0010)
 
 ## Phase 5: Smart extras
 

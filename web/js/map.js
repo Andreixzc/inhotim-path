@@ -1,39 +1,40 @@
-// The map: OpenFreeMap's quiet basemaps drawn by MapLibre GL (ADR 0006), the planned route with
-// numbered stops, the park's other points as grey dots, the visitor's position, and optional
-// satellite imagery from MapTiler (ADR 0008). Uses the global `maplibregl` from index.html.
+// The map: OpenFreeMap's basemap drawn by MapLibre GL (ADR 0006), the planned route with numbered
+// stops, the park's other points, the visitor's position, and optional satellite imagery from
+// MapTiler (ADR 0008). Uses the global `maplibregl` from the script tag in index.html.
+//
+// The map looks the same in light and dark mode: the page's dark theme stops at its edge.
 
 import { t } from "./i18n.js";
 
-const DARK = globalThis.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
-// Grey basemaps, so the route is what stands out.
-const BASEMAP = `https://tiles.openfreemap.org/styles/${DARK ? "dark" : "positron"}`;
+const BASEMAP = "https://tiles.openfreemap.org/styles/liberty";
 // If the basemap can't load, the route still draws, on a plain background.
 const PLAIN = {
   version: 8,
   sources: {},
-  layers: [
-    {
-      id: "background",
-      type: "background",
-      paint: { "background-color": DARK ? "#181c19" : "#eff0ec" },
-    },
-  ],
+  layers: [{ id: "background", type: "background", paint: { "background-color": "#eceee6" } }],
 };
 const EMPTY = { type: "FeatureCollection", features: [] };
-// OpenFreeMap's styles credit OpenStreetMap themselves; the plain fallback needs it for the paths.
+// OpenFreeMap's style credits OpenStreetMap itself; the plain fallback needs it for the paths.
 const OSM_CREDIT =
   '<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">' +
   "© OpenStreetMap</a>";
 
+/** The same colors as the command line's map (src/inhotim_path/export.py). */
+export const KIND_COLOR = {
+  gallery: "#d62728",
+  outdoor_work: "#2ca02c",
+  garden: "#9467bd",
+  botanical: "#8c8c00",
+  exhibition: "#ff7f0e",
+  work_in_gallery: "#e377c2",
+  service: "#333333",
+  event: "#17becf",
+  other: "#7f7f7f",
+};
+
 export const FLAG =
   '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" ' +
   'd="M5 21V4h9l.4 2H20v10h-7l-.4-2H7v7z"/></svg>';
-
-/** A color from the page's palette (style.css), so the map follows light and dark mode. */
-function palette(name, fallback) {
-  const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-  return value || fallback;
-}
 
 /** Room around a route when framing it: clear of the controls, the credits and the sheet. */
 function fitPadding() {
@@ -78,7 +79,7 @@ export class RouteMap {
     });
     this.parkBounds = bounds;
     this.markers = [];
-    this.popup = new maplibregl.Popup({ offset: 16, maxWidth: "280px", focusAfterOpen: false });
+    this.popup = new maplibregl.Popup({ offset: 14, maxWidth: "290px", focusAfterOpen: false });
     /** Set by the page: what to show in a popup, what a stop is called, what a pick does. */
     this.describe = () => document.createElement("div");
     this.nameOf = (poi) => poi.name;
@@ -91,10 +92,7 @@ export class RouteMap {
         customAttribution: style === PLAIN ? OSM_CREDIT : undefined,
       }),
     );
-    // Zoom buttons only where there's no pinching.
-    if (matchMedia("(pointer: fine)").matches) {
-      this.map.addControl(new maplibregl.NavigationControl({ showCompass: false }));
-    }
+    this.map.addControl(new maplibregl.NavigationControl({ showCompass: false }));
     this.map.addControl(
       new maplibregl.GeolocateControl({
         positionOptions: { enableHighAccuracy: true },
@@ -117,14 +115,13 @@ export class RouteMap {
     const shapes = layers.findLastIndex((layer) => layer.type === "line" || layer.type === "fill");
     const labels = layers.slice(shapes + 1).find((layer) => layer.type === "symbol")?.id;
     const layout = { "line-join": "round", "line-cap": "round" };
-    const background = palette("--bg", "#ffffff");
     map.addLayer(
       {
         id: "legs-casing",
         type: "line",
         source: "legs",
         layout,
-        paint: { "line-color": background, "line-width": 8, "line-opacity": 0.9 },
+        paint: { "line-color": "#ffffff", "line-width": 7, "line-opacity": 0.85 },
       },
       labels,
     );
@@ -134,7 +131,7 @@ export class RouteMap {
         type: "line",
         source: "legs",
         layout,
-        paint: { "line-color": palette("--accent", "#0d6b47"), "line-width": 4.5 },
+        paint: { "line-color": "#e4572e", "line-width": 4 },
       },
       labels,
     );
@@ -144,9 +141,10 @@ export class RouteMap {
       source: "pois",
       paint: {
         "circle-radius": ["interpolate", ["linear"], ["zoom"], 14, 3, 17, 6],
-        "circle-color": DARK ? "#7d857f" : "#9aa29c",
-        "circle-stroke-color": background,
-        "circle-stroke-width": 1.5,
+        "circle-color": ["get", "color"],
+        "circle-opacity": 0.75,
+        "circle-stroke-color": "#ffffff",
+        "circle-stroke-width": 1,
       },
     });
     map.on("click", "pois", (event) => {
@@ -174,7 +172,7 @@ export class RouteMap {
       type: "FeatureCollection",
       features: others.map((poi) => ({
         type: "Feature",
-        properties: { id: poi.id },
+        properties: { id: poi.id, color: KIND_COLOR[poi.kind] ?? KIND_COLOR.other },
         geometry: { type: "Point", coordinates: [poi.lng, poi.lat] },
       })),
     });
@@ -196,6 +194,7 @@ export class RouteMap {
         );
       } else {
         element.textContent = String(index);
+        element.style.background = KIND_COLOR[visit.poi.kind] ?? KIND_COLOR.other;
         element.setAttribute("aria-label", `${index}. ${this.nameOf(visit.poi)}`);
       }
       const pick = (event) => {

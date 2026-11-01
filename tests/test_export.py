@@ -1,6 +1,10 @@
 import json
+import shutil
+import subprocess
 from dataclasses import replace
 from datetime import time
+
+import pytest
 
 from inhotim_path.export import clock, duration, format_itinerary, to_geojson, to_html
 from inhotim_path.models import Poi, PoiKind
@@ -93,3 +97,12 @@ def test_html_basemap_works_from_a_local_file():
     assert "tile.openstreetmap.org" not in page
     assert "https://tiles.openfreemap.org/styles/" in page
     assert page.count('integrity="sha512-') == 2  # MapLibre's script and stylesheet are pinned
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="needs node")
+def test_html_script_is_valid_javascript(tmp_path):
+    script = to_html(make_plan()).split("<script>")[1].split("</script>")[0]
+    path = tmp_path / "map.js"
+    path.write_text(script, encoding="utf-8")
+    result = subprocess.run(["node", "--check", str(path)], capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr

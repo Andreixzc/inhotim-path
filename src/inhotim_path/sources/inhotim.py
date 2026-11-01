@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import dataclasses
 import re
+import unicodedata
 from collections import Counter
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
@@ -238,7 +239,8 @@ def _flags(value: Any) -> tuple[str, ...]:
 
 
 def _squash(text: str) -> str:
-    return re.sub(r"\s+", " ", text).strip()
+    """Collapse whitespace and use composed Unicode (the feed mixes "í" and "i" + U+0301)."""
+    return unicodedata.normalize("NFC", re.sub(r"\s+", " ", text).strip())
 
 
 def _link_texts(fragment: Any) -> tuple[str, ...]:

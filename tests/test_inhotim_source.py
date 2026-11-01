@@ -129,3 +129,18 @@ def test_parse_overlay_bounds():
 
     assert parse_overlay_bounds(THEME_JS) == FALLBACK_OVERLAY_BOUNDS
     assert parse_overlay_bounds("new google.maps.LatLng(1,2)") is None
+
+
+def test_text_is_normalized_to_composed_unicode():
+    from inhotim_path.sources.inhotim import parse_marker
+
+    decomposed = "sem título"  # "i" + combining acute, as found in the live feed
+    raw = {
+        "id": 1,
+        "lat": -20.12,
+        "lng": -44.22,
+        "content": f"<div><h1><a href='https://x/item-do-acervo/a/'>{decomposed}</a></h1></div>",
+        "group": ["obras-a-ceu-aberto"],
+        "artists_names": "<a href='https://x'>Amilcar de Castro</a>",
+    }
+    assert parse_marker(raw).name == "sem título"

@@ -113,6 +113,9 @@ by just a few meters. We still do it properly.
 ## 6. Fetching etiquette
 
 - A full refresh is a handful of requests (map page, marker feed, SVG, theme bundle, Overpass). Run it **daily at most**.
+- **Automated:** [`.github/workflows/refresh-data.yml`](../.github/workflows/refresh-data.yml) runs `fetch` once a day
+  (06:17 in Brasília) and commits `data/` only when something changed
+  ([ADR 0007](../history/decisions/0007-daily-data-refresh.md)).
 - Identify the client: `User-Agent: inhotim-path/<version> (+https://github.com/Andreixzc/inhotim-path)`.
 - Store only factual metadata. Never re-host photos or descriptions; link to the official item page instead.
 
@@ -125,3 +128,12 @@ The CLI never downloads map tiles. The `--html` page loads them in the viewer's 
 - **Attribution:** "OpenFreeMap © OpenMapTiles Data from OpenStreetMap". MapLibre adds it to the map.
 - **Not `tile.openstreetmap.org`:** OSM's servers require a `Referer` from browsers, and a page opened from a
   file sends none. See [ADR 0006](../history/decisions/0006-basemap-openfreemap.md).
+
+## 8. Satellite imagery (HTML map, optional)
+
+- **Source:** [MapTiler](https://www.maptiler.com/cloud/) `satellite-v2` raster tiles. Needs the user's own key
+  (`--satellite-key` or `$MAPTILER_API_KEY`). The free plan has no card and pauses at its quota instead of billing.
+- **Loaded only on demand:** the page contacts MapTiler only after the "Satellite" button is pressed.
+- **Attribution:** © MapTiler © OpenStreetMap contributors (from MapTiler's tile index), plus the MapTiler logo.
+- **Not Esri World Imagery:** its terms require Esri software or a subscription, even though the tiles answer
+  without a key. See [ADR 0008](../history/decisions/0008-satellite-view-maptiler.md).

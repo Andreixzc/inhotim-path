@@ -1,6 +1,7 @@
 # inhotim-path
 
 [![CI](https://github.com/Andreixzc/inhotim-path/actions/workflows/ci.yml/badge.svg)](https://github.com/Andreixzc/inhotim-path/actions/workflows/ci.yml)
+[![Refresh data](https://github.com/Andreixzc/inhotim-path/actions/workflows/refresh-data.yml/badge.svg)](https://github.com/Andreixzc/inhotim-path/actions/workflows/refresh-data.yml)
 
 **Plan the best walking route through [Inhotim](https://www.inhotim.org.br/), built from the museum's live map.**
 
@@ -16,8 +17,8 @@ order* to see them.
   within a time budget, with your must-sees always included;
 - 📅 *(planned)* slope-aware walking times, opening hours, multi-day plans, a web app and live GPS re-routing.
 
-> **Status:** the command-line tool works end to end (Phase 1). Next up: better time estimates.
-> See the [roadmap](docs/roadmap.md).
+> **Status:** the command-line tool works end to end (Phase 1), and its data refreshes itself every day.
+> The goal is a simple web app to plan a visit, at home or on site. See the [roadmap](docs/roadmap.md).
 
 <p align="center">
   <img src="docs/img/route-all.png" width="49%" alt="The optimal tour through all 58 stops">
@@ -34,6 +35,10 @@ Inhotim live map  ──► POIs (galleries, works, gardens) ──────�
 Official axes SVG ──► georeferenced routes ──┐                       ├─► snap POIs ─► walking-time matrix ─► solver ─► route
 OpenStreetMap     ──► footpaths + park boundary ─► walking graph ────┘
 ```
+
+**Fresh data:** a GitHub Action reads the live map every morning. When something changed, it commits the new
+snapshots to [`data/`](data/) with a "what's new" note (works added, removed or moved). `git pull` gets the
+latest; `inhotim-path fetch` refreshes on demand.
 
 More detail: [vision](docs/vision.md) · [data sources](docs/data-sources.md) · [architecture](docs/architecture.md)
 
@@ -88,6 +93,7 @@ uv run inhotim-path fetch                                   # refresh data/ from
 | `--speed KMH` | Walking speed (default 4). |
 | `--start NAME` · `--start-time HH:MM` | Start/end point (default: Recepção) and clock times. |
 | `--html PATH` · `--geojson PATH` | Write the route as a standalone map page or as GeoJSON. |
+| `--satellite-key KEY` | Add a satellite view to the map page. Takes a free [MapTiler](https://www.maptiler.com/cloud/) key; defaults to `$MAPTILER_API_KEY`. The key is written into the page. |
 | `--time-limit SECONDS` | Solver search time (default 5). |
 
 ### How the route is chosen
@@ -99,8 +105,10 @@ uv run inhotim-path fetch                                   # refresh data/ from
 - **Solver:** [OR-Tools CP-SAT](https://developers.google.com/optimization/cp/cp_solver). The itinerary says when
   a route is proven optimal ([why CP-SAT](history/decisions/0004-cp-sat-circuit-solver.md),
   [why minutes](history/decisions/0005-stop-value-is-viewing-time.md)).
-- **Assumptions:** walking at 4 km/h on flat ground (Inhotim is hilly: slope-aware times are planned) and
-  guessed time per stop. Opening hours aren't modeled yet.
+- **Times:** walking time = shortest path length ÷ 4 km/h, plus a fixed time at each stop by kind (gallery
+  20 min, outdoor work 8, garden 10; change them with `--dwell`).
+- **Assumptions:** flat ground (Inhotim is hilly: slope-aware times are planned) and guessed time per stop.
+  Opening hours, queues and breaks aren't modeled yet.
 
 ## Development
 
@@ -123,6 +131,7 @@ Independent hobby project, **not affiliated with Instituto Inhotim**. Map data i
 museum's public website, and only factual metadata (names, coordinates, categories, links) is stored:
 no photos or texts. Path data © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright) (ODbL).
 The HTML map's basemap is [OpenFreeMap](https://openfreemap.org/) © OpenMapTiles, data from OpenStreetMap.
+The optional satellite imagery is © [MapTiler](https://www.maptiler.com/copyright/).
 
 ## License
 

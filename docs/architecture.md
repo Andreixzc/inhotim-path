@@ -24,7 +24,8 @@ flowchart LR
 The work is split into two stages with very different rhythms:
 
 1. **`fetch`** (online, rare: daily at most): sources → snapshots in `data/`, committed to git.
-   The snapshots double as an offline cache and as a changelog of the collection.
+   The snapshots double as an offline cache and as a changelog of the collection. A scheduled GitHub Action
+   runs it every morning and commits only real changes, with a "what's new" report.
 2. **`route`** (offline, fast: every request): `data/` → graph → matrix → solver → outputs.
    It never touches the network, so it's reproducible and testable.
 
@@ -35,6 +36,7 @@ The work is split into two stages with very different rhythms:
 | `models.py` | Domain types: `Poi`, `PoiKind` |
 | `http.py` | Shared HTTP client with the identifying User-Agent |
 | `snapshots.py` | Read/write `data/` snapshots (skips writes when the content is unchanged) |
+| `changes.py` | What changed between two POI snapshots: added, removed, renamed, moved (fetch's report) |
 | `geo.py` | Local metric projection, haversine, Web Mercator SVG georeferencing |
 | `sources/inhotim.py` | Fetch and normalize the marker feed; discover the SVG URL and overlay bounds |
 | `sources/axes.py` | Parse and georeference the routes SVG |
@@ -43,7 +45,7 @@ The work is split into two stages with very different rhythms:
 | `matrix.py` | All-pairs walking times (and paths) between stops |
 | `solver.py` | CP-SAT circuit model: TSP and orienteering (time budget), with must-sees |
 | `planner.py` | Glue: pick stops from a request, build graph + matrix, solve, lay out the timeline |
-| `export.py` | Itinerary text, GeoJSON, standalone HTML map (MapLibre GL on OpenFreeMap tiles) |
+| `export.py` | Itinerary text, GeoJSON, standalone HTML map (MapLibre GL on OpenFreeMap tiles; optional MapTiler satellite view) |
 | `cli.py` | `inhotim-path fetch` / `inhotim-path route` |
 
 ## Cost model (v1)

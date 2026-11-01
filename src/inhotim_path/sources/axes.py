@@ -8,6 +8,7 @@ polylines in lat/lng, tagged with its route color.
 from __future__ import annotations
 
 import io
+import itertools
 import math
 from collections.abc import Iterator
 from dataclasses import dataclass
@@ -40,7 +41,7 @@ class AxisLine:
 
     @property
     def length_m(self) -> float:
-        return sum(haversine_m(a, b) for a, b in zip(self.coords, self.coords[1:], strict=False))
+        return sum(haversine_m(a, b) for a, b in itertools.pairwise(self.coords))
 
 
 def parse_axes_svg(

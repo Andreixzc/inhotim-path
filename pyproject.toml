@@ -36,10 +36,6 @@ select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
-filterwarnings = [
-    # OR-Tools SWIG bindings on Python 3.14
-    "ignore:builtin type swig.* has no __module__ attribute:DeprecationWarning",
-]
 
 [dependency-groups]
 dev = [

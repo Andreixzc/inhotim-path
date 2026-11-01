@@ -30,36 +30,30 @@ test("distances", () => {
   assert.equal(distance(451_049, "pt-BR"), "451 km");
 });
 
-const parkDefaults = { kinds: ["gallery", "outdoor_work", "garden"] };
-
 test("settings survive a round trip through a link", () => {
   const state = {
-    ...defaults(parkDefaults),
+    ...defaults(),
     budgetMin: 240,
     startTime: "10:15",
+    see: "galleries",
     must: [3386, 3425],
     exclude: [12],
-    pace: "relaxed",
-    dwellMin: { gallery: 30 },
   };
   const hash = toHash(state);
-  assert.equal(
-    hash,
-    "b=240&t=1015&k=gallery,outdoor_work,garden&m=3386,3425&x=12&p=relaxed&d=gallery:30",
-  );
-  assert.deepEqual(fromHash(`#${hash}`, defaults(parkDefaults)), state);
-  const all = { ...defaults(parkDefaults), budgetMin: null };
-  assert.equal(fromHash(toHash(all), defaults(parkDefaults)).budgetMin, null);
+  assert.equal(hash, "b=240&t=1015&s=galleries&m=3386,3425&x=12");
+  assert.deepEqual(fromHash(`#${hash}`, defaults()), state);
+  const all = { ...defaults(), budgetMin: null };
+  assert.equal(fromHash(toHash(all), defaults()).budgetMin, null);
 });
 
 test("junk in a link is ignored", () => {
-  const base = defaults(parkDefaults);
-  const state = fromHash("#b=-5&t=2599&k=<script>&m=1,x,2.5,7&p=fast&d=gallery:-1,garden:15", base);
+  const base = defaults();
+  const state = fromHash("#b=-5&t=2599&s=constructor&m=1,x,2.5,7&p=brisk&d=gallery:30", base);
   assert.equal(state.budgetMin, base.budgetMin);
   assert.equal(state.startTime, base.startTime);
-  assert.deepEqual(state.kinds, []);
+  assert.equal(state.see, "all");
   assert.deepEqual(state.must, [1, 7]);
-  assert.equal(state.pace, "normal");
-  assert.deepEqual(state.dwellMin, { garden: 15 });
-  assert.equal(state.from, "reception", "a link never starts from someone's position");
+  assert.equal(fromHash("#b=90", base).budgetMin, base.budgetMin, "only the budgets on offer");
+  assert.equal(state.from, "gate", "a link never starts from someone's position");
+  assert.deepEqual(Object.keys(state), Object.keys(base), "no walking pace or minutes per stop");
 });

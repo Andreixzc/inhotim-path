@@ -35,3 +35,4 @@ Code shows *what* the project is. This folder explains *how it got there* and *w
 - [0004: CP-SAT circuit model instead of the OR-Tools routing library](decisions/0004-cp-sat-circuit-solver.md)
 - [0005: A stop is worth its viewing minutes](decisions/0005-stop-value-is-viewing-time.md)
 - [0006: HTML map basemap from OpenFreeMap (MapLibre), not OSM's tile servers](decisions/0006-basemap-openfreemap.md)
+- [0007: Keep the data fresh with a daily GitHub Actions refresh](decisions/0007-daily-data-refresh.md)

@@ -1,0 +1,72 @@
+{
+  "success": true,
+  "data": {
+    "markers": [
+      {
+        "id": 4241, "lat": -20.1240764, "lng": -44.2184546,
+        "content": "<div class=\"infowindow__content \"><h1>Recepção</h1></div>",
+        "axis": "", "artists": "", "category": "", "artists_names": "",
+        "group": "it_services", "main_view": true
+      },
+      {
+        "id": 3890, "lat": -20.1229, "lng": -44.2193,
+        "content": "<div class=\"infowindow__content  infowindow__content--amarelo\"><div class=\"infowindow__img\"><a href=\"https://www.inhotim.org.br/item-do-acervo/galeria-praca/\"><img src=\"x.jpg\" /></a></div><h3><a href=\"https://www.inhotim.org.br/categorias/galeria/\">Galeria</a></h3><h1><a href=\"https://www.inhotim.org.br/item-do-acervo/galeria-praca/\">Galeria Pra&ccedil;a</a></h1></div>",
+        "axis": ["amarelo"], "artists": [], "category": "<a href=\"https://www.inhotim.org.br/categorias/galeria/\">Galeria</a>",
+        "artists_names": "", "group": ["galeria"], "main_view": true
+      },
+      {
+        "id": 3890, "lat": -20.1229, "lng": -44.2193,
+        "content": "<div class=\"infowindow__content  infowindow__content--amarelo\"><h1><a href=\"https://www.inhotim.org.br/item-do-acervo/galeria-praca/\">Galeria Praça</a></h1></div>",
+        "axis": ["amarelo"], "artists": [], "category": "", "artists_names": "",
+        "group": ["galeria"], "main_view": true
+      },
+      {
+        "id": 3236, "lat": -20.1270, "lng": -44.2240,
+        "content": "<div class=\"infowindow__content  infowindow__content--laranja\"><div class=\"infowindow__img\"><a href=\"https://www.inhotim.org.br/item-do-acervo/beam-drop-inhotim-chris-burden/\"><img src=\"y.jpg\" /></a></div><h3><a href=\"https://www.inhotim.org.br/categorias/obras-a-ceu-aberto/\">Obras a céu aberto</a></h3><h2><a href=\"https://www.inhotim.org.br/item-do-acervo/chris-burden/\">Chris Burden</a></h2><h1><a href=\"https://www.inhotim.org.br/item-do-acervo/beam-drop-inhotim-chris-burden/\">Beam Drop Inhotim</a></h1></div>",
+        "axis": ["orange"], "artists": [3361], "category": "",
+        "artists_names": "<a href=\"https://www.inhotim.org.br/?post_type=it_collection_item&p=3361\">Chris Burden</a>",
+        "group": ["obras-a-ceu-aberto"], "main_view": true
+      },
+      {
+        "id": 3476, "lat": -20.12400, "lng": -44.22000,
+        "content": "<div class=\"infowindow__content\"><h1><a href=\"https://www.inhotim.org.br/item-do-acervo/galeria-rivane-neuenschwander/\">Galeria Rivane Neuenschwander</a></h1></div>",
+        "axis": ["rosa"], "artists": [3158], "category": "",
+        "artists_names": "<a href=\"https://www.inhotim.org.br/?p=3158\">Rivane Neuenschwander</a>",
+        "group": ["galeria", "obra-em-galeria"], "main_view": false,
+        "filters": {"novidades-do-acervo": ["obras-e-galerias-reabertas"]}
+      },
+      {
+        "id": 3476, "lat": -20.123834, "lng": -44.219952,
+        "content": "<div class=\"infowindow__content\"><h1><a href=\"https://www.inhotim.org.br/item-do-acervo/galeria-rivane-neuenschwander/\">Galeria Rivane Neuenschwander</a></h1></div>",
+        "axis": ["amarelo"], "artists": [3158], "category": "",
+        "artists_names": "<a href=\"https://www.inhotim.org.br/?p=3158\">Rivane Neuenschwander</a>",
+        "group": ["galeria", "obra-em-galeria"], "main_view": true
+      },
+      {
+        "id": 3700, "lat": -20.1225, "lng": -44.2210,
+        "content": "<div class=\"infowindow__content\"><h1><a href=\"https://www.inhotim.org.br/item-do-acervo/forty-part-motet/\">Forty Part Motet</a></h1></div>",
+        "axis": ["amarelo"], "artists": [3642], "category": "",
+        "artists_names": "<a href=\"https://www.inhotim.org.br/?p=3642\">Janet Cardiff</a>",
+        "group": ["obra-em-galeria"], "main_view": false
+      },
+      {
+        "id": 17243, "lat": -20.12412, "lng": -44.2196,
+        "content": "<div class=\"infowindow__content \"><h1><a href=\"https://www.inhotim.org.br/eventos/o-que-e-um-rio/\">O que é um rio?</a></h1></div>",
+        "axis": [], "artists": null, "category": null, "artists_names": null,
+        "group": null, "main_view": true
+      },
+      {
+        "id": 3226, "lat": -20.1232, "lng": -44.22222,
+        "content": "<div class=\"infowindow__content\"><h1><a href=\"https://www.inhotim.org.br/item-do-acervo/yayoi-kusama/\">Yayoi Kusama</a></h1></div>",
+        "axis": ["laranja"], "artists": [], "category": "", "artists_names": "",
+        "group": ["artista"], "main_view": true
+      },
+      {
+        "id": 4060, "lat": -20.1250, "lng": -44.2230,
+        "content": "<div class=\"infowindow__content\"><h1><a href=\"https://www.inhotim.org.br/item-do-acervo/ipe-amarelo/\">Ipê-amarelo</a></h1></div>",
+        "axis": ["laranja"], "artists": [], "category": "", "artists_names": "",
+        "group": ["destaque-botanico"], "main_view": true
+      }
+    ]
+  }
+}

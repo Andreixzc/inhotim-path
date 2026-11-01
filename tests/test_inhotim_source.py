@@ -1,0 +1,92 @@
+import json
+from pathlib import Path
+
+import pytest
+
+from inhotim_path.models import PoiKind
+from inhotim_path.sources import SourceError
+from inhotim_path.sources.inhotim import classify, extract_markers, normalize_markers
+
+FIXTURE = Path(__file__).parent / "fixtures" / "get_markers_sample.json"
+
+
+@pytest.fixture
+def pois():
+    markers = extract_markers(json.loads(FIXTURE.read_text(encoding="utf-8")))
+    return {p.id: p for p in normalize_markers(markers)}
+
+
+def test_deduplicates_by_id(pois):
+    assert len(pois) == 8  # 10 raw markers, 2 duplicated ids
+
+
+def test_parses_title_url_and_unescapes_entities(pois):
+    praca = pois[3890]
+    assert praca.name == "Galeria Praça"
+    assert praca.url == "https://www.inhotim.org.br/item-do-acervo/galeria-praca/"
+    assert praca.kind is PoiKind.GALLERY
+    assert praca.axes == ("amarelo",)
+
+
+def test_prefers_main_view_copy_and_merges_axes_and_flags(pois):
+    rivane = pois[3476]
+    assert (rivane.lat, rivane.lng) == (-20.123834, -44.219952)  # the main_view=True copy
+    assert rivane.main_view is True
+    assert set(rivane.axes) == {"rosa", "amarelo"}
+    assert rivane.flags == ("obras-e-galerias-reabertas",)
+    assert rivane.kind is PoiKind.GALLERY  # "galeria" wins over "obra-em-galeria"
+
+
+def test_artists_and_axis_aliases(pois):
+    beam_drop = pois[3236]
+    assert beam_drop.kind is PoiKind.OUTDOOR_WORK
+    assert beam_drop.artists == ("Chris Burden",)
+    assert beam_drop.axes == ("laranja",)  # "orange" (English site) normalized
+
+
+def test_kinds(pois):
+    assert pois[4241].kind is PoiKind.SERVICE
+    assert pois[4241].axes == ()  # axis "" -> no axes
+    assert pois[3700].kind is PoiKind.WORK_IN_GALLERY
+    assert pois[3700].main_view is False
+    assert pois[17243].kind is PoiKind.EVENT
+    assert pois[3226].kind is PoiKind.GALLERY  # artist pinned on the map = their gallery
+    assert pois[4060].kind is PoiKind.BOTANICAL
+
+
+def test_output_is_sorted_for_stable_diffs():
+    markers = extract_markers(json.loads(FIXTURE.read_text(encoding="utf-8")))
+    result = normalize_markers(markers)
+    assert result == normalize_markers(list(reversed(markers)))
+    keys = [(p.kind.value, p.name.casefold(), p.id) for p in result]
+    assert keys == sorted(keys)
+
+
+@pytest.mark.parametrize(
+    ("group", "url", "expected"),
+    [
+        ("it_services", None, PoiKind.SERVICE),
+        (["jardim-tematico"], None, PoiKind.GARDEN),
+        (["exposicoes"], None, PoiKind.EXHIBITION),
+        (None, "https://www.inhotim.org.br/eventos/x/", PoiKind.EVENT),
+        (None, "https://www.inhotim.org.br/outra-coisa/", PoiKind.OTHER),
+        (["slug-desconhecido"], None, PoiKind.OTHER),
+        ("", None, PoiKind.OTHER),
+    ],
+)
+def test_classify(group, url, expected):
+    assert classify(group, url) is expected
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        None,
+        {"success": False},
+        {"success": True, "data": {"markers": []}},
+        {"success": True, "data": {"markers": [{"id": 1, "lat": 0}]}},
+    ],
+)
+def test_rejects_unexpected_payloads(payload):
+    with pytest.raises(SourceError):
+        extract_markers(payload)

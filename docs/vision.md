@@ -23,8 +23,8 @@ official map dynamically.*
 
 Model the park as a **graph**: path junctions are nodes, and path segments are edges weighted by walking time.
 Visiting every attraction once and coming back to the reception in minimum time is the
-**Traveling Salesman Problem**. With ~60 stops it is NP-hard in theory but easy in practice: a solver like
-OR-Tools finds optimal or near-optimal tours in seconds.
+**Traveling Salesman Problem**. With ~60 stops it is NP-hard in theory but easy in practice: OR-Tools' CP-SAT
+proves the optimal tour through the 58 default stops in about 0.2 s.
 
 Two important details:
 
@@ -38,8 +38,11 @@ Two important details:
 ### 2. Reality check: "everything" probably doesn't fit in one day
 
 Back-of-the-envelope with the current map: ~20 galleries × 20 min + ~30 outdoor works × 8 min + 9 gardens × 10 min
-≈ **12 hours of looking, before walking a single meter**. The dwell times are assumptions; the engine will
-produce real numbers.
+≈ **12 hours of looking, before walking a single meter**.
+
+The engine's answer (2026-11-01 data): the optimal tour has **58 stops: 11h50 at stops plus 11.8 km of walking
+(2h57) = 14h47**. The dwell times are assumptions, but the conclusion holds: seeing everything takes about two
+days.
 
 ### 3. So the useful question is "I have N hours: what should I see, and in what order?"
 
@@ -47,14 +50,17 @@ That's the **Orienteering Problem** (also called the prize-collecting TSP). Ever
 is to maximize the total value within a time budget, starting and ending at the reception. Two days means two
 tours that never repeat a stop: the **Team Orienteering Problem**.
 
-Values default by category (gallery > outdoor work > garden > botanical highlight) and the visitor can push them
-up: must-sees, favorite artists, "only what's new".
+A stop is worth its viewing minutes ([ADR 0005](../history/decisions/0005-stop-value-is-viewing-time.md)), so the
+best route spends the most time with art and then walks the least. Per-category weights were tried first, and
+they flipped between "all outdoor works" and "all galleries". Visitors steer with must-sees today; favorite
+artists and "only what's new" can come later.
 
 ### 4. One engine for all of it
 
-OR-Tools' routing solver supports optional stops with penalties (orienteering), a time dimension with a budget,
-time windows (opening hours) and multiple vehicles (= days). The original "see everything" TSP comes for free,
-and the more useful modes sit on top of it.
+One CP-SAT circuit model covers both modes: optional stops take a self-loop, and a constraint caps the total time
+([ADR 0004](../history/decisions/0004-cp-sat-circuit-solver.md)). The original "see everything" TSP is the
+special case with no optional stops. Time windows (opening hours) and one circuit per day (multi-day plans) fit
+the same model.
 
 ## Who it's for
 

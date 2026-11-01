@@ -43,7 +43,7 @@ The work is split into two stages with very different rhythms:
 | `matrix.py` | All-pairs walking times (and paths) between stops |
 | `solver.py` | CP-SAT circuit model: TSP and orienteering (time budget), with must-sees |
 | `planner.py` | Glue: pick stops from a request, build graph + matrix, solve, lay out the timeline |
-| `export.py` | Itinerary text, GeoJSON, standalone HTML map |
+| `export.py` | Itinerary text, GeoJSON, standalone HTML map (MapLibre GL on OpenFreeMap tiles) |
 | `cli.py` | `inhotim-path fetch` / `inhotim-path route` |
 
 ## Cost model (v1)

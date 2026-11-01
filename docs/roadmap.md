@@ -38,7 +38,7 @@ session-by-session story lives in [`history/`](../history/).
 ## Phase 3: Web app
 
 - [ ] Decide how routes are computed on the web: precomputed vs. API vs. in-browser heuristic (see ADR 0003)
-- [ ] Mobile-first map UI (MapLibre or Leaflet), offline-capable PWA
+- [ ] Mobile-first map UI (MapLibre, as in the HTML map: ADR 0006), offline-capable PWA
 - [ ] Scheduled data refresh (GitHub Actions cron) + "what's new" diff of the collection
 - [ ] Deploy (GitHub Pages or Vercel)
 

@@ -67,7 +67,7 @@ time budget 4h00 · 41 stops left out
  18      13:58  Recepção                                        service        214 m · 3 min
 ```
 
-Open `output/route.html` for the route on a map. More examples:
+Open `output/route.html` in a browser for the route on a map. More examples:
 
 ```bash
 uv run inhotim-path route                                   # everything (TSP), proven optimal
@@ -122,6 +122,7 @@ This repo keeps a running log of working sessions and decisions in [`history/`](
 Independent hobby project, **not affiliated with Instituto Inhotim**. Map data is fetched from the
 museum's public website, and only factual metadata (names, coordinates, categories, links) is stored:
 no photos or texts. Path data © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright) (ODbL).
+The HTML map's basemap is [OpenFreeMap](https://openfreemap.org/) © OpenMapTiles, data from OpenStreetMap.
 
 ## License
 

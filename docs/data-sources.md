@@ -115,3 +115,13 @@ by just a few meters. We still do it properly.
 - A full refresh is a handful of requests (map page, marker feed, SVG, theme bundle, Overpass). Run it **daily at most**.
 - Identify the client: `User-Agent: inhotim-path/<version> (+https://github.com/Andreixzc/inhotim-path)`.
 - Store only factual metadata. Never re-host photos or descriptions; link to the official item page instead.
+
+## 7. Basemap tiles (HTML map only)
+
+The CLI never downloads map tiles. The `--html` page loads them in the viewer's browser:
+
+- **Source:** [OpenFreeMap](https://openfreemap.org/), style `https://tiles.openfreemap.org/styles/liberty`
+  (vector tiles, drawn with MapLibre GL). No API key, no usage limits, commercial use allowed.
+- **Attribution:** "OpenFreeMap © OpenMapTiles Data from OpenStreetMap". MapLibre adds it to the map.
+- **Not `tile.openstreetmap.org`:** OSM's servers require a `Referer` from browsers, and a page opened from a
+  file sends none. See [ADR 0006](../history/decisions/0006-basemap-openfreemap.md).

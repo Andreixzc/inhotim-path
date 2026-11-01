@@ -37,19 +37,26 @@ session-by-session story lives in [`history/`](../history/).
 
 ## Phase 3: Web app
 
-- [ ] Decide how routes are computed on the web: precomputed vs. API vs. in-browser heuristic (see ADR 0003)
-- [ ] Mobile-first map UI (MapLibre, as in the HTML map: ADR 0006), offline-capable PWA
+- [x] Decide how routes are computed on the web: in the browser, exact up to 12 stops, heuristics beyond,
+      benchmarked against CP-SAT (ADR 0009)
+- [x] `inhotim-path web-data`: the park (POIs + walking network) as one JSON file for the browser
+- [x] Mobile-first planner page in `web/`: time available, kinds, must-sees, pace, skip/add stops, Portuguese and
+      English, shareable links
 - [x] Scheduled data refresh (GitHub Actions cron) + "what's new" diff of the collection (ADR 0007)
 - [x] Satellite view on the map, with a MapTiler key (ADR 0008)
-- [ ] A MapTiler key restricted to the web app's domain
-- [ ] Deploy (GitHub Pages or Vercel)
+- [x] Deploy workflow for GitHub Pages (`pages.yml`), republished after each data refresh
+- [ ] Switch GitHub Pages on (Settings > Pages > Source: GitHub Actions)
+- [ ] A MapTiler key restricted to the web app's domain (repository variable `MAPTILER_API_KEY`)
+- [ ] Try it on real phones: speed of the largest plans, the layout, GPS inside the park
+- [ ] Offline-capable PWA (cache the page, `park.json` and the basemap around the park)
 
 ## Phase 4: Live mode
 
-- [ ] GPS "you are here": MapLibre's `GeolocateControl` (HTTPS and the visitor's permission; the position never
+- [x] GPS "you are here": MapLibre's `GeolocateControl` (HTTPS and the visitor's permission; the position never
       leaves the phone)
+- [x] Plan from the current position, starting now, ending at the reception
 - [ ] Check off visited stops, automatically within ~25 m of one
-- [ ] Re-plan from the current position with the time left (needs routing in the browser or a small API)
+- [ ] Re-plan the rest of the visit as you go (keep what's been seen, use the time left)
 - [ ] Time-left and closing-time alerts
 
 ## Phase 5: Smart extras
@@ -57,4 +64,4 @@ session-by-session story lives in [`history/`](../history/).
 - [ ] Crowd/queue heuristics
 - [ ] Weather-aware ordering
 - [ ] Accessibility mode (avoid steep or unpaved paths)
-- [ ] Shareable plans
+- [x] Shareable plans (the settings live in the page's URL)

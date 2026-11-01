@@ -46,7 +46,28 @@ The work is split into two stages with very different rhythms:
 | `solver.py` | CP-SAT circuit model: TSP and orienteering (time budget), with must-sees |
 | `planner.py` | Glue: pick stops from a request, build graph + matrix, solve, lay out the timeline |
 | `export.py` | Itinerary text, GeoJSON, standalone HTML map (MapLibre GL on OpenFreeMap tiles; optional MapTiler satellite view) |
-| `cli.py` | `inhotim-path fetch` / `inhotim-path route` |
+| `webdata.py` | The park for the web app: every POI plus the walking network, as one compact JSON file |
+| `cli.py` | `inhotim-path fetch` / `route` / `web-data` |
+
+## Web app (`web/`)
+
+A static page that plans in the browser ([ADR 0009](../history/decisions/0009-web-app-plans-in-the-browser.md)).
+Plain ES modules with no build step; MapLibre GL comes from cdnjs, pinned with SRI. The page reads
+`web/data/park.json`, written by `inhotim-path web-data` (not committed; the Pages workflow builds it).
+
+| Module (`web/js/`) | Responsibility |
+|---|---|
+| `network.js` | Dijkstra over the exported paths, walk shapes for the map, snapping a GPS position onto the paths |
+| `solver.js` | Exact (Held-Karp) up to 12 stops; iterated local search beyond: TSP and orienteering, with must-sees |
+| `plan.js` | Mirror of `planner.py`: pick stops, walking-time matrix, solve, timeline, legs |
+| `worker.js` | Runs `plan.js` off the main thread |
+| `map.js` | Basemap with fallback, route, numbered stops, other POIs, locate button, satellite toggle |
+| `app.js` | The form, the itinerary, popups, and the glue between them |
+| `state.js` · `format.js` · `i18n.js` | Settings (localStorage + URL fragment), formatting, Portuguese and English |
+
+The modules without DOM code (`network`, `solver`, `plan`, `state`, `format`) are tested under node
+(`tests/web/`). `tests/test_web_planner.py` runs `scripts/web_plan.mjs` to check that the JavaScript planner agrees
+with the Python one, and `scripts/benchmark_web_solver.py` compares it with CP-SAT on the real park.
 
 ## Cost model (v1)
 
@@ -114,4 +135,7 @@ Why CP-SAT rather than the OR-Tools routing library: [ADR 0004](../history/decis
   building on synthetic lines, solver on toy matrices with known optimal tours, renderers on hand-made plans.
 - **End-to-end tests:** planner and CLI on a synthetic park (`tests/synthetic_park.py`) where every distance can
   be checked by hand: snapshots are written to a temp dir and `inhotim-path route` runs on them.
-- **CI:** ruff and pytest on every push (GitHub Actions).
+- **Web app:** `node --test tests/web/*.test.mjs` checks the solver against brute force on small instances (both
+  the exact and the heuristic paths), the network, the planner on the synthetic park's export, and the settings.
+- **CI:** ruff, pytest and the node tests on every push (GitHub Actions). After CI passes on `main`,
+  `pages.yml` publishes the web app (once Pages is switched on).

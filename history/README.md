@@ -37,3 +37,4 @@ Code shows *what* the project is. This folder explains *how it got there* and *w
 - [0006: HTML map basemap from OpenFreeMap (MapLibre), not OSM's tile servers](decisions/0006-basemap-openfreemap.md)
 - [0007: Keep the data fresh with a daily GitHub Actions refresh](decisions/0007-daily-data-refresh.md)
 - [0008: Satellite view from MapTiler, with the user's own key](decisions/0008-satellite-view-maptiler.md)
+- [0009: The web app is a static site that plans routes in the browser](decisions/0009-web-app-plans-in-the-browser.md)

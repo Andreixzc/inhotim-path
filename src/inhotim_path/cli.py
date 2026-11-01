@@ -3,17 +3,31 @@
 from __future__ import annotations
 
 import argparse
+import re
+import sys
 from collections import Counter
 from collections.abc import Sequence
+from datetime import datetime, time
 from pathlib import Path
 
 import httpx
 
-from inhotim_path import __version__, snapshots
+from inhotim_path import __version__, export, planner, snapshots
 from inhotim_path.http import make_client
+from inhotim_path.models import PoiKind
+from inhotim_path.solver import RouteNotFoundError
 from inhotim_path.sources import axes, inhotim, osm
 
 FETCH_STEPS = ("pois", "axes", "osm")
+ROUTABLE_KINDS = (
+    PoiKind.GALLERY,
+    PoiKind.OUTDOOR_WORK,
+    PoiKind.GARDEN,
+    PoiKind.BOTANICAL,
+    PoiKind.EXHIBITION,
+    PoiKind.WORK_IN_GALLERY,
+    PoiKind.EVENT,
+)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -39,7 +53,127 @@ def build_parser() -> argparse.ArgumentParser:
         help="refresh only some sources (default: all)",
     )
     fetch.set_defaults(handler=cmd_fetch)
+
+    route = commands.add_parser(
+        "route",
+        help="compute the best walking route",
+        description="Shortest route through every stop (TSP), or the best route that fits a "
+        "time budget (orienteering) when --budget is given. Works offline from data/.",
+    )
+    route.add_argument(
+        "--budget",
+        type=parse_duration,
+        metavar="DURATION",
+        help="time you have, e.g. 4h, 5h30, 90m (default: see everything)",
+    )
+    route.add_argument(
+        "--kinds",
+        nargs="+",
+        choices=[k.value for k in ROUTABLE_KINDS],
+        default=[k.value for k in planner.DEFAULT_KINDS],
+        metavar="KIND",
+        help="kinds of stops (default: %(default)s); choices: "
+        + ", ".join(k.value for k in ROUTABLE_KINDS),
+    )
+    route.add_argument("--botanical", action="store_true", help="also stop at botanical highlights")
+    route.add_argument(
+        "--must",
+        nargs="+",
+        default=[],
+        metavar="NAME",
+        help="must-see stops: name or artist, accents/case optional (e.g. Kusama 'Beam Drop')",
+    )
+    route.add_argument("--exclude", nargs="+", default=[], metavar="NAME", help="stops to skip")
+    route.add_argument(
+        "--start", default=planner.DEFAULT_START, help="start/end point (default: %(default)s)"
+    )
+    route.add_argument(
+        "--speed",
+        type=float,
+        default=planner.DEFAULT_SPEED_KMH,
+        metavar="KMH",
+        help="walking speed (default: %(default)s)",
+    )
+    route.add_argument(
+        "--dwell",
+        nargs="+",
+        default=[],
+        type=parse_dwell,
+        metavar="KIND=MIN",
+        help="minutes spent per kind of stop, e.g. gallery=30 outdoor_work=5",
+    )
+    route.add_argument(
+        "--start-time", type=parse_clock, metavar="HH:MM", help="show clock times from HH:MM"
+    )
+    route.add_argument(
+        "--time-limit",
+        type=float,
+        default=5.0,
+        metavar="SECONDS",
+        help="solver search time (default: %(default)s)",
+    )
+    route.add_argument("--geojson", type=Path, metavar="PATH", help="write the route as GeoJSON")
+    route.add_argument("--html", type=Path, metavar="PATH", help="write a standalone map page")
+    route.set_defaults(handler=cmd_route)
     return parser
+
+
+def parse_duration(text: str) -> float:
+    """'4h' -> 240, '5h30' -> 330, '1.5h' -> 90, '90m' / '90' -> 90 (minutes)."""
+    match = re.fullmatch(
+        r"\s*(?:(\d+(?:\.\d+)?)\s*h)?\s*(?:(\d+(?:\.\d+)?)\s*(?:m|min)?)?\s*", text
+    )
+    if not match or not any(match.groups()):
+        raise argparse.ArgumentTypeError(f"invalid duration {text!r} (try 4h, 5h30, 90m)")
+    hours, minutes = (float(g) if g else 0.0 for g in match.groups())
+    return hours * 60 + minutes
+
+
+def parse_clock(text: str) -> time:
+    try:
+        return datetime.strptime(text, "%H:%M").time()
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"invalid time {text!r} (use HH:MM)") from None
+
+
+def parse_dwell(text: str) -> tuple[PoiKind, float]:
+    kind, _, minutes = text.partition("=")
+    try:
+        return PoiKind(kind.strip()), float(minutes)
+    except ValueError:
+        raise argparse.ArgumentTypeError(
+            f"invalid dwell {text!r} (use KIND=MINUTES, e.g. gallery=30)"
+        ) from None
+
+
+def cmd_route(args: argparse.Namespace) -> int:
+    kinds = tuple(PoiKind(k) for k in args.kinds)
+    if args.botanical and PoiKind.BOTANICAL not in kinds:
+        kinds += (PoiKind.BOTANICAL,)
+    request = planner.PlanRequest(
+        kinds=kinds,
+        must=tuple(args.must),
+        exclude=tuple(args.exclude),
+        start=args.start,
+        budget_min=args.budget,
+        speed_kmh=args.speed,
+        dwell_min={**planner.DEFAULT_DWELL_MIN, **dict(args.dwell)},
+        time_limit_s=args.time_limit,
+    )
+    try:
+        plan = planner.plan_route(planner.ParkData.load(args.data_dir), request)
+    except (planner.PlanningError, RouteNotFoundError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    print(export.format_itinerary(plan, args.start_time))
+    if args.geojson:
+        snapshots.write_json(args.geojson, export.to_geojson(plan, args.start_time))
+        print(f"\nGeoJSON  -> {args.geojson}")
+    if args.html:
+        args.html.parent.mkdir(parents=True, exist_ok=True)
+        args.html.write_text(export.to_html(plan, args.start_time), encoding="utf-8")
+        print(f"HTML map -> {args.html}")
+    return 0
 
 
 def cmd_fetch(args: argparse.Namespace) -> int:

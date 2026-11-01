@@ -12,9 +12,9 @@ from pathlib import Path
 
 import httpx
 
-from inhotim_path import __version__, export, planner, snapshots
+from inhotim_path import __version__, changes, export, planner, snapshots
 from inhotim_path.http import make_client
-from inhotim_path.models import PoiKind
+from inhotim_path.models import Poi, PoiKind
 from inhotim_path.solver import RouteNotFoundError
 from inhotim_path.sources import axes, inhotim, osm
 
@@ -190,10 +190,26 @@ def _fetch_pois(client: httpx.Client, data_dir: Path) -> None:
     raw = inhotim.fetch_markers(client)
     pois = inhotim.normalize_markers(raw)
     path = data_dir / snapshots.POIS_FILE
+    previous = _read_previous_pois(path)
     changed = snapshots.write_pois(path, pois, source=inhotim.MARKERS_URL)
     kinds = Counter(p.kind.value for p in pois)
     print(f"pois: {len(raw)} markers -> {len(pois)} unique POIs -> {path} ({_status(changed)})")
     print("      " + ", ".join(f"{kind}={n}" for kind, n in kinds.most_common()))
+    if changed and previous is not None:
+        diff = changes.diff_pois(previous, pois)
+        if not diff:
+            print("      what's new: nothing notable (pins nudged or reordered)")
+            return
+        print(f"      what's new: {changes.summary(diff)}")
+        for line in changes.describe(diff):
+            print(f"        {line}")
+
+
+def _read_previous_pois(path: Path) -> list[Poi] | None:
+    try:
+        return snapshots.read_pois(path)
+    except (OSError, ValueError, KeyError, TypeError):
+        return None  # first fetch, or an unreadable snapshot: nothing to compare with
 
 
 def _fetch_axes(client: httpx.Client, data_dir: Path) -> None:

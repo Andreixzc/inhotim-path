@@ -1,10 +1,12 @@
 import argparse
 import json
 from datetime import time
+from pathlib import Path
 
+import httpx
 import pytest
 
-from inhotim_path import __version__
+from inhotim_path import __version__, snapshots
 from inhotim_path.cli import main, parse_clock, parse_duration, parse_dwell
 from inhotim_path.models import PoiKind
 from tests.synthetic_park import write_snapshots
@@ -92,3 +94,24 @@ def test_route_with_must_that_cannot_fit(tmp_path, capsys):
     write_snapshots(tmp_path)
     assert main(["--data-dir", str(tmp_path), "route", "--budget", "10m", "--must", "lago"]) == 2
     assert "no feasible route" in capsys.readouterr().err
+
+
+def test_fetch_reports_whats_new_in_the_collection(tmp_path, monkeypatch, capsys):
+    feed = (Path(__file__).parent / "fixtures" / "get_markers_sample.json").read_text("utf-8")
+    transport = httpx.MockTransport(lambda request: httpx.Response(200, text=feed))
+    monkeypatch.setattr("inhotim_path.cli.make_client", lambda: httpx.Client(transport=transport))
+    fetch = ["--data-dir", str(tmp_path), "fetch", "--only", "pois"]
+
+    assert main(fetch) == 0  # first snapshot: nothing to compare with
+    assert "what's new" not in capsys.readouterr().out
+
+    path = tmp_path / snapshots.POIS_FILE
+    first, *rest = snapshots.read_pois(path)
+    snapshots.write_pois(path, rest, source="test")  # as if the first POI were new on the map
+    assert main(fetch) == 0
+    out = capsys.readouterr().out
+    assert "what's new: 1 added, 0 removed, 0 changed" in out
+    assert f"+ {first.name} ({first.kind.value})" in out
+
+    assert main(fetch) == 0
+    assert "(unchanged)" in capsys.readouterr().out

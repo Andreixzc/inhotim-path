@@ -4,6 +4,7 @@ import { test } from "node:test";
 import { distance } from "../../web/js/format.js";
 import {
   KINDS,
+  artistStops,
   covers,
   defaults,
   fromHash,
@@ -86,4 +87,16 @@ test("a category is chosen whole, or not at all", () => {
   assert.deepEqual(state, { ...defaults(), kinds: ["garden", "botanical"], exclude: [2] });
   setKind(state, "gallery", true, pois);
   assert.deepEqual(state.kinds, ["gallery", "garden", "botanical"], "kept in the page's order");
+});
+
+test("an artist's stops: on the map, or inside a gallery if that's all they have", () => {
+  const own = { id: 10, artists: ["Tunga"], main_view: true };
+  const outdoor = { id: 11, artists: ["Tunga", "Duo"], main_view: true };
+  const insideOwn = { id: 12, artists: ["Tunga"], main_view: false };
+  const insideOnly = { id: 13, artists: ["Janet Cardiff", "Tunga"], main_view: false };
+  const stops = artistStops([own, outdoor, insideOwn, insideOnly]);
+  assert.deepEqual([...stops.keys()].sort(), ["Duo", "Janet Cardiff", "Tunga"]);
+  assert.deepEqual(stops.get("Tunga"), [own, outdoor]);
+  assert.deepEqual(stops.get("Duo"), [outdoor]);
+  assert.deepEqual(stops.get("Janet Cardiff"), [insideOnly]);
 });

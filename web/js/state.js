@@ -4,7 +4,7 @@
 //
 // No times and no time limit (ADR 0010): the page plans the shortest walk through what's chosen.
 // What's chosen is a set of the museum's own categories, plus stops added or skipped one by one
-// (ADR 0012).
+// (ADR 0012), also a whole artist at a time (ADR 0013).
 
 /** The categories a visitor can choose, as on Inhotim's map, in the order the page lists them. */
 export const KINDS = ["gallery", "outdoor_work", "garden", "botanical"];
@@ -46,6 +46,25 @@ export function setKind(state, kind, on, pois) {
   const ofKind = new Set(pois.filter((poi) => poi.kind === kind).map((poi) => poi.id));
   state.must = state.must.filter((id) => !ofKind.has(id));
   state.exclude = state.exclude.filter((id) => !ofKind.has(id));
+}
+
+/**
+ * Each artist's stops, for choosing by artist: their galleries and works on the map. A work
+ * inside a gallery counts only for an artist with nothing else on the map; the others' are in
+ * their galleries.
+ */
+export function artistStops(pois) {
+  const onMap = new Map();
+  const inside = new Map();
+  for (const poi of pois) {
+    for (const artist of poi.artists) {
+      const index = poi.main_view ? onMap : inside;
+      if (!index.has(artist)) index.set(artist, []);
+      index.get(artist).push(poi);
+    }
+  }
+  for (const [artist, works] of inside) if (!onMap.has(artist)) onMap.set(artist, works);
+  return onMap;
 }
 
 /** The shareable part of the state, as a URL fragment (without "#"). */

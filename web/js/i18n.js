@@ -53,6 +53,7 @@ const STRINGS = {
       outdoor_work: "Obras a céu aberto",
       garden: "Jardins temáticos",
       botanical: "Destaques botânicos",
+      artist: "Artistas",
       other: "Outros",
     },
     kind: {
@@ -118,6 +119,7 @@ const STRINGS = {
       outdoor_work: "Open-air works",
       garden: "Themed gardens",
       botanical: "Botanical highlights",
+      artist: "Artists",
       other: "Other",
     },
     kind: {

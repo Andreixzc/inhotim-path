@@ -1,7 +1,8 @@
 // The planner page: the settings, the itinerary and the map, wired together. Routes are planned
 // in a worker (worker.js) so the page stays responsive; where workers can't start, on the main
 // thread. No times anywhere (ADR 0010): the route is the shortest walk through what's chosen.
-// What's chosen: the museum's categories, and in a separate picker, each stop (ADR 0012).
+// What's chosen: the museum's categories, and in a separate picker, each stop (ADR 0012) or
+// artist (ADR 0013).
 
 import { distance } from "./format.js";
 import { detect, lang, setLang, t } from "./i18n.js";
@@ -12,6 +13,7 @@ import * as settings from "./state.js";
 const DATA_URL = "data/park.json";
 const LANG_KEY = "inhotim-path-lang";
 const BUSY_AFTER_MS = 150;
+const ARTIST_COLOR = "#1d5c45"; // the green of the start and finish markers
 
 const ALERT_ICON =
   '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">' +
@@ -425,56 +427,78 @@ function renderCustomNote() {
 
 // ----------------------------------------------------------------------------- the picker
 
-/** What the picker lists: each category's POIs, then the rest, found only by searching. */
+/** The stops each of the picker's boxes stands for (one POI, or an artist's), by `data-row`. */
+let pickerRows = [];
+
+/**
+ * What the picker lists: each category's POIs, then the artists, then the rest (found only by
+ * searching). A row is a POI, or an artist with their stops.
+ */
 function pickerGroups() {
   const start = app.data.defaults.start;
   const routable = app.data.pois.filter((poi) => poi.node !== null && poi.id !== start);
   const listed = (poi) => poi.main_view && settings.KINDS.includes(poi.kind);
-  const byName = (a, b) => a.name.localeCompare(b.name, lang());
+  const byLabel = (a, b) => a.label.localeCompare(b.label, lang());
+  const poiRow = (poi, withKind) => {
+    // Artists, unless the name says it already ("Doug Aitken", "Galeria Adriana Varejão").
+    const name = normalize(poi.name);
+    const artists = poi.artists.filter((artist) => !name.includes(normalize(artist)));
+    const about = withKind ? [t(`kind.${poi.kind}`), ...artists] : artists;
+    return { label: poi.name, about, text: [poi.name, ...poi.artists], stops: [poi] };
+  };
+  const artistRow = ([artist, stops]) => ({
+    label: artist,
+    // Their stops; the kind for one named after them ("Doris Salcedo": a gallery).
+    about: stops.map((poi) =>
+      normalize(poi.name) === normalize(artist) ? t(`kind.${poi.kind}`) : poi.name,
+    ),
+    text: [artist, ...stops.map((poi) => poi.name)],
+    stops,
+  });
+  const rows = (pois, withKind = false) => pois.map((poi) => poiRow(poi, withKind)).sort(byLabel);
   return [
     ...settings.KINDS.map((kind) => ({
       kind,
-      pois: routable.filter((poi) => listed(poi) && poi.kind === kind).sort(byName),
+      rows: rows(routable.filter((poi) => listed(poi) && poi.kind === kind)),
     })),
-    { kind: "other", pois: routable.filter((poi) => !listed(poi)).sort(byName) },
+    { kind: "artist", rows: [...settings.artistStops(routable)].map(artistRow).sort(byLabel) },
+    { kind: "other", rows: rows(routable.filter((poi) => !listed(poi)), true) },
   ];
 }
 
 function buildPicker() {
-  const sections = pickerGroups().map(({ kind, pois }) => {
+  pickerRows = [];
+  const sections = pickerGroups().map(({ kind, rows }) => {
     const title = t(`kinds.${kind}`);
-    const other = kind === "other";
-    const items = pois.map((poi) => {
-      // Artists, unless the name says it already ("Doug Aitken", "Galeria Adriana Varejão").
-      const name = normalize(poi.name);
-      const artists = poi.artists.filter((artist) => !name.includes(normalize(artist)));
-      const about = other ? [t(`kind.${poi.kind}`), ...artists] : artists;
+    const items = rows.map((row) => {
+      pickerRows.push(row.stops);
       return h(
         "li",
-        { "data-text": normalize([poi.name, ...poi.artists].join(" ")) },
+        { "data-text": normalize(row.text.join(" ")) },
         h(
           "label",
           { class: "check" },
-          h("input", { type: "checkbox", value: String(poi.id) }),
+          h("input", { type: "checkbox", "data-row": String(pickerRows.length - 1) }),
           h(
             "span",
             { class: "check__text" },
-            poi.name,
-            about.length ? h("small", {}, about.join(" · ")) : null,
+            row.label,
+            row.about.length ? h("small", {}, row.about.join(" · ")) : null,
           ),
         ),
       );
     });
-    // The whole category at once; "other" has no such box (a spacer keeps the names in line).
-    const all = other
-      ? h("span", { class: "group__all" })
-      : h("input", {
+    // A box for the whole category. Artists and "other" have none: a spacer keeps the names in
+    // line.
+    const all = settings.KINDS.includes(kind)
+      ? h("input", {
           type: "checkbox",
           class: "group__all",
           "data-kind": kind,
           "aria-label": title,
-        });
-    const color = KIND_COLOR[kind] ?? KIND_COLOR.other;
+        })
+      : h("span", { class: "group__all" });
+    const color = kind === "artist" ? ARTIST_COLOR : (KIND_COLOR[kind] ?? KIND_COLOR.other);
     const section = h(
       "section",
       { class: "group", "data-kind": kind, style: `--kind: ${color}` },
@@ -522,22 +546,27 @@ function openPicker() {
   filterPicker();
 }
 
-/** The picker's boxes and counts, from the settings. */
+/** The picker's boxes and counts, from the settings: a box is ticked when all its stops are. */
 function syncPicker() {
   if (!$("#picker").open) return;
+  const chosen = (poi) => settings.isChosen(app.state, poi);
   for (const section of document.querySelectorAll("#picker-groups .group")) {
     const boxes = [...section.querySelectorAll(".group__items input")];
+    let full = 0;
     for (const box of boxes) {
-      box.checked = settings.isChosen(app.state, app.park.byId.get(Number(box.value)));
+      const stops = pickerRows[Number(box.dataset.row)];
+      const on = stops.filter(chosen).length;
+      box.checked = on === stops.length;
+      box.indeterminate = on > 0 && on < stops.length;
+      if (box.checked) full += 1;
     }
-    const on = boxes.filter((box) => box.checked).length;
     const all = section.querySelector("input.group__all");
     if (all) {
-      all.checked = boxes.length > 0 && on === boxes.length;
-      all.indeterminate = on > 0 && on < boxes.length;
+      all.checked = boxes.length > 0 && full === boxes.length;
+      all.indeterminate = full > 0 && full < boxes.length;
     }
     section.querySelector(".group__count").textContent =
-      section.dataset.kind === "other" ? "" : t("countOf", { n: on, total: boxes.length });
+      section.dataset.kind === "other" ? "" : t("countOf", { n: full, total: boxes.length });
   }
   renderPickerNote();
 }
@@ -565,7 +594,9 @@ function onPickerChange(event) {
   if (box.classList.contains("group__all")) {
     settings.setKind(app.state, box.dataset.kind, box.checked, app.data.pois);
   } else {
-    settings.setStop(app.state, app.park.byId.get(Number(box.value)), box.checked);
+    for (const poi of pickerRows[Number(box.dataset.row)]) {
+      settings.setStop(app.state, poi, box.checked);
+    }
   }
   app.picked = true;
   syncKinds();

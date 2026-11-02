@@ -15,7 +15,7 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from html.parser import HTMLParser
 from typing import Any
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlsplit
 
 import httpx
 
@@ -38,6 +38,9 @@ GROUP_PRECEDENCE: tuple[tuple[str, PoiKind], ...] = (
     ("obra-em-galeria", PoiKind.WORK_IN_GALLERY),
 )
 SERVICES_GROUP = "it_services"
+#: The map files a few artist galleries under outdoor works (e.g. Doug Aitken's Sonic Pavilion), but
+#: their pages in the collection are named ``galeria-<artist>``, like every other gallery's.
+GALLERY_PAGE_RE = re.compile(r"/item-do-acervo/galeria-[^/]+/?$")
 #: The English version of the site uses English color names.
 AXIS_ALIASES = {"orange": "laranja", "yellow": "amarelo", "pink": "rosa"}
 
@@ -165,7 +168,12 @@ def parse_marker(raw: Mapping[str, Any]) -> Poi:
 
 
 def classify(group: Any, url: str | None = None) -> PoiKind:
-    """Map the feed's ``group`` field (list of slugs, a string, or null) to a :class:`PoiKind`."""
+    """Map the feed's ``group`` field (list of slugs, a string, or null) to a :class:`PoiKind`.
+
+    The item's page (``url``) settles what the categories don't: an outdoor work whose page is a
+    gallery's (:data:`GALLERY_PAGE_RE`) is a gallery, and a marker with no category is an event when
+    its page is one.
+    """
     if group == SERVICES_GROUP:
         return PoiKind.SERVICE
     if isinstance(group, list):
@@ -174,6 +182,8 @@ def classify(group: Any, url: str | None = None) -> PoiKind:
         slugs = {group} if isinstance(group, str) and group else set()
     for slug, kind in GROUP_PRECEDENCE:
         if slug in slugs:
+            if kind is PoiKind.OUTDOOR_WORK and url and GALLERY_PAGE_RE.search(urlsplit(url).path):
+                return PoiKind.GALLERY
             return kind
     if not slugs and url and "/eventos/" in url:
         return PoiKind.EVENT

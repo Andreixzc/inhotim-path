@@ -8,6 +8,7 @@ from inhotim_path.sources import SourceError
 from inhotim_path.sources.inhotim import classify, extract_markers, normalize_markers
 
 FIXTURE = Path(__file__).parent / "fixtures" / "get_markers_sample.json"
+ITEM = "https://www.inhotim.org.br/item-do-acervo"
 
 
 @pytest.fixture
@@ -67,6 +68,14 @@ def test_output_is_sorted_for_stable_diffs():
     [
         ("it_services", None, PoiKind.SERVICE),
         (["jardim-tematico"], None, PoiKind.GARDEN),
+        (["obras-a-ceu-aberto"], None, PoiKind.OUTDOOR_WORK),
+        (["obras-a-ceu-aberto"], f"{ITEM}/beam-drop-inhotim-chris-burden/", PoiKind.OUTDOOR_WORK),
+        # Filed under outdoor works, but its page is a gallery's: Doug Aitken's Sonic Pavilion.
+        (["obras-a-ceu-aberto"], f"{ITEM}/galeria-doug-aitken/", PoiKind.GALLERY),
+        (["obras-a-ceu-aberto"], f"{ITEM}/galeria-doug-aitken", PoiKind.GALLERY),
+        (["obras-a-ceu-aberto"], f"{ITEM}/galeria-doug-aitken/?lang=en", PoiKind.GALLERY),
+        (["obra-em-galeria"], f"{ITEM}/galeria-x/", PoiKind.WORK_IN_GALLERY),
+        (None, "https://www.inhotim.org.br/eventos/atelie-galeria-lago/", PoiKind.EVENT),
         (["exposicoes"], None, PoiKind.EXHIBITION),
         (None, "https://www.inhotim.org.br/eventos/x/", PoiKind.EVENT),
         (None, "https://www.inhotim.org.br/outra-coisa/", PoiKind.OTHER),

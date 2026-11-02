@@ -38,5 +38,6 @@ Code shows *what* the project is. This folder explains *how it got there* and *w
 - [0007: Keep the data fresh with a daily GitHub Actions refresh](decisions/0007-daily-data-refresh.md)
 - [0008: Satellite view from MapTiler, with the user's own key](decisions/0008-satellite-view-maptiler.md)
 - [0009: The web app is a static site that plans routes in the browser](decisions/0009-web-app-plans-in-the-browser.md)
-- [0010: The web app shows no times and sets no time limit](decisions/0010-web-app-without-times.md) (what "everything" covers: see 0011)
-- [0011: What "galleries" and "everything" cover](decisions/0011-what-galleries-and-everything-cover.md)
+- [0010: The web app shows no times and sets no time limit](decisions/0010-web-app-without-times.md) (what to see: see 0011 and 0012)
+- [0011: What "galleries" and "everything" cover](decisions/0011-what-galleries-and-everything-cover.md) ("everything" replaced by 0012)
+- [0012: Visitors choose what to see by category, and stop by stop in a picker](decisions/0012-choose-what-to-see-by-category.md)

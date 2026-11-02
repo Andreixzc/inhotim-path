@@ -1,6 +1,7 @@
 # 0011: What "galleries" and "everything" cover
 
-- **Status:** accepted
+- **Status:** accepted; the choice of "everything" is replaced by choosing categories
+  ([0012](0012-choose-what-to-see-by-category.md)), which start with the same three
 - **Date:** 2026-11-01
 
 ## Context

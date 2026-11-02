@@ -1,6 +1,7 @@
 # 0010: The web app shows no times and sets no time limit
 
-- **Status:** accepted; what "everything" covers is set by [0011](0011-what-galleries-and-everything-cover.md)
+- **Status:** accepted; what to see is set by [0011](0011-what-galleries-and-everything-cover.md) and
+  [0012](0012-choose-what-to-see-by-category.md)
 - **Date:** 2026-11-01
 
 ## Context

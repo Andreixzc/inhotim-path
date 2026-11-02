@@ -638,6 +638,22 @@
       "flags": []
     },
     {
+      "id": 3435,
+      "name": "Cristina Iglesias",
+      "kind": "gallery",
+      "lat": -20.12305296268939,
+      "lng": -44.22318398952484,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Cristina Iglesias"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/galeria-cristina-iglesias/",
+      "main_view": true,
+      "flags": []
+    },
+    {
       "id": 3439,
       "name": "Doris Salcedo",
       "kind": "gallery",
@@ -650,6 +666,22 @@
         "Doris Salcedo"
       ],
       "url": "https://www.inhotim.org.br/item-do-acervo/galeria-doris-salcedo/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3443,
+      "name": "Doug Aitken",
+      "kind": "gallery",
+      "lat": -20.118542338204644,
+      "lng": -44.22425532084436,
+      "axes": [
+        "rosa"
+      ],
+      "artists": [
+        "Doug Aitken"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/galeria-doug-aitken/",
       "main_view": true,
       "flags": []
     },
@@ -867,6 +899,24 @@
       "flags": []
     },
     {
+      "id": 3452,
+      "name": "Marilá Dardot",
+      "kind": "gallery",
+      "lat": -20.12520120795355,
+      "lng": -44.2255362868309,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Marilá Dardot"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/galeria-marila-dardot/",
+      "main_view": true,
+      "flags": [
+        "obras-e-galerias-reabertas"
+      ]
+    },
+    {
       "id": 3456,
       "name": "Matthew Barney",
       "kind": "gallery",
@@ -895,6 +945,22 @@
         "Tunga"
       ],
       "url": "https://www.inhotim.org.br/item-do-acervo/galeria-true-rouge/",
+      "main_view": true,
+      "flags": []
+    },
+    {
+      "id": 3485,
+      "name": "Valeska Soares",
+      "kind": "gallery",
+      "lat": -20.126603898436723,
+      "lng": -44.22092617198587,
+      "axes": [
+        "laranja"
+      ],
+      "artists": [
+        "Valeska Soares"
+      ],
+      "url": "https://www.inhotim.org.br/item-do-acervo/galeria-valeska-soares/",
       "main_view": true,
       "flags": []
     },
@@ -1135,22 +1201,6 @@
       "flags": []
     },
     {
-      "id": 3435,
-      "name": "Cristina Iglesias",
-      "kind": "outdoor_work",
-      "lat": -20.12305296268939,
-      "lng": -44.22318398952484,
-      "axes": [
-        "laranja"
-      ],
-      "artists": [
-        "Cristina Iglesias"
-      ],
-      "url": "https://www.inhotim.org.br/item-do-acervo/galeria-cristina-iglesias/",
-      "main_view": true,
-      "flags": []
-    },
-    {
       "id": 3717,
       "name": "Deleite",
       "kind": "outdoor_work",
@@ -1179,22 +1229,6 @@
         "Dominique Gonzalez-Foerster"
       ],
       "url": "https://www.inhotim.org.br/item-do-acervo/desert-park-dominique-gonzalez-foerster/",
-      "main_view": true,
-      "flags": []
-    },
-    {
-      "id": 3443,
-      "name": "Doug Aitken",
-      "kind": "outdoor_work",
-      "lat": -20.118542338204644,
-      "lng": -44.22425532084436,
-      "axes": [
-        "rosa"
-      ],
-      "artists": [
-        "Doug Aitken"
-      ],
-      "url": "https://www.inhotim.org.br/item-do-acervo/galeria-doug-aitken/",
       "main_view": true,
       "flags": []
     },
@@ -1293,24 +1327,6 @@
       "url": "https://www.inhotim.org.br/item-do-acervo/invencao-da-cor-penetravel-magic-square-5-de-luxe/",
       "main_view": true,
       "flags": []
-    },
-    {
-      "id": 3452,
-      "name": "Marilá Dardot",
-      "kind": "outdoor_work",
-      "lat": -20.12520120795355,
-      "lng": -44.2255362868309,
-      "axes": [
-        "laranja"
-      ],
-      "artists": [
-        "Marilá Dardot"
-      ],
-      "url": "https://www.inhotim.org.br/item-do-acervo/galeria-marila-dardot/",
-      "main_view": true,
-      "flags": [
-        "obras-e-galerias-reabertas"
-      ]
     },
     {
       "id": 3728,
@@ -1487,22 +1503,6 @@
         "Jarbas Lopes"
       ],
       "url": "https://www.inhotim.org.br/item-do-acervo/troca-troca-jarbas-lopes/",
-      "main_view": true,
-      "flags": []
-    },
-    {
-      "id": 3485,
-      "name": "Valeska Soares",
-      "kind": "outdoor_work",
-      "lat": -20.126603898436723,
-      "lng": -44.22092617198587,
-      "axes": [
-        "laranja"
-      ],
-      "artists": [
-        "Valeska Soares"
-      ],
-      "url": "https://www.inhotim.org.br/item-do-acervo/galeria-valeska-soares/",
       "main_view": true,
       "flags": []
     },

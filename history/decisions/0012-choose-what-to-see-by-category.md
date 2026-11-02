@@ -1,6 +1,6 @@
 # 0012: Visitors choose what to see by category, and stop by stop in a picker
 
-- **Status:** accepted
+- **Status:** accepted (the categories' words, and choosing by artist: [0013](0013-inhotim-words-and-choosing-by-artist.md))
 - **Date:** 2026-11-01
 
 ## Context

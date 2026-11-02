@@ -27,7 +27,7 @@ order* to see them.
   <img src="docs/img/route-6h.png" width="49%" alt="The best 6-hour route">
 </p>
 
-Seeing *everything* means 58 stops, 11.8 km of walking and **14h47** in total: more than one visiting day.
+Seeing *everything* means 58 stops, 11.8 km of walking and **15h35** in total: more than one visiting day.
 Hence the time budget: the best 6-hour visit covers 24 stops with only 40 minutes of walking.
 
 ## How it works

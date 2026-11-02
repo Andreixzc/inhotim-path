@@ -47,7 +47,7 @@ Response shape: `{"success": true, "data": {"markers": [...]}}`, with **262 entr
 |---|---|---:|---|
 | `galeria` (± `obra-em-galeria`) | Gallery / pavilion | 20 | Stop |
 | `artista` | Artist pinned on the map (Yayoi Kusama, i.e. her gallery) | 1 | Stop |
-| `obras-a-ceu-aberto` | Outdoor work | 32 | Stop |
+| `obras-a-ceu-aberto` | Outdoor work (four are galleries: see the quirks) | 32 | Stop |
 | `jardim-tematico` | Themed garden | 9 | Stop |
 | `destaque-botanico` | Botanical highlight (a notable plant) | 31 | Optional stop |
 | `obra-em-galeria` | Work inside a gallery (`main_view=false`) | 20 | Attribute of its gallery |
@@ -59,6 +59,10 @@ Response shape: `{"success": true, "data": {"markers": [...]}}`, with **262 entr
 - **Duplicates:** most ids appear twice, some three times, probably once per translation or category.
   14 ids have *differing* duplicates (other coordinates or `main_view`). Rule: group by id, prefer the
   `main_view=true` entry, and union the axes and flags.
+- **Galleries filed as outdoor works:** the map puts four artist galleries under `obras-a-ceu-aberto`: Doug Aitken
+  (the Sonic Pavilion), Cristina Iglesias, Valeska Soares and Marilá Dardot. Their pages in the collection are
+  named like every other gallery's (`/item-do-acervo/galeria-doug-aitken/`), so an outdoor work with such a page
+  counts as a gallery ([ADR 0011](../history/decisions/0011-what-galleries-and-everything-cover.md)).
 - **Outliers:** one event sits ~3.6 km away from the park (off-site). Clip POIs to the park boundary plus a small buffer.
 - **Undocumented endpoint:** no versioning and no contract. Validate the shape, fail loudly, and keep the last good snapshot.
 

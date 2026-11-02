@@ -17,7 +17,7 @@ already there."* That means two moments, both on a phone:
 
 ## The problem
 
-- **Inhotim is big and hilly.** Around 20 galleries, 30 outdoor works and 9 themed gardens are spread across
+- **Inhotim is big and hilly.** Around 23 galleries, 26 outdoor works and 9 themed gardens are spread across
   a large park and connected by winding paths. The only guidance is three colored routes ("eixos").
 - **The official map answers "where is X?", not "what should I see next?"** Visitors backtrack, miss a work
   that was a few minutes away, or run out of time on the far side of the park.
@@ -47,11 +47,11 @@ Two important details:
 
 ### 2. Reality check: "everything" probably doesn't fit in one day
 
-Back-of-the-envelope with the current map: ~20 galleries × 20 min + ~30 outdoor works × 8 min + 9 gardens × 10 min
-≈ **12 hours of looking, before walking a single meter**.
+Back-of-the-envelope with the current map: ~23 galleries × 20 min + ~26 outdoor works × 8 min + 9 gardens × 10 min
+≈ **12½ hours of looking, before walking a single meter**.
 
-The engine's answer (2026-11-01 data): the optimal tour has **58 stops: 11h50 at stops plus 11.8 km of walking
-(2h57) = 14h47**. The dwell times are assumptions, but the conclusion holds: seeing everything takes about two
+The engine's answer (2026-11-01 data): the optimal tour has **58 stops: 12h38 at stops plus 11.8 km of walking
+(2h57) = 15h35**. The dwell times are assumptions, but the conclusion holds: seeing everything takes about two
 days.
 
 ### 3. So the useful question is "I have N hours: what should I see, and in what order?"

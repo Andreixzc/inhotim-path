@@ -118,10 +118,12 @@ Use it at **<https://andreixzc.github.io/inhotim-path/>**, on a phone or a compu
 
 [`web/`](web/) is a static page that plans routes in your browser: no server, nothing to install
 ([why and how](history/decisions/0009-web-app-plans-in-the-browser.md)). It asks where you start (the Portaria,
-or where you are) and what to see (galleries only, or everything). Then it shows the shortest walk through all
-of it, on the map and as a list. It shows distances only: no time estimates and no time limit, since everyone
-walks and looks at their own pace ([ADR 0010](history/decisions/0010-web-app-without-times.md)). You can skip
-stops or add others, switch between Portuguese and English, and share a plan as a link. Starting from your
+or where you are) and what to see, by the museum's own categories: galleries, outdoor works, gardens and
+botanical highlights, in any mix ([ADR 0012](history/decisions/0012-choose-what-to-see-by-category.md)). Then it
+shows the shortest walk through all of it, on the map and as a list. It shows distances only: no time estimates
+and no time limit, since everyone walks and looks at their own pace
+([ADR 0010](history/decisions/0010-web-app-without-times.md)). "Customize" picks stop by stop, in a list of its
+own. You can also switch between Portuguese and English, and share a plan as a link. Starting from your
 position works inside the park only, and your position stays on your phone.
 
 Run it locally:

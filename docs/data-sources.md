@@ -17,6 +17,9 @@ Findings from the research spike on **2026-11-01**. Counts are as of that date. 
 `/wp-content/themes/inhotim/dist/scripts/main_<hash>.js`:
 
 - **Center and zoom:** `#map[data-center-lat="-20.1242111"][data-center-lng="-44.2218008"][data-zoom="16"]`.
+- **Filters:** groups titled Artistas, Galerias, Obras a céu aberto, Obras em galerias, Destaques Botânicos and
+  Jardins temáticos: the categories below. The web app lets visitors choose by the same categories
+  ([ADR 0012](../history/decisions/0012-choose-what-to-see-by-category.md)).
 - **Markers:** `$.ajax({url: $(".main").data("ajax-url"), data: {action: "get_markers"}})`, which resolves to
   `admin-ajax.php?action=get_markers`.
 - **Routes overlay:** a custom `google.maps.OverlayView` that stretches the image at `#map[data-axis]`

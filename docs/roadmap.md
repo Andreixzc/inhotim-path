@@ -46,6 +46,9 @@ session-by-session story lives in [`history/`](../history/).
       the park
 - [x] No times and no time limit: the shortest walk through what you choose, shown as distances (ADR 0010). The
       original map is back, and stays light in dark mode
+- [x] Galleries are what Inhotim calls galleries, Doug Aitken's Sonic Pavilion among them (ADR 0011)
+- [x] Choose what to see by the museum's categories, in any mix, and stop by stop in a separate picker
+      (ADR 0012). Botanical highlights start off
 - [x] Scheduled data refresh (GitHub Actions cron) + "what's new" diff of the collection (ADR 0007)
 - [x] Satellite view on the map, with a MapTiler key (ADR 0008)
 - [x] Deploy workflow for GitHub Pages (`pages.yml`), republished after each data refresh

@@ -1,6 +1,6 @@
 # 0001: Use the official map's marker feed as the POI source
 
-- **Status:** accepted
+- **Status:** accepted; what counts as a gallery is refined by [0011](0011-what-galleries-and-everything-cover.md)
 - **Date:** 2026-11-01
 
 ## Context

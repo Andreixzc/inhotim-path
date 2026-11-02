@@ -38,6 +38,9 @@ GROUP_PRECEDENCE: tuple[tuple[str, PoiKind], ...] = (
     ("obra-em-galeria", PoiKind.WORK_IN_GALLERY),
 )
 SERVICES_GROUP = "it_services"
+#: An artist pinned on the map (Yayoi Kusama): the pin is their gallery, which the feed credits to
+#: no one.
+ARTIST_GROUP = "artista"
 #: The map files a few artist galleries under outdoor works (e.g. Doug Aitken's Sonic Pavilion), but
 #: their pages in the collection are named ``galeria-<artist>``, like every other gallery's.
 GALLERY_PAGE_RE = re.compile(r"/item-do-acervo/galeria-[^/]+/?$")
@@ -153,6 +156,9 @@ def parse_marker(raw: Mapping[str, Any]) -> Poi:
     info = _InfoWindow.parse(raw.get("content") or "")
     poi_id = int(raw["id"])
     url = info.title_href or info.first_href
+    artists = _link_texts(raw.get("artists_names")) or tuple(info.subtitles)
+    if not artists and info.title and ARTIST_GROUP in _slugs(raw.get("group")):
+        artists = (info.title,)
     return Poi(
         id=poi_id,
         name=info.title or f"#{poi_id}",
@@ -160,7 +166,7 @@ def parse_marker(raw: Mapping[str, Any]) -> Poi:
         lat=float(raw["lat"]),
         lng=float(raw["lng"]),
         axes=_axes(raw.get("axis")),
-        artists=_link_texts(raw.get("artists_names")) or tuple(info.subtitles),
+        artists=artists,
         url=url,
         main_view=bool(raw.get("main_view", True)),
         flags=_flags(raw.get("filters")),
@@ -176,10 +182,7 @@ def classify(group: Any, url: str | None = None) -> PoiKind:
     """
     if group == SERVICES_GROUP:
         return PoiKind.SERVICE
-    if isinstance(group, list):
-        slugs = {str(g) for g in group if g}
-    else:
-        slugs = {group} if isinstance(group, str) and group else set()
+    slugs = _slugs(group)
     for slug, kind in GROUP_PRECEDENCE:
         if slug in slugs:
             if kind is PoiKind.OUTDOOR_WORK and url and GALLERY_PAGE_RE.search(urlsplit(url).path):
@@ -224,6 +227,13 @@ def _merge(copies: list[Poi]) -> Poi:
         flags=_sorted_union(p.flags for p in copies),
         main_view=any(p.main_view for p in copies),
     )
+
+
+def _slugs(group: Any) -> set[str]:
+    """The feed's ``group`` (a list of slugs, a string, or null) as a set of slugs."""
+    if isinstance(group, list):
+        return {str(g) for g in group if g}
+    return {group} if isinstance(group, str) and group else set()
 
 
 def _sorted_union(groups: Iterable[tuple[str, ...]]) -> tuple[str, ...]:

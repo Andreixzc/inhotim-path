@@ -52,6 +52,7 @@ def test_kinds(pois):
     assert pois[3700].main_view is False
     assert pois[17243].kind is PoiKind.EVENT
     assert pois[3226].kind is PoiKind.GALLERY  # artist pinned on the map = their gallery
+    assert pois[3226].artists == ("Yayoi Kusama",)  # ... and theirs, though the feed credits no one
     assert pois[4060].kind is PoiKind.BOTANICAL
 
 

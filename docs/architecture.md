@@ -64,8 +64,8 @@ Plain ES modules with no build step; MapLibre GL comes from cdnjs, pinned with S
 | `plan.js` | Mirror of `planner.py`: pick stops, walking-time matrix, solve, timeline, legs |
 | `worker.js` | Runs `plan.js` off the main thread |
 | `map.js` | OpenFreeMap liberty basemap with a plain fallback (light in dark mode too), route, stops and other POIs in kind colors, locate button, satellite toggle |
-| `app.js` | The form (category chips), the stop-by-stop picker, the itinerary, popups, and the glue between them |
-| `state.js` · `format.js` · `i18n.js` | Settings: categories and stops added or skipped (localStorage + URL fragment); distances; Portuguese and English |
+| `app.js` | The form (category chips), the picker (stop by stop, or artist by artist), the itinerary, popups, and the glue between them |
+| `state.js` · `format.js` · `i18n.js` | Settings: categories and stops added or skipped (localStorage + URL fragment), and each artist's stops; distances; Portuguese and English |
 
 The modules without DOM code (`network`, `solver`, `plan`, `state`, `format`) are tested under node
 (`tests/web/`). `tests/test_web_planner.py` runs `scripts/web_plan.mjs` to check that the JavaScript planner agrees

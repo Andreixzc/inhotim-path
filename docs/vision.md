@@ -62,8 +62,8 @@ tours that never repeat a stop: the **Team Orienteering Problem**.
 
 A stop is worth its viewing minutes ([ADR 0005](../history/decisions/0005-stop-value-is-viewing-time.md)), so the
 best route spends the most time with art and then walks the least. Per-category weights were tried first, and
-they flipped between "all outdoor works" and "all galleries". Visitors steer with must-sees today; favorite
-artists and "only what's new" can come later.
+they flipped between "all outdoor works" and "all galleries". Visitors steer with must-sees today (in the web
+app, by category, stop or artist); "only what's new" can come later.
 
 ### 4. One engine for all of it
 

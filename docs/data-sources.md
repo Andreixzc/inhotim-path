@@ -18,8 +18,9 @@ Findings from the research spike on **2026-11-01**. Counts are as of that date. 
 
 - **Center and zoom:** `#map[data-center-lat="-20.1242111"][data-center-lng="-44.2218008"][data-zoom="16"]`.
 - **Filters:** groups titled Artistas, Galerias, Obras a céu aberto, Obras em galerias, Destaques Botânicos and
-  Jardins temáticos: the categories below. The web app lets visitors choose by the same categories
-  ([ADR 0012](../history/decisions/0012-choose-what-to-see-by-category.md)).
+  Jardins temáticos: the categories below. The web app lets visitors choose by the same categories, in the same
+  words ([ADR 0012](../history/decisions/0012-choose-what-to-see-by-category.md)), and by artist
+  ([ADR 0013](../history/decisions/0013-inhotim-words-and-choosing-by-artist.md)).
 - **Markers:** `$.ajax({url: $(".main").data("ajax-url"), data: {action: "get_markers"}})`, which resolves to
   `admin-ajax.php?action=get_markers`.
 - **Routes overlay:** a custom `google.maps.OverlayView` that stretches the image at `#map[data-axis]`
@@ -66,8 +67,14 @@ Response shape: `{"success": true, "data": {"markers": [...]}}`, with **262 entr
   (the Sonic Pavilion), Cristina Iglesias, Valeska Soares and Marilá Dardot. Their pages in the collection are
   named like every other gallery's (`/item-do-acervo/galeria-doug-aitken/`), so an outdoor work with such a page
   counts as a gallery ([ADR 0011](../history/decisions/0011-what-galleries-and-everything-cover.md)).
+- **An artist's pin credits no one:** Yayoi Kusama's gallery is pinned as the artist herself (`artista`), with no
+  `artists_names`. A pin in that group is credited to the artist it's named after
+  ([ADR 0013](../history/decisions/0013-inhotim-words-and-choosing-by-artist.md)).
 - **Outliers:** one event sits ~3.6 km away from the park (off-site). Clip POIs to the park boundary plus a small buffer.
 - **Undocumented endpoint:** no versioning and no contract. Validate the shape, fail loudly, and keep the last good snapshot.
+- **Not for other sites' pages:** no `Access-Control-Allow-Origin` header, so a browser won't let another site's
+  page read it. About 442 KB per request, sent with `cache-control: no-store`. The web app reads the daily
+  snapshot instead ([ADR 0007](../history/decisions/0007-daily-data-refresh.md)).
 
 ## 3. Official routes SVG ("eixos")
 

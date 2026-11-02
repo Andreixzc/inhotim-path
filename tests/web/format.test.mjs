@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { distance } from "../../web/js/format.js";
-import { defaults, fromHash, toHash } from "../../web/js/state.js";
+import { SEE, defaults, fromHash, toHash } from "../../web/js/state.js";
 
 test("distances", () => {
   assert.equal(distance(347), "350 m");
@@ -32,4 +32,9 @@ test("junk in a link is ignored", () => {
 test("old links with a time limit or a start time still open", () => {
   const state = fromHash("#b=240&t=1015&s=galleries&m=3386", defaults());
   assert.deepEqual(state, { ...defaults(), see: "galleries", must: [3386] });
+});
+
+test("everything is art and gardens; botanical highlights are added one by one", () => {
+  assert.deepEqual(SEE.galleries, ["gallery"]);
+  assert.deepEqual(SEE.all, ["gallery", "outdoor_work", "garden"]);
 });

@@ -4,10 +4,13 @@
 // No times and no time limit (ADR 0010): how long a visit takes is up to the visitor, so the page
 // only plans the shortest walk through what they want to see.
 
-/** What to see: the kinds of stop behind each choice. */
+/**
+ * What to see: the kinds of stop behind each choice. "Everything" leaves out the botanical highlights:
+ * single plants, there to add one by one.
+ */
 export const SEE = {
   galleries: ["gallery"],
-  all: ["gallery", "outdoor_work", "garden", "botanical"],
+  all: ["gallery", "outdoor_work", "garden"],
 };
 const STORAGE_KEY = "inhotim-path";
 

@@ -1,16 +1,16 @@
 // The planner page: the settings, the itinerary and the map, wired together. Routes are planned
 // in a worker (worker.js) so the page stays responsive; where workers can't start, on the main
 // thread. No times anywhere (ADR 0010): the route is the shortest walk through what's chosen.
+// What's chosen: the museum's categories, and in a separate picker, each stop (ADR 0012).
 
 import { distance } from "./format.js";
 import { detect, lang, setLang, t } from "./i18n.js";
 import { FLAG, KIND_COLOR, RouteMap } from "./map.js";
-import { MAX_SNAP_M, Park } from "./plan.js";
+import { MAX_SNAP_M, Park, normalize } from "./plan.js";
 import * as settings from "./state.js";
 
 const DATA_URL = "data/park.json";
 const LANG_KEY = "inhotim-path-lang";
-const SEARCH_LIMIT = 8;
 const BUSY_AFTER_MS = 150;
 
 const ALERT_ICON =
@@ -120,7 +120,8 @@ const app = {
   alert: null, // a location problem until dismissed: {kind: "outside", meters} or {kind: "geo"}
   latest: 0,
   timer: 0,
-  open: {}, // which lists under the route are expanded
+  open: {}, // which of the picker's groups are expanded
+  picked: false, // the picker changed something since it opened
 };
 
 // ----------------------------------------------------------------------------- start up
@@ -160,14 +161,24 @@ function wireEvents() {
   const form = $("#form");
   form.addEventListener("submit", (event) => event.preventDefault());
   form.addEventListener("change", onFormChange);
-  $("#must-search").addEventListener("input", renderResults);
-  $("#must-search").addEventListener("keydown", (event) => {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      $("#must-results button")?.click();
-    } else if (event.key === "Escape") {
+  const picker = $("#picker");
+  $("#customize").addEventListener("click", openPicker);
+  $("#picker-done").addEventListener("click", () => picker.close());
+  picker.addEventListener("close", onPickerClose);
+  picker.addEventListener("click", (event) => {
+    // A click on the backdrop (beside the panel, on wide screens) closes it.
+    const box = picker.getBoundingClientRect();
+    const { clientX: x, clientY: y } = event;
+    const outside = x < box.left || x > box.right || y < box.top || y > box.bottom;
+    if (event.target === picker && outside) picker.close();
+  });
+  $("#picker-groups").addEventListener("change", onPickerChange);
+  $("#picker-search").addEventListener("input", filterPicker);
+  $("#picker-search").addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && event.target.value) {
+      event.preventDefault(); // clear the search first; the next Escape closes the picker
       event.target.value = "";
-      renderResults();
+      filterPicker();
     }
   });
   $("#lang").addEventListener("click", () => {
@@ -204,7 +215,7 @@ function wireEvents() {
 function request() {
   const s = app.state;
   return {
-    kinds: settings.SEE[s.see],
+    kinds: s.kinds,
     must: s.must,
     exclude: s.exclude,
     budgetMin: null, // no time limit: every stop, by the shortest walk
@@ -297,49 +308,12 @@ function locationFailed(alert) {
 
 // ----------------------------------------------------------------------------- actions
 
-/** Whether "what to see" already puts this POI on the route. */
-function covered(poi) {
-  return settings.SEE[app.state.see].includes(poi.kind);
-}
-
-/** The POIs added on top of what "what to see" covers: a chip each. */
-function added() {
-  return app.state.must.map((id) => app.park.byId.get(id)).filter((poi) => poi && !covered(poi));
-}
-
-/** Take a stop off the route. */
-function skip(id) {
+/** Put a POI on the route, or take it off (from its popup on the map). */
+function setStop(id, on) {
   app.map?.close();
-  app.state.must = app.state.must.filter((other) => other !== id);
-  if (covered(app.park.byId.get(id)) && !app.state.exclude.includes(id)) {
-    app.state.exclude.push(id);
-  }
-  renderChips();
-  changed({ now: true });
-}
-
-/** Put a skipped stop back. */
-function restore(id) {
-  app.map?.close();
-  app.state.exclude = app.state.exclude.filter((other) => other !== id);
-  changed({ fit: true, now: true });
-}
-
-/** Put a POI on the route: back if it was skipped, added if "what to see" leaves it out. */
-function include(id) {
-  app.map?.close();
-  app.state.exclude = app.state.exclude.filter((other) => other !== id);
-  if (!covered(app.park.byId.get(id)) && !app.state.must.includes(id)) app.state.must.push(id);
-  renderChips();
-  changed({ fit: true, now: true });
-}
-
-/** Undo `include` for an added POI (its chip's button). */
-function unadd(id) {
-  app.map?.close();
-  app.state.must = app.state.must.filter((other) => other !== id);
-  renderChips();
-  changed({ fit: true, now: true });
+  settings.setStop(app.state, app.park.byId.get(id), on);
+  syncKinds();
+  changed({ fit: on, now: true });
 }
 
 function pick(index) {
@@ -372,9 +346,9 @@ function onFormChange(event) {
       app.here = null;
       changed({ fit: true });
     }
-  } else if (target.name === "see") {
-    s.see = target.value;
-    renderChips();
+  } else if (target.name === "kind") {
+    settings.setKind(s, target.value, target.checked, app.data.pois);
+    renderCustomNote();
     changed({ fit: true });
   }
 }
@@ -412,84 +386,204 @@ function nameOf(poi) {
 }
 
 function buildForm() {
-  const s = app.state;
-  $(`#from input[value="${s.from}"]`).checked = true;
-  $(`#see input[value="${s.see}"]`).checked = true;
-  renderChips();
+  $(`#from input[value="${app.state.from}"]`).checked = true;
+  // A chip per category, in the map's color for it.
+  const chips = settings.KINDS.map((kind) =>
+    h(
+      "label",
+      { class: "kind", style: `--kind: ${KIND_COLOR[kind]}` },
+      h("input", { type: "checkbox", name: "kind", value: kind }),
+      h("span", {}, t(`kinds.${kind}`)),
+    ),
+  );
+  $("#kinds").replaceChildren(...chips);
+  syncKinds();
 }
 
-function renderChips() {
-  const chips = added().map((poi) =>
-      h(
+function syncKinds() {
+  for (const box of document.querySelectorAll("#kinds input")) {
+    box.checked = app.state.kinds.includes(box.value);
+  }
+  renderCustomNote();
+}
+
+/** Beside "Customize": the stops added to the categories, and those skipped. */
+function renderCustomNote() {
+  const s = app.state;
+  const count = (ids, covered) =>
+    ids.filter((id) => {
+      const poi = app.park.byId.get(id);
+      return poi && settings.covers(s, poi) === covered;
+    }).length;
+  const added = count(s.must, false);
+  const skipped = count(s.exclude, true);
+  const parts = [];
+  if (added) parts.push(t("addedN", { n: added }));
+  if (skipped) parts.push(t("skippedN", { n: skipped }));
+  $("#custom-note").textContent = parts.join(" · ");
+}
+
+// ----------------------------------------------------------------------------- the picker
+
+/** What the picker lists: each category's POIs, then the rest, found only by searching. */
+function pickerGroups() {
+  const start = app.data.defaults.start;
+  const routable = app.data.pois.filter((poi) => poi.node !== null && poi.id !== start);
+  const listed = (poi) => poi.main_view && settings.KINDS.includes(poi.kind);
+  const byName = (a, b) => a.name.localeCompare(b.name, lang());
+  return [
+    ...settings.KINDS.map((kind) => ({
+      kind,
+      pois: routable.filter((poi) => listed(poi) && poi.kind === kind).sort(byName),
+    })),
+    { kind: "other", pois: routable.filter((poi) => !listed(poi)).sort(byName) },
+  ];
+}
+
+function buildPicker() {
+  const sections = pickerGroups().map(({ kind, pois }) => {
+    const title = t(`kinds.${kind}`);
+    const other = kind === "other";
+    const items = pois.map((poi) => {
+      // Artists, unless the name says it already ("Doug Aitken", "Galeria Adriana Varejão").
+      const name = normalize(poi.name);
+      const artists = poi.artists.filter((artist) => !name.includes(normalize(artist)));
+      const about = other ? [t(`kind.${poi.kind}`), ...artists] : artists;
+      return h(
         "li",
-        { class: "chip" },
-        h("span", {}, poi.name),
+        { "data-text": normalize([poi.name, ...poi.artists].join(" ")) },
+        h(
+          "label",
+          { class: "check" },
+          h("input", { type: "checkbox", value: String(poi.id) }),
+          h(
+            "span",
+            { class: "check__text" },
+            poi.name,
+            about.length ? h("small", {}, about.join(" · ")) : null,
+          ),
+        ),
+      );
+    });
+    // The whole category at once; "other" has no such box (a spacer keeps the names in line).
+    const all = other
+      ? h("span", { class: "group__all" })
+      : h("input", {
+          type: "checkbox",
+          class: "group__all",
+          "data-kind": kind,
+          "aria-label": title,
+        });
+    const color = KIND_COLOR[kind] ?? KIND_COLOR.other;
+    const section = h(
+      "section",
+      { class: "group", "data-kind": kind, style: `--kind: ${color}` },
+      h(
+        "div",
+        { class: "group__head" },
+        all,
         h(
           "button",
           {
             type: "button",
-            "aria-label": t("remove", { name: poi.name }),
-            onclick: () => unadd(poi.id),
+            class: "group__more",
+            "aria-expanded": "false",
+            "aria-controls": `picker-${kind}`,
+            onclick: (event) => {
+              const open = event.currentTarget.getAttribute("aria-expanded") !== "true";
+              expand(section, open);
+              app.open[kind] = open;
+            },
           },
-          icon(CLOSE_ICON),
+          h("span", { class: "group__title" }, title),
+          h("span", { class: "group__count" }),
         ),
       ),
+      h("ul", { id: `picker-${kind}`, class: "group__items", hidden: true }, items),
     );
-  $("#must-chips").replaceChildren(...chips);
+    return section;
+  });
+  const empty = h("p", { id: "picker-empty", class: "picker__empty", hidden: true });
+  empty.textContent = t("noMatches");
+  $("#picker-groups").replaceChildren(...sections, empty);
 }
 
-function renderResults() {
-  const input = $("#must-search");
-  const list = $("#must-results");
-  const query = input.value;
-  if (!query.trim()) {
-    list.hidden = true;
-    list.replaceChildren();
-    return;
-  }
-  const start = app.data.defaults.start;
-  const chips = new Set(added().map((poi) => poi.id));
-  const matches = app.park
-    .search(query)
-    .filter((poi) => poi.node !== null && poi.id !== start && !chips.has(poi.id))
-    .slice(0, SEARCH_LIMIT);
-  // Stops already on the route: picking one shows it instead of adding it again.
-  const visits = app.plan?.visits ?? [];
-  const stops = new Map();
-  visits.forEach((visit, index) => {
-    if (index > 0 && index < visits.length - 1) stops.set(visit.poi.id, index);
-  });
-  const choose = (poi) => {
-    input.value = "";
-    renderResults();
-    if (stops.has(poi.id)) {
-      pick(stops.get(poi.id));
-    } else {
-      include(poi.id);
-      input.focus();
+function expand(section, open) {
+  section.querySelector(".group__more").setAttribute("aria-expanded", String(open));
+  section.querySelector(".group__items").hidden = !open;
+}
+
+function openPicker() {
+  buildPicker();
+  $("#picker-search").value = "";
+  $("#picker").showModal();
+  app.picked = false;
+  syncPicker();
+  filterPicker();
+}
+
+/** The picker's boxes and counts, from the settings. */
+function syncPicker() {
+  if (!$("#picker").open) return;
+  for (const section of document.querySelectorAll("#picker-groups .group")) {
+    const boxes = [...section.querySelectorAll(".group__items input")];
+    for (const box of boxes) {
+      box.checked = settings.isChosen(app.state, app.park.byId.get(Number(box.value)));
     }
-  };
-  const about = (poi) =>
-    stops.has(poi.id)
-      ? `${t(`kind.${poi.kind}`)} · ${t("inRoute", { n: stops.get(poi.id) })}`
-      : t(`kind.${poi.kind}`);
-  list.replaceChildren(
-    ...(matches.length
-      ? matches.map((poi) =>
-          h(
-            "li",
-            {},
-            h(
-              "button",
-              { type: "button", onclick: () => choose(poi) },
-              poi.name,
-              h("small", {}, about(poi)),
-            ),
-          ),
-        )
-      : [h("li", { class: "empty" }, t("noMatches"))]),
-  );
-  list.hidden = false;
+    const on = boxes.filter((box) => box.checked).length;
+    const all = section.querySelector("input.group__all");
+    if (all) {
+      all.checked = boxes.length > 0 && on === boxes.length;
+      all.indeterminate = on > 0 && on < boxes.length;
+    }
+    section.querySelector(".group__count").textContent =
+      section.dataset.kind === "other" ? "" : t("countOf", { n: on, total: boxes.length });
+  }
+  renderPickerNote();
+}
+
+/** Show what matches the search, in every group; without a search, the groups as they were. */
+function filterPicker() {
+  const needle = normalize($("#picker-search").value);
+  let found = 0;
+  for (const section of document.querySelectorAll("#picker-groups .group")) {
+    let matches = 0;
+    for (const item of section.querySelectorAll(".group__items li")) {
+      item.hidden = Boolean(needle) && !item.dataset.text.includes(needle);
+      if (!item.hidden) matches += 1;
+    }
+    const kind = section.dataset.kind;
+    section.hidden = needle ? matches === 0 : kind === "other";
+    expand(section, needle ? matches > 0 : Boolean(app.open[kind]));
+    if (needle) found += matches;
+  }
+  $("#picker-empty").hidden = !needle || found > 0;
+}
+
+function onPickerChange(event) {
+  const box = event.target;
+  if (box.classList.contains("group__all")) {
+    settings.setKind(app.state, box.dataset.kind, box.checked, app.data.pois);
+  } else {
+    settings.setStop(app.state, app.park.byId.get(Number(box.value)), box.checked);
+  }
+  app.picked = true;
+  syncKinds();
+  syncPicker();
+  changed();
+}
+
+function onPickerClose() {
+  if (app.picked) changed({ fit: true, now: true });
+  app.picked = false;
+}
+
+/** The picker's summary: the route as it is now. */
+function renderPickerNote() {
+  const plan = app.plan;
+  $("#picker-note").textContent = plan
+    ? `${t("stops", { n: plan.visits.length - 2 })} · ${distance(plan.walkM, lang())}`
+    : (app.error ?? "");
 }
 
 // ----------------------------------------------------------------------------- results
@@ -497,13 +591,12 @@ function renderResults() {
 function render() {
   renderHero();
   renderNotices(app.plan);
+  renderPickerNote();
   if (!app.plan) {
     $("#itinerary").replaceChildren();
-    renderExtras(null);
     return;
   }
   renderItinerary(app.plan);
-  renderExtras(app.plan);
 }
 
 function renderHero() {
@@ -602,42 +695,6 @@ function walkLabel(visit) {
   return visit.walkM < 20 ? t("nextDoor") : distance(visit.walkM, lang());
 }
 
-function renderExtras(plan) {
-  const blocks = [];
-  const block = (key, title, pois, action) =>
-    h(
-      "details",
-      {
-        class: "extra",
-        open: app.open[key] ?? null,
-        ontoggle: (event) => (app.open[key] = event.target.open),
-      },
-      h("summary", {}, title),
-      h(
-        "ul",
-        {},
-        pois.map((poi) =>
-          h(
-            "li",
-            {},
-            h("span", {}, poi.name, h("small", {}, t(`kind.${poi.kind}`))),
-            action(poi),
-          ),
-        ),
-      ),
-    );
-  // Only the skips that matter now: "Galleries only" doesn't miss a skipped garden.
-  const excluded = app.state.exclude
-    .map((id) => app.park.byId.get(id))
-    .filter((poi) => poi && covered(poi));
-  if (excluded.length) {
-    const title = t("skippedByYou", { n: excluded.length });
-    const back = (poi) => chip(t("restore"), () => restore(poi.id));
-    blocks.push(block("skipped", title, excluded, back));
-  }
-  $("#extras").replaceChildren(...blocks);
-}
-
 function officialLink(poi) {
   if (!/^https?:\/\//i.test(poi?.url ?? "")) return null;
   return h(
@@ -664,13 +721,11 @@ function describe(poiId, index) {
   box.append(h("p", {}, [t(`kind.${poi.kind}`), ...poi.artists].join(" · ")));
   const actions = h("div", { class: "popup__actions" });
   if (!ends && poi.id !== app.data.defaults.start) {
-    if (isStop) {
-      actions.append(chip(t("skip"), () => skip(poi.id)));
-    } else if (app.state.exclude.includes(poi.id) && covered(poi)) {
-      actions.append(chip(t("restore"), () => restore(poi.id)));
-    } else {
-      actions.append(chip(t("add"), () => include(poi.id)));
-    }
+    actions.append(
+      isStop
+        ? chip(t("skip"), () => setStop(poi.id, false))
+        : chip(t("add"), () => setStop(poi.id, true)),
+    );
   }
   const link = officialLink(poi);
   if (link) actions.append(link);

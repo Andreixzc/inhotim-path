@@ -42,26 +42,16 @@
       </fieldset>
       <fieldset class="control">
         <legend data-i18n="see">What to see</legend>
-        <div id="see" class="segmented">
-          <label><input type="radio" name="see" value="galleries"><span data-i18n="galleries">Galleries only</span></label>
-          <label><input type="radio" name="see" value="all"><span data-i18n="everything">Everything</span></label>
-        </div>
+        <div id="kinds" class="kinds"></div>
+        <button id="customize" class="row-button" type="button" aria-haspopup="dialog" aria-controls="picker">
+          <span data-i18n="customize">Customize</span>
+          <span id="custom-note" class="row-button__note"></span>
+        </button>
       </fieldset>
-      <div class="control">
-        <label class="control__label" for="must-search" data-i18n="addStops">Add to the route</label>
-        <div class="search">
-          <svg class="search__icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="m16 16 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-          <input id="must-search" type="search" data-i18n-placeholder="searchPlaceholder"
-            aria-controls="must-results" enterkeyhint="done">
-          <ul id="must-results" class="results" hidden></ul>
-        </div>
-        <ul id="must-chips" class="chips"></ul>
-      </div>
     </form>
     <h2 class="section-title" data-i18n="route">Route</h2>
     <div id="notices" aria-live="polite"></div>
     <ol id="itinerary" class="list"></ol>
-    <div id="extras" class="extras"></div>
     <footer class="footer">
       <p><span id="data-date"></span> <span data-i18n="disclaimer">Check opening hours at inhotim.org.br.</span></p>
       <p><span data-i18n="notAffiliated">An independent project, not affiliated with Inhotim.</span>
@@ -71,5 +61,20 @@
   </div>
 </aside>
 <main id="map" class="map" aria-label="Map"></main>
+<dialog id="picker" class="picker" aria-labelledby="picker-title">
+  <div class="picker__top">
+    <div>
+      <h2 id="picker-title" data-i18n="see">What to see</h2>
+      <p id="picker-note" class="picker__note" aria-live="polite"></p>
+    </div>
+    <button id="picker-done" class="pill" type="button" data-i18n="done">Done</button>
+  </div>
+  <div class="search picker__search">
+    <svg class="search__icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="m16 16 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    <input id="picker-search" type="search" data-i18n-placeholder="searchPlaceholder"
+      data-i18n-label="searchPlaceholder" aria-controls="picker-groups" enterkeyhint="search">
+  </div>
+  <div id="picker-groups" class="picker__groups"></div>
+</dialog>
 </body>
 </html>

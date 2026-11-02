@@ -326,8 +326,7 @@ h1 {
   border: 0;
 }
 
-.control legend,
-.control__label {
+.control legend {
   display: block;
   margin-bottom: 8px;
   padding: 0;
@@ -414,95 +413,100 @@ h1 {
   color: var(--muted);
 }
 
-.results {
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
-  right: 0;
-  z-index: 5;
-  max-height: 300px;
-  margin: 0;
-  padding: 6px;
-  overflow-y: auto;
-  list-style: none;
-  background: var(--bg);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-}
-
-.results button {
-  display: block;
-  width: 100%;
-  padding: 10px 12px;
-  border: 0;
-  border-radius: 12px;
-  background: none;
-  text-align: left;
-}
-
-.results button:hover,
-.results button:focus-visible {
-  background: var(--surface);
-}
-
-.results small,
-.results .empty {
-  display: block;
-  color: var(--muted);
-  font-size: 0.8125rem;
-}
-
-.results .empty {
-  padding: 10px 12px;
-}
-
-.chips {
+/* What to see: a chip per category, in the map's color for it. */
+.kinds {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin: 12px 0 0;
-  padding: 0;
-  list-style: none;
 }
 
-.chips:empty {
-  display: none;
+.kind {
+  position: relative;
 }
 
-.chip {
-  display: inline-flex;
+.kind input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.kind span {
+  display: flex;
   align-items: center;
-  gap: 2px;
-  max-width: 100%;
-  padding: 5px 5px 5px 14px;
+  gap: 8px;
+  padding: 10px 16px 10px 13px;
   border-radius: 999px;
-  background: var(--surface-strong);
-  font-size: 0.875rem;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.9375rem;
   font-weight: 600;
-}
-
-.chip span {
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    box-shadow 0.15s;
 }
 
-.chip button {
-  display: grid;
+.kind span::before {
+  content: "";
   flex: none;
-  place-items: center;
-  width: 26px;
-  height: 26px;
-  padding: 0;
-  border: 0;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  background: none;
-  color: inherit;
-  opacity: 0.75;
+  box-shadow: inset 0 0 0 2px var(--faint);
 }
 
-.chip button:hover {
-  opacity: 1;
+.kind input:checked + span {
+  background: color-mix(in srgb, var(--kind) 12%, var(--bg));
+  color: var(--text);
+  box-shadow: inset 0 0 0 1.5px var(--kind);
+}
+
+.kind input:checked + span::before {
+  background: var(--kind);
+  box-shadow: none;
+}
+
+.kind input:focus-visible + span {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.row-button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin-top: 8px;
+  padding: 12px 2px 12px 0;
+  border: 0;
+  background: none;
+  font-size: 0.9375rem;
+  font-weight: 650;
+  text-align: left;
+}
+
+.row-button__note {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.row-button::after,
+.group__more::after {
+  content: "";
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid var(--muted);
+  border-bottom: 2px solid var(--muted);
+  transform: rotate(-45deg);
+  transition: transform 0.15s;
 }
 
 /* ------------------------------------------------------------------ the route */
@@ -601,67 +605,6 @@ h1 {
   font-size: 0.75rem;
 }
 
-.extras {
-  margin-top: 18px;
-}
-
-.extra {
-  border-top: 1px solid var(--line);
-}
-
-.extra summary {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 14px 0;
-  color: var(--muted);
-  font-size: 0.9rem;
-  font-weight: 600;
-  list-style: none;
-  cursor: pointer;
-}
-
-.extra summary::-webkit-details-marker {
-  display: none;
-}
-
-.extra summary::after {
-  content: "";
-  width: 8px;
-  height: 8px;
-  margin-right: 4px;
-  border-right: 2px solid currentColor;
-  border-bottom: 2px solid currentColor;
-  transform: rotate(45deg);
-  transition: transform 0.15s;
-}
-
-.extra[open] summary::after {
-  transform: rotate(-135deg);
-}
-
-.extra ul {
-  margin: 0 0 10px;
-  padding: 0;
-  list-style: none;
-}
-
-.extra li {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 8px 0;
-  font-size: 0.9375rem;
-}
-
-.extra small {
-  display: block;
-  color: var(--muted);
-  font-size: 0.8125rem;
-}
-
 .chip-button {
   flex: none;
   padding: 7px 14px;
@@ -693,6 +636,162 @@ h1 {
 
 .footer a {
   color: var(--text);
+}
+
+/* ------------------------------------------------------------------ the picker */
+
+/* Each stop, by category, in a panel of its own: the whole screen on phones, over the sidebar on
+   wider screens (the map stays in view and shows each change). */
+.picker {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.picker[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.picker::backdrop {
+  background: rgb(15 20 16 / 30%);
+}
+
+.picker__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: calc(18px + env(safe-area-inset-top)) var(--gutter) 14px;
+}
+
+.picker__top h2 {
+  margin: 0;
+  font-size: 1.375rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+
+.picker__note {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.picker__search {
+  margin: 0 var(--gutter) 6px;
+}
+
+.picker__groups {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 var(--gutter) calc(24px + env(safe-area-inset-bottom));
+}
+
+.picker__empty {
+  margin: 0;
+  padding: 16px 0;
+  color: var(--muted);
+}
+
+.group + .group {
+  border-top: 1px solid var(--line);
+}
+
+.group__head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.group__all,
+.check input {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--kind);
+}
+
+.group__more {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 16px 2px 16px 0;
+  border: 0;
+  background: none;
+  font-weight: 650;
+  text-align: left;
+}
+
+.group__more::after {
+  transform: rotate(45deg);
+}
+
+.group__more[aria-expanded="true"]::after {
+  transform: rotate(-135deg);
+}
+
+.group__count {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.group__items {
+  margin: -4px 0 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 9px 0;
+  cursor: pointer;
+}
+
+.check__text {
+  min-width: 0;
+  font-size: 0.9375rem;
+}
+
+.check small {
+  display: block;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (min-width: 900px) {
+  .picker {
+    width: 420px;
+    height: 100%;
+    inset: 0 auto 0 0;
+    box-shadow:
+      1px 0 0 var(--line),
+      8px 0 32px rgb(15 20 16 / 10%);
+  }
+
+  .picker::backdrop {
+    background: transparent;
+  }
 }
 
 /* ------------------------------------------------------------------ map */

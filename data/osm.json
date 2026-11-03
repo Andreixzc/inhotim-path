@@ -1,7 +1,7 @@
 {
   "source": "OpenStreetMap via the Overpass API",
   "license": "ODbL 1.0, © OpenStreetMap contributors",
-  "fetched_at": "2026-11-02T19:33:50+00:00",
+  "fetched_at": "2026-11-03T17:11:38+00:00",
   "park_relation": 5418784,
   "boundary": {
     "type": "Polygon",
@@ -604,7 +604,8 @@
       "highway": "track",
       "tags": {
         "surface": "paving_stones",
-        "smoothness": "intermediate"
+        "smoothness": "intermediate",
+        "tracktype": "grade1"
       },
       "coords": [
         [
@@ -3374,7 +3375,8 @@
       "highway": "track",
       "tags": {
         "surface": "paving_stones",
-        "smoothness": "intermediate"
+        "smoothness": "intermediate",
+        "tracktype": "grade1"
       },
       "coords": [
         [
@@ -3681,7 +3683,9 @@
     {
       "id": 666736535,
       "highway": "footway",
-      "tags": {},
+      "tags": {
+        "surface": "paving_stones"
+      },
       "coords": [
         [
           -44.2165026,
@@ -5116,7 +5120,8 @@
       "highway": "track",
       "tags": {
         "surface": "paving_stones",
-        "smoothness": "intermediate"
+        "smoothness": "intermediate",
+        "tracktype": "grade1"
       },
       "coords": [
         [
@@ -5178,7 +5183,8 @@
       "highway": "track",
       "tags": {
         "surface": "paving_stones",
-        "smoothness": "intermediate"
+        "smoothness": "intermediate",
+        "tracktype": "grade1"
       },
       "coords": [
         [
@@ -5235,7 +5241,8 @@
       "highway": "track",
       "tags": {
         "surface": "paving_stones",
-        "smoothness": "intermediate"
+        "smoothness": "intermediate",
+        "tracktype": "grade1"
       },
       "coords": [
         [
@@ -5444,7 +5451,8 @@
       "id": 1450139761,
       "highway": "track",
       "tags": {
-        "surface": "compacted"
+        "surface": "compacted",
+        "tracktype": "grade1"
       },
       "coords": [
         [

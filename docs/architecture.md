@@ -63,11 +63,12 @@ Plain ES modules with no build step; MapLibre GL comes from cdnjs, pinned with S
 | `solver.js` | Exact (Held-Karp) up to 12 stops; iterated local search beyond: TSP and orienteering, with must-sees |
 | `plan.js` | Mirror of `planner.py`: pick stops, walking-time matrix, solve, timeline, legs |
 | `worker.js` | Runs `plan.js` off the main thread |
-| `map.js` | OpenFreeMap liberty basemap with a plain fallback (light in dark mode too), route, stops and other POIs in kind colors, locate button, satellite toggle |
+| `map.js` | OpenFreeMap liberty basemap with a plain fallback (light in dark mode too), route, stops and other POIs in kind colors, locate button, satellite toggle, and the canvas that plays a new route's animation |
+| `reveal.js` | That animation's geometry and timing ([ADR 0014](../history/decisions/0014-map-shows-the-search-then-the-route.md)): the shortest-path wave from the start along every path, the route as one line, and the timeline |
 | `app.js` | The form (category chips), the picker (stop by stop, or artist by artist), the itinerary, popups, and the glue between them |
 | `state.js` · `format.js` · `i18n.js` | Settings: categories and stops added or skipped (localStorage + URL fragment), and each artist's stops; distances; Portuguese and English |
 
-The modules without DOM code (`network`, `solver`, `plan`, `state`, `format`) are tested under node
+The modules without DOM code (`network`, `solver`, `plan`, `reveal`, `state`, `format`) are tested under node
 (`tests/web/`). `tests/test_web_planner.py` runs `scripts/web_plan.mjs` to check that the JavaScript planner agrees
 with the Python one, and `scripts/benchmark_web_solver.py` compares it with CP-SAT on the real park.
 

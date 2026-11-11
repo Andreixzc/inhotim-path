@@ -127,6 +127,11 @@ artist ([ADR 0013](history/decisions/0013-inhotim-words-and-choosing-by-artist.m
 English, and share a plan as a link. Starting from your
 position works inside the park only, and your position stays on your phone.
 
+Each new route takes a few hundredths of a second to plan. The map then shows how it was found, in about a second:
+the search spreading along the paths from the start, then the route drawn stop by stop
+([ADR 0014](history/decisions/0014-map-shows-the-search-then-the-route.md)). It's skipped when your system asks
+for less motion.
+
 Run it locally:
 
 ```bash

@@ -8,6 +8,7 @@ import { distance } from "./format.js";
 import { detect, lang, setLang, t } from "./i18n.js";
 import { FLAG, KIND_COLOR, RouteMap } from "./map.js";
 import { MAX_SNAP_M, Park, normalize } from "./plan.js";
+import { routeKey } from "./reveal.js";
 import * as settings from "./state.js";
 
 const DATA_URL = "data/park.json";
@@ -118,6 +119,8 @@ const app = {
   here: null, // [lng, lat] when the visit starts from the visitor's position
   locating: false,
   plan: null,
+  shownKey: null, // the route the map last played the search for (ADR 0014)
+  shownM: null, // the distance in the summary, which a new route counts from
   error: null, // why there is no plan
   alert: null, // a location problem until dismissed: {kind: "outside", meters} or {kind: "geo"}
   latest: 0,
@@ -149,6 +152,7 @@ async function main() {
   RouteMap.create($("#map"), {
     pois: app.data.pois,
     satelliteKey: app.data.config?.maptiler_key ?? null,
+    network: app.park.network,
   }).then((map) => {
     app.map = map;
     map.describe = describe;
@@ -253,17 +257,30 @@ async function replan({ fit = false } = {}) {
     if (id === app.latest) document.body.classList.remove("busy");
   }
   if (id !== app.latest) return;
+  const shown = app.shownM; // the summary counts from here to the new route
   render();
-  showOnMap(fit);
+  showOnMap(fit, shown);
 }
 
-function showOnMap(fit) {
+/**
+ * A new route plays the search on the map first (ADR 0014), and the summary follows: it waits, then
+ * counts from `from` meters to the new length. Not behind the picker: when it closes instead.
+ */
+function showOnMap(fit, from = null) {
   if (!app.map) return;
   if (app.plan) {
     const visited = new Set(app.plan.visits.map((visit) => visit.poi?.id));
     const others = app.data.pois.filter((poi) => poi.node !== null && !visited.has(poi.id));
-    app.map.show(app.plan, others);
+    const key = routeKey(app.plan);
+    const animate = key !== app.shownKey && !$("#picker").open;
+    if (animate) app.shownKey = key;
+    const start = from ?? app.plan.walkM;
+    app.map.show(app.plan, others, {
+      animate,
+      onFrame: (state) => renderHero({ ...state, from: start }),
+    });
   } else {
+    app.shownKey = null;
     app.map.clear();
   }
   if (fit) app.map.fit(app.plan);
@@ -630,19 +647,34 @@ function render() {
   renderItinerary(app.plan);
 }
 
-function renderHero() {
+/**
+ * The summary: the route's length and stops. While the map plays the search (`reveal`, a frame of
+ * reveal.js with the length to count `from`), it says so, then counts to the new length as the
+ * route is drawn.
+ */
+function renderHero(reveal = null) {
+  const playing = reveal !== null && !reveal.done;
+  document.body.classList.toggle("searching", playing && reveal.searching);
+  $(".hero").setAttribute("aria-busy", String(playing)); // screen readers hear the result once
   if (app.locating) {
     $("#meta").textContent = t("locating");
     return;
   }
   const plan = app.plan;
   if (!plan) {
-    $("#total").textContent = "—";
+    setTotal(null);
     $("#meta").textContent = app.error ?? "";
     return;
   }
-  $("#total").textContent = distance(plan.walkM, lang());
-  $("#meta").textContent = t("stops", { n: plan.visits.length - 2 });
+  setTotal(playing ? reveal.from + (plan.walkM - reveal.from) * reveal.drawn : plan.walkM);
+  $("#meta").textContent =
+    playing && reveal.searching ? t("searching") : t("stops", { n: plan.visits.length - 2 });
+}
+
+/** The big number, remembered so that the next route can count from it. */
+function setTotal(meters) {
+  app.shownM = meters;
+  $("#total").textContent = meters === null ? "—" : distance(meters, lang());
 }
 
 function renderAlert() {

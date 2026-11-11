@@ -302,7 +302,9 @@ h1 {
 }
 
 .busy .hero__total,
-.busy .list {
+.busy .list,
+.searching .hero__total,
+.searching .list {
   opacity: 0.35;
 }
 
@@ -837,6 +839,51 @@ h1 {
   width: 30px;
   height: 30px;
   background: #1d5c45;
+}
+
+/* The "finding the route" animation (ADR 0014): a canvas above the map's own drawing, then each
+   stop waiting for the route to reach it, and appearing with a ping in the route's orange. Only
+   opacity and shadow move: MapLibre places the markers with their transform. */
+.reveal {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.marker--wait {
+  visibility: hidden;
+}
+
+.marker--ping {
+  animation: marker-ping 0.5s ease-out;
+}
+
+@keyframes marker-ping {
+  from {
+    opacity: 0;
+    box-shadow:
+      0 0 0 0 rgb(228 87 46 / 70%),
+      0 1px 4px rgb(0 0 0 / 45%);
+  }
+
+  40% {
+    opacity: 1;
+  }
+
+  to {
+    box-shadow:
+      0 0 0 14px rgb(228 87 46 / 0%),
+      0 1px 4px rgb(0 0 0 / 45%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marker--ping {
+    animation: none;
+  }
 }
 
 .maplibregl-popup-content {

@@ -3,10 +3,29 @@
 // MapTiler (ADR 0008). Uses the global `maplibregl` from the script tag in index.html.
 //
 // The map looks the same in light and dark mode: the page's dark theme stops at its edge.
+//
+// A new route can play a short animation first (ADR 0014): the search spreading along the paths,
+// then the route drawn from the start. It's drawn on a canvas above the map, which hands over to the
+// map's own layers at the end. Not for visitors who ask their system for less motion.
 
 import { t } from "./i18n.js";
+import {
+  FINISHED,
+  HEAD,
+  flicker,
+  frame,
+  paths as networkPaths,
+  reached,
+  routeLine,
+  slice,
+  wave,
+} from "./reveal.js";
 
 const BASEMAP = "https://tiles.openfreemap.org/styles/liberty";
+const ROUTE_COLOR = "#e4572e";
+/** The search wave's blinking front: a lighter orange than the route. */
+const FRONT_COLOR = "#ff8f4a";
+const reducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 // If the basemap can't load, the route still draws, on a plain background.
 const PLAIN = {
   version: 8,
@@ -57,12 +76,14 @@ async function loadStyle() {
 export class RouteMap {
   /**
    * @param {HTMLElement} container
-   * @param {{pois: object[], satelliteKey: string | null}} options
+   * @param {{pois: object[], satelliteKey: string | null, network?: object}} options  `network`
+   *   (the park's WalkNetwork) lets a new route play the search along its paths
    */
   static async create(container, options) {
     const routeMap = new RouteMap(container, await loadStyle(), options);
     await new Promise((resolve) => routeMap.map.once("load", resolve));
     routeMap.setup();
+    if (options.network) routeMap.reveal = new Reveal(routeMap.map, options.network);
     return routeMap;
   }
 
@@ -79,6 +100,8 @@ export class RouteMap {
     });
     this.parkBounds = bounds;
     this.markers = [];
+    this.shown = null; // the plan on the map
+    this.reveal = null;
     this.popup = new maplibregl.Popup({ offset: 14, maxWidth: "290px", focusAfterOpen: false });
     /** Set by the page: what to show in a popup, what a stop is called, what a pick does. */
     this.describe = () => document.createElement("div");
@@ -115,13 +138,20 @@ export class RouteMap {
     const shapes = layers.findLastIndex((layer) => layer.type === "line" || layer.type === "fill");
     const labels = layers.slice(shapes + 1).find((layer) => layer.type === "symbol")?.id;
     const layout = { "line-join": "round", "line-cap": "round" };
+    // No fade when the animation hides the route and gives it back: the canvas covers the change.
+    const instant = { duration: 0, delay: 0 };
     map.addLayer(
       {
         id: "legs-casing",
         type: "line",
         source: "legs",
         layout,
-        paint: { "line-color": "#ffffff", "line-width": 7, "line-opacity": 0.85 },
+        paint: {
+          "line-color": "#ffffff",
+          "line-width": 7,
+          "line-opacity": 0.85,
+          "line-opacity-transition": instant,
+        },
       },
       labels,
     );
@@ -131,7 +161,12 @@ export class RouteMap {
         type: "line",
         source: "legs",
         layout,
-        paint: { "line-color": "#e4572e", "line-width": 4 },
+        paint: {
+          "line-color": ROUTE_COLOR,
+          "line-width": 4,
+          "line-opacity": 1,
+          "line-opacity-transition": instant,
+        },
       },
       labels,
     );
@@ -155,11 +190,18 @@ export class RouteMap {
     map.on("mouseleave", "pois", () => (map.getCanvas().style.cursor = ""));
   }
 
-  /** Draw a plan: its walks, a numbered marker per stop, and the other points as dots. */
-  show(plan, others) {
+  /**
+   * Draw a plan: its walks, a numbered marker per stop, and the other points as dots. With
+   * `animate`, the search plays first and the route is drawn from the start (ADR 0014).
+   * `onFrame` follows along with each step of that animation (see reveal.js `frame`), or gets the
+   * end state at once when there's nothing to play.
+   */
+  show(plan, others, { animate = false, onFrame = () => {} } = {}) {
+    this.reveal?.stop();
     this.popup.remove();
     this.markers.forEach((marker) => marker.remove());
     this.markers = [];
+    const stops = []; // each marker's element, with the number of the visit it stands for
     this.map.getSource("legs").setData({
       type: "FeatureCollection",
       features: plan.legs.map((coordinates) => ({
@@ -207,7 +249,15 @@ export class RouteMap {
         if (event.key === "Enter" || event.key === " ") pick(event);
       });
       this.markers.push(new maplibregl.Marker({ element }).setLngLat(visit.lnglat).addTo(this.map));
+      stops.push({ element, index });
     });
+    const previous = this.shown;
+    this.shown = plan;
+    if (animate && this.reveal && plan.legs.length > 0 && !reducedMotion()) {
+      this.reveal.play(plan, previous, stops, onFrame);
+    } else {
+      onFrame(FINISHED);
+    }
   }
 
   /** Show the popup for a POI (or the start position) at `lnglat`; `index` is its stop number. */
@@ -245,6 +295,191 @@ export class RouteMap {
 
   resize() {
     this.map.resize();
+  }
+}
+
+// The "finding the route" animation (ADR 0014; the geometry and timing are in reveal.js). It draws
+// on a canvas above the map's own drawing and below the markers, with the map's route hidden, and
+// gives the route back to the map's layers at the end.
+class Reveal {
+  constructor(map, network) {
+    this.map = map;
+    this.network = network;
+    this.paths = networkPaths(network);
+    this.waves = new Map(); // start node -> its wave, as the same starts come back
+    this.canvas = document.createElement("canvas");
+    this.canvas.className = "reveal";
+    this.canvas.setAttribute("aria-hidden", "true");
+    map.getCanvas().after(this.canvas);
+    this.context = this.canvas.getContext("2d");
+    this.job = null;
+    [this.width, this.height, this.ratio] = [0, 0, 1];
+  }
+
+  /** Play the search, then draw `plan`'s route. `previous` fades out; `stops` wait their turn. */
+  play(plan, previous, stops, onFrame) {
+    const job = {
+      wave: this.waveFrom(plan.visits[0]),
+      line: routeLine(plan.legs),
+      old: previous?.legs.length ? routeLine(previous.legs).points : null,
+      waiting: stops.filter(({ index }) => index > 0), // the start is there from the beginning
+      onFrame,
+      began: performance.now(),
+      frameId: 0,
+    };
+    for (const { element } of job.waiting) element.classList.add("marker--wait");
+    this.job = job;
+    this.setRouteOpacity(0);
+    onFrame(frame(0));
+    job.frameId = requestAnimationFrame(() => this.tick(job));
+  }
+
+  tick(job) {
+    if (this.job !== job) return;
+    const elapsed = performance.now() - job.began;
+    const state = frame(elapsed);
+    if (state.done) {
+      this.stop();
+      return;
+    }
+    this.draw(job, state, elapsed);
+    job.onFrame(state);
+    job.frameId = requestAnimationFrame(() => this.tick(job));
+  }
+
+  /** Jump to the end: the route back on the map's layers, and every stop shown. */
+  stop() {
+    const job = this.job;
+    if (!job) return;
+    this.job = null;
+    cancelAnimationFrame(job.frameId);
+    for (const { element } of job.waiting) element.classList.remove("marker--wait");
+    this.setRouteOpacity(1);
+    // Keep the canvas until the map has drawn its own route again, so the line never blinks out.
+    this.map.once("render", () => this.job === null && this.clear());
+    this.map.triggerRepaint();
+    job.onFrame(FINISHED);
+  }
+
+  draw(job, state, elapsed) {
+    const ctx = this.context;
+    this.fit();
+    ctx.setTransform(this.ratio, 0, 0, this.ratio, 0, 0);
+    ctx.clearRect(0, 0, this.width, this.height);
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+
+    if (job.old && state.old > 0) this.strokeRoute(job.old, state.old);
+
+    // The search: every path it reached, faintly, its front blinking, and a flash at the end.
+    const glow = state.glow * (1 + state.flash);
+    if (glow > 0.01) {
+      const front = state.front * job.wave.depth;
+      ctx.beginPath();
+      this.paths.forEach((path, i) => {
+        for (const piece of reached(path, job.wave.reach[i], front)) this.addLine(piece);
+      });
+      ctx.strokeStyle = ROUTE_COLOR;
+      ctx.globalAlpha = Math.min(0.4 * glow, 1);
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+      if (state.front < 1) {
+        const behind = HEAD * job.wave.depth;
+        ctx.strokeStyle = FRONT_COLOR;
+        ctx.lineWidth = 4;
+        this.paths.forEach((path, i) => {
+          const pieces = reached(path, job.wave.reach[i], front, behind);
+          if (pieces.length === 0) return;
+          ctx.beginPath();
+          for (const piece of pieces) this.addLine(piece);
+          ctx.globalAlpha = flicker(i, elapsed) * state.glow;
+          ctx.stroke();
+        });
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    // The route, from the start, with a dot at its tip and each stop shown as the line gets there.
+    if (state.drawn > 0) {
+      const at = state.drawn * job.line.length;
+      const drawn = slice(job.line.points, job.line.along, 0, at);
+      this.strokeRoute(drawn, 1);
+      const tip = drawn.at(-1);
+      if (tip) {
+        const { x, y } = this.map.project(tip);
+        ctx.beginPath();
+        ctx.arc(x, y, 5.5, 0, 2 * Math.PI);
+        ctx.fillStyle = ROUTE_COLOR;
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "#ffffff";
+        ctx.stroke();
+      }
+      job.waiting = job.waiting.filter(({ element, index }) => {
+        if (job.line.visits[index] > at + 0.5) return true;
+        element.classList.remove("marker--wait");
+        element.classList.add("marker--ping");
+        return false;
+      });
+    }
+  }
+
+  /** A route the way the map's layers draw it: orange over a white casing. */
+  strokeRoute(points, opacity) {
+    const ctx = this.context;
+    ctx.beginPath();
+    this.addLine(points);
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 7;
+    ctx.globalAlpha = 0.85 * opacity;
+    ctx.stroke();
+    ctx.strokeStyle = ROUTE_COLOR;
+    ctx.lineWidth = 4;
+    ctx.globalAlpha = opacity;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+
+  /** Add a `[lng, lat]` polyline to the canvas's current path, in screen pixels. */
+  addLine(points) {
+    points.forEach((point, i) => {
+      const { x, y } = this.map.project(point);
+      if (i === 0) this.context.moveTo(x, y);
+      else this.context.lineTo(x, y);
+    });
+  }
+
+  /** The shortest-path wave from a plan's start: a POI's is kept, a free position's isn't. */
+  waveFrom(start) {
+    if (!start.poi) {
+      const sources = this.network.snap(start.lnglat).seeds;
+      return wave(this.paths, this.network.shortestPaths(sources).dist);
+    }
+    const node = start.poi.node;
+    if (!this.waves.has(node)) {
+      this.waves.set(node, wave(this.paths, this.network.shortestPaths([[node, 0]]).dist));
+    }
+    return this.waves.get(node);
+  }
+
+  setRouteOpacity(opacity) {
+    this.map.setPaintProperty("legs-casing", "line-opacity", 0.85 * opacity);
+    this.map.setPaintProperty("legs", "line-opacity", opacity);
+  }
+
+  /** Cover the map at the screen's pixel density (it can change size, e.g. with the sheet). */
+  fit() {
+    const box = this.map.getContainer();
+    const [width, height, ratio] = [box.clientWidth, box.clientHeight, devicePixelRatio || 1];
+    if (width === this.width && height === this.height && ratio === this.ratio) return;
+    this.canvas.width = Math.round(width * ratio);
+    this.canvas.height = Math.round(height * ratio);
+    [this.width, this.height, this.ratio] = [width, height, ratio];
+  }
+
+  clear() {
+    this.context.setTransform(1, 0, 0, 1, 0, 0);
+    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
   }
 }
 

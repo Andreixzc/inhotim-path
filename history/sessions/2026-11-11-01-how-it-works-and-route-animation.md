@@ -58,6 +58,8 @@
      - first load, a language switch, the picker, rapid taps, "reduce motion" and a GPS start inside the park;
      - the canvas is left empty and every marker shown at the end, with no console errors;
      - 60 fps with the CPU slowed 4×, and one dropped frame at 6×.
+   - **Live:** `pages.yml` deployed it on 2026-11-11 (run 43107157804). The first-load, language, picker,
+     rapid-tap, reduce-motion and GPS checks pass on the live site too, with no console errors.
 
 ## Decisions
 
@@ -73,7 +75,7 @@
 
 ## Next steps (hand-off)
 
-- [ ] **Andrei's review of the animation**, live once `pages.yml` has deployed it.
+- [ ] **Andrei's review of the animation**, live at <https://andreixzc.github.io/inhotim-path/>.
 - [ ] **Quiet the daily refresh:** ignore OSM changes that routing doesn't use.
 - [ ] Decide on the CLI's `--budget` (above).
 - Still open from [2026-11-01](2026-11-01-01-kickoff.md):

@@ -56,6 +56,7 @@ session-by-session story lives in [`history/`](../history/).
 - [x] On phones, the map fills the screen and the plan is a sheet over it, dragged down to its summary and
       back up (ADR 0016)
 - [x] A click or a tap opens the nearest stop or point within reach, not just the one exactly under it (ADR 0017)
+- [x] On phones, a popup opens above or below its stop, and the map moves to show all of it
 - [x] Scheduled data refresh (GitHub Actions cron) + "what's new" diff of the collection (ADR 0007)
 - [x] Satellite view on the map, with a MapTiler key (ADR 0008)
 - [x] Deploy workflow for GitHub Pages (`pages.yml`), republished after each data refresh
@@ -70,8 +71,12 @@ session-by-session story lives in [`history/`](../history/).
 - [x] GPS "you are here": MapLibre's `GeolocateControl` (HTTPS and the visitor's permission; the position never
       leaves the phone)
 - [x] Plan from the current position, ending at the Portaria
-- [ ] Check off visited stops, automatically within ~25 m of one
-- [ ] Re-plan the rest of the visit as you go (keep what's been seen)
+- [x] Mark stops as seen, kept on the phone until cleared: the rest of the visit is planned from the stop seen
+      last, back to the Portaria (ADR 0018)
+- [x] Suggest a stop as seen after two minutes near it
+- ~~Check off visited stops automatically within ~25 m of one~~: the GPS only suggests, since paths pass right by
+  works and GPS drifts (ADR 0018)
+- [ ] Try it during a visit: how often suggestions come, and whether two minutes is right
 - ~~Time-left and closing-time alerts~~: dropped, the web app shows no times (ADR 0010)
 
 ## Phase 5: Smart extras

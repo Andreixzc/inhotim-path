@@ -137,6 +137,11 @@ On a phone, the map fills the screen and the plan lies over it in a sheet. Drag 
 with only the distance and the number of stops left showing, and up to get the plan back
 ([ADR 0016](history/decisions/0016-on-phones-the-plan-is-a-sheet-over-the-map.md)).
 
+During your visit, tap "Seen it" on a stop, in its popup or in the list. It leaves the route and stays on the map,
+faded with a check, and the route goes on from there, back to the Portaria. With your position on, a stop where you
+stay for two minutes is suggested. The marks stay on your phone until you clear them
+([ADR 0018](history/decisions/0018-visitors-mark-stops-as-seen-on-their-phone.md)).
+
 Run it locally:
 
 ```bash

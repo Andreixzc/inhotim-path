@@ -63,14 +63,15 @@ Plain ES modules with no build step; MapLibre GL comes from cdnjs, pinned with S
 | `solver.js` | The shortest walk through every stop: exact (Held-Karp) up to 12 stops, iterated local search beyond |
 | `plan.js` | Mirror of `planner.py`: pick stops, walking-time matrix, solve, timeline, legs |
 | `worker.js` | Runs `plan.js` off the main thread |
-| `map.js` | OpenFreeMap liberty basemap with a plain fallback (light in dark mode too), route, stops and other POIs in kind colors, locate button, satellite toggle, and the canvas that plays a new route's animation |
+| `map.js` | OpenFreeMap liberty basemap with a plain fallback (light in dark mode too), route, stops and other POIs in kind colors, stops seen (faded), locate button, satellite toggle, and the canvas that plays a new route's animation |
 | `reveal.js` | That animation's geometry and timing ([ADR 0014](../history/decisions/0014-map-shows-the-search-then-the-route.md)): the shortest-path wave from the start along every path, the route as one line, and the timeline |
-| `pick.js` | What a click or a tap on the map opens: the stop or point nearest to it, within a mouse's or a finger's reach ([ADR 0017](../history/decisions/0017-a-click-opens-the-nearest-stop-or-point.md)) |
+| `pick.js` | What a click or a tap on the map opens: the stop or point nearest to it, within a mouse's or a finger's reach ([ADR 0017](../history/decisions/0017-a-click-opens-the-nearest-stop-or-point.md)). On a narrow map, where its popup goes so all of it shows |
 | `sheet.js` | Phones: the plan's sheet over the map, which follows a finger and settles raised or lowered to its summary ([ADR 0016](../history/decisions/0016-on-phones-the-plan-is-a-sheet-over-the-map.md)) |
-| `app.js` | The form (category chips), the picker (stop by stop, or artist by artist), the itinerary, popups, and the glue between them |
+| `seen.js` | Stops marked as seen, kept on the phone; the stop the visit goes on from; a stop to suggest once the visitor has stayed near it ([ADR 0018](../history/decisions/0018-visitors-mark-stops-as-seen-on-their-phone.md)) |
+| `app.js` | The form (category chips), the picker (stop by stop, or artist by artist), the itinerary, the stops seen, popups, and the glue between them |
 | `state.js` · `format.js` · `i18n.js` | Settings: categories and stops added or skipped (localStorage + URL fragment), and each artist's stops; distances; Portuguese and English |
 
-The modules without DOM code (`network`, `solver`, `plan`, `reveal`, `pick`, `state`, `format`) are tested under node
+The modules without DOM code (`network`, `solver`, `plan`, `reveal`, `pick`, `seen`, `state`, `format`) are tested under node
 (`tests/web/`), and so are the sheet's rules for where a released sheet settles. `tests/test_web_planner.py` runs
 `scripts/web_plan.mjs` to check that the JavaScript planner agrees with the Python one, and
 `scripts/benchmark_web_solver.py` compares it with CP-SAT on the real park.

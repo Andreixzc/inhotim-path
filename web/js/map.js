@@ -8,10 +8,11 @@
 // then the route drawn from the start. It's drawn on a canvas above the map, which hands over to the
 // map's own layers at the end. Not for visitors who ask their system for less motion.
 //
-// A click or a tap opens the stop or point nearest to it, within a reach (pick.js, ADR 0017).
+// A click or a tap opens the stop or point nearest to it, within a reach (pick.js, ADR 0017). On a
+// narrow map its popup goes above or below it, and the map moves to show all of the popup.
 
 import { t } from "./i18n.js";
-import { REACH, nearest, reachFor } from "./pick.js";
+import { POPUP_ROOM, REACH, focusPopup, nearest, placePopup, reachFor } from "./pick.js";
 import {
   FINISHED,
   HEAD,
@@ -29,6 +30,8 @@ const ROUTE_COLOR = "#e4572e";
 /** The search wave's blinking front: a lighter orange than the route. */
 const FRONT_COLOR = "#ff8f4a";
 const reducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+/** A popup is at most `width` px wide, its tip `offset` px from its place. */
+const POPUP = { width: 290, offset: 14 };
 /** The dots for points off the route: radius 3 px at zoom 14 to 6 px at zoom 17, 1 px rim. */
 const DOT = { zoom: [14, 17], radius: [3, 6], rim: 1 };
 /** How big a dot is on screen (px), rim included, at `zoom`. */
@@ -135,8 +138,8 @@ export class RouteMap {
     this.near = null; // what a click would open, under the mouse
     // Closed by `click` below: a click that opens something else moves it instead.
     this.popup = new maplibregl.Popup({
-      offset: 14,
-      maxWidth: "290px",
+      offset: POPUP.offset,
+      maxWidth: `${POPUP.width}px`,
       focusAfterOpen: false,
       closeOnClick: false,
     });
@@ -394,7 +397,49 @@ export class RouteMap {
 
   /** Show the popup for a POI (or the start position) at `lnglat`; `index` is its stop number. */
   open(lnglat, poiId, index) {
-    this.popup.setLngLat(lnglat).setDOMContent(this.describe(poiId, index)).addTo(this.map);
+    const popup = this.popup;
+    // On a wide map MapLibre places it (no anchor); on a narrow one, pick.js does.
+    const narrow = this.narrow();
+    popup.options.anchor = narrow ? "bottom" : undefined;
+    popup.setLngLat(lnglat).setDOMContent(this.describe(poiId, index)).addTo(this.map);
+    if (!narrow) return;
+    const at = this.map.project(lnglat);
+    const { anchor, pan } = placePopup(at, this.popupSize(), this.view(), POPUP.offset);
+    popup.options.anchor = anchor;
+    popup.setLngLat(lnglat); // placed again, on that side
+    if (pan[0] || pan[1]) this.map.panBy(pan, { duration: 250 });
+  }
+
+  /**
+   * Whether the map is too narrow for MapLibre's placing of popups. Near a side of the map, that
+   * puts one beside its place, which takes about one and a half popups' width.
+   */
+  narrow() {
+    return this.map.getContainer().clientWidth < 1.5 * POPUP.width + POPUP.offset + 2 * POPUP_ROOM;
+  }
+
+  popupSize() {
+    const element = this.popup.getElement();
+    return { width: element.offsetWidth, height: element.offsetHeight };
+  }
+
+  /**
+   * What a popup can use (px on the map): above the sheet and the credits just over it, and not
+   * under the map's buttons, which take a corner at the top right.
+   */
+  view() {
+    const container = this.map.getContainer();
+    const box = container.getBoundingClientRect();
+    const rect = (selector) => container.querySelector(selector)?.getBoundingClientRect();
+    const buttons = rect(".maplibregl-ctrl-top-right");
+    const credits = rect(".maplibregl-ctrl-bottom-right");
+    return {
+      left: 0,
+      top: 0,
+      right: box.width,
+      bottom: Math.min(box.height - this.sheet, credits ? credits.top - box.top : Infinity),
+      corner: buttons && { left: buttons.left - box.left, bottom: buttons.bottom - box.top },
+    };
   }
 
   close() {
@@ -414,13 +459,23 @@ export class RouteMap {
     });
   }
 
-  /** Center a place in the part of the map that the sheet leaves in view. */
+  /**
+   * Center a place in the part of the map that the sheet leaves in view. On a narrow map, where
+   * all of its open popup shows too (pick.js).
+   */
   focus(lnglat) {
     this.following = false;
+    const { clientWidth: width, clientHeight: height } = this.map.getContainer();
+    let at = { x: width / 2, y: (height - this.sheet) / 2 };
+    if (this.narrow() && this.popup.isOpen()) {
+      let anchor;
+      ({ at, anchor } = focusPopup(this.popupSize(), this.view(), POPUP.offset));
+      this.popup.options.anchor = anchor;
+    }
     this.map.easeTo({
       center: lnglat,
       zoom: Math.max(this.map.getZoom(), 16),
-      offset: [0, -this.sheet / 2],
+      offset: [at.x - width / 2, at.y - height / 2],
       duration: 500,
     });
   }

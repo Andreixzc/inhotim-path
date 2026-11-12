@@ -46,3 +46,4 @@ Code shows *what* the project is. This folder explains *how it got there* and *w
 - [0014: The map shows the search, then draws the route](decisions/0014-map-shows-the-search-then-the-route.md)
 - [0015: No time budget in the command line either](decisions/0015-no-time-budget-in-the-command-line.md)
 - [0016: On phones, the plan is a sheet dragged over a full-screen map](decisions/0016-on-phones-the-plan-is-a-sheet-over-the-map.md)
+- [0017: A click opens the nearest stop or point within reach](decisions/0017-a-click-opens-the-nearest-stop-or-point.md)

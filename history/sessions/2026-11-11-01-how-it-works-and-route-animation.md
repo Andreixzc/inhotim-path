@@ -71,15 +71,35 @@
    - **No route changed on the page:** the browser's walks were identical before and after, in all 75 runs.
    - **README:** the 6-hour figure became the galleries route (23 stops, 8.4 km), and both figures were redrawn
      with distance-only titles.
+7. **A sheet to drag on phones.** Andrei, on a Galaxy S22: *"i cant hide the bar where i select the things i want
+   to see"* and *"i cant 'drag' the thing to colappse it, only 'clicking' this isnt very intuitive."* →
+   [ADR 0016](../decisions/0016-on-phones-the-plan-is-a-sheet-over-the-map.md):
+   - **Before:** at 360 × 700, the map had 280 px above a 420 px sheet. The only control was a tap on a faint
+     40 × 5 px handle.
+   - **Now:** the map fills the screen and the plan is a sheet over it (`web/js/sheet.js`).
+     - A finger drags the sheet down to its summary (163 px) and back up. Let go while still moving and it goes
+       that way; let go at rest and it settles at the nearer end.
+     - Taps still work.
+     - The route is re-framed in the part of the map left in view. If the visitor has moved the map, it's panned
+       instead.
+   - **Checked** in Chrome with real touch input at 360 × 700: the sheet's 22 checks pass in light and dark mode.
+     The animation's 10 checks pass at phone and desktop sizes.
+   - **A flick that bounced back:** the first version needed 0.4 px per ms, measured from the moves in the last
+     100 ms. A 60 px test flick, slowed to 0.3 px per ms by the test harness, didn't count. Now the speed is
+     measured over at least the last 100 ms and the threshold is 0.2 px per ms, closer to Android's own sheets
+     (they follow any motion at release).
 
 ## Decisions
 
 - [0014](../decisions/0014-map-shows-the-search-then-the-route.md): the map shows the search, then draws the route.
 - [0015](../decisions/0015-no-time-budget-in-the-command-line.md): no time budget in the command line either.
+- [0016](../decisions/0016-on-phones-the-plan-is-a-sheet-over-the-map.md): on phones, the plan is a sheet dragged
+  over a full-screen map.
 
 ## Open questions
 
 - Does Andrei like the animation's look and length (about 1.3 s)? `TIMING` in `reveal.js` sets it.
+- How does the sheet feel on a real phone? `FLICK` and `SLOP` at the top of `sheet.js` tune it.
 - The command line still prints estimated times (4 km/h, minutes per kind of stop). Keep them, or show distances
   only, like the web app?
 - Keep a route's order stable when unticking a stop makes nothing shorter? Today the re-solve can renumber stops.
@@ -89,6 +109,7 @@
 ## Next steps (hand-off)
 
 - [ ] **Andrei's review of the animation**, live at <https://andreixzc.github.io/inhotim-path/>.
+- [ ] **Andrei tries the sheet on his S22:** dragging, flicking and tapping it.
 - [ ] **Quiet the daily refresh:** ignore OSM changes that routing doesn't use.
 - [x] The CLI's `--budget`: removed (ADR 0015).
 - Still open from [2026-11-01](2026-11-01-01-kickoff.md):

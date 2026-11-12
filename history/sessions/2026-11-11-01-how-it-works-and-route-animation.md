@@ -88,6 +88,23 @@
      100 ms. A 60 px test flick, slowed to 0.3 px per ms by the test harness, didn't count. Now the speed is
      measured over at least the last 100 ms and the threshold is 0.2 px per ms, closer to Android's own sheets
      (they follow any motion at release).
+   - **Andrei, on his S22 (2026-11-12):** *"that thing is working properly on drag now"*. He finds the animation
+     *"pretty good"* too.
+8. **Easier to click a stop or a point** (2026-11-12). Andrei: *"its very dificult to click on the actual atraction
+   [...] on mobile is even wrost"* → [ADR 0017](../decisions/0017-a-click-opens-the-nearest-stop-or-point.md):
+   - **Measured before:** a dot opened within 4 to 6 px of its center with a mouse, and within 2 to 4 px with a
+     finger. A stop opened within 12 px.
+   - **A bug:** with a popup open, a click on another dot closed the popup instead of opening the other one.
+   - **Now** (`web/js/pick.js`): a click opens the stop or point whose edge is nearest, within 8 px for a mouse and
+     20 px for a finger. With a mouse, the dot grows or the stop gets a ring before the click.
+     - With a mouse, a dot opens up to 12 to 14 px from its center and a stop up to 20 px.
+     - With a finger, a lone dot opens up to 26 px from its center and a stop up to 32 px.
+   - **Checked** in Chrome on desktop and at 360 × 700 with touch. The popup now switches between dots and stays
+     open on clicks inside it. A click on empty map closes it, and the zoom buttons leave it alone.
+9. **Andrei's next idea** (2026-11-12): *"could see himself on the map? like a gps? and also enable him to mark the
+   things he saw, so he wouldnt have to see redudnat stuff on the map?"* Seeing yourself already works: the map's
+   locate button shows a live dot. Marking stops as seen is the roadmap's live mode. A design was proposed in
+   the chat, and Andrei's choices are still to come (see the open questions).
 
 ## Decisions
 
@@ -95,11 +112,15 @@
 - [0015](../decisions/0015-no-time-budget-in-the-command-line.md): no time budget in the command line either.
 - [0016](../decisions/0016-on-phones-the-plan-is-a-sheet-over-the-map.md): on phones, the plan is a sheet dragged
   over a full-screen map.
+- [0017](../decisions/0017-a-click-opens-the-nearest-stop-or-point.md): a click opens the nearest stop or point
+  within reach.
 
 ## Open questions
 
-- Does Andrei like the animation's look and length (about 1.3 s)? `TIMING` in `reveal.js` sets it.
-- How does the sheet feel on a real phone? `FLICK` and `SLOP` at the top of `sheet.js` tune it.
+- **Marking stops as seen:**
+  - Should seen stops stay on the map, faded with a check, or disappear?
+  - Should the GPS mark stops by itself, suggest them, or stay out of it?
+  - Should marks last for a two-day visit until cleared, or reset each day?
 - The command line still prints estimated times (4 km/h, minutes per kind of stop). Keep them, or show distances
   only, like the web app?
 - Keep a route's order stable when unticking a stop makes nothing shorter? Today the re-solve can renumber stops.
@@ -108,8 +129,12 @@
 
 ## Next steps (hand-off)
 
-- [ ] **Andrei's review of the animation**, live at <https://andreixzc.github.io/inhotim-path/>.
-- [ ] **Andrei tries the sheet on his S22:** dragging, flicking and tapping it.
+- [ ] **Seen stops** (live mode, Phase 4), once Andrei has chosen:
+  - mark a stop as seen from its popup or the list;
+  - re-plan what's left from the last one seen, or from where you are, back to the Portaria;
+  - keep the marks on the phone.
+- [x] Andrei's review of the animation: *"pretty good"*.
+- [x] Andrei tried the sheet on his S22: it drags properly.
 - [ ] **Quiet the daily refresh:** ignore OSM changes that routing doesn't use.
 - [x] The CLI's `--budget`: removed (ADR 0015).
 - Still open from [2026-11-01](2026-11-01-01-kickoff.md):

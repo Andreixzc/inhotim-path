@@ -15,7 +15,7 @@ GALLERY = Poi(id=2, name="Galeria <Praça>", kind=PoiKind.GALLERY, lat=-20.121, 
 SNEAKY = Poi(id=3, name="</script><b>x</b>", kind=PoiKind.OUTDOOR_WORK, lat=-20.122, lng=-44.222)
 
 
-def make_plan(*, total_hours=1.0, budget_min=None, optimal=True, skipped=()):
+def make_plan(*, total_hours=1.0, optimal=True):
     walk_s = 300
     dwell_s = round(total_hours * 3600) - 2 * walk_s
     visits = (
@@ -28,10 +28,9 @@ def make_plan(*, total_hours=1.0, budget_min=None, optimal=True, skipped=()):
         ((GALLERY.lat, GALLERY.lng), (START.lat, START.lng)),
     )
     return Plan(
-        request=PlanRequest(budget_min=budget_min),
+        request=PlanRequest(),
         visits=visits,
         legs=legs,
-        skipped=tuple(skipped),
         unreachable=(),
         network_stats={},
         optimal=optimal,
@@ -58,11 +57,10 @@ def test_itinerary_lists_stops_with_clock_times():
     assert "route quality: proven optimal" in text
 
 
-def test_itinerary_reports_budget_and_left_out_stops():
-    text = format_itinerary(make_plan(budget_min=90, optimal=False, skipped=[SNEAKY]))
-    assert "time budget 1h30 · 1 stops left out" in text
-    assert "Left out (1): </script><b>x</b>" in text
-    assert "not proven optimal" in text
+def test_itinerary_says_when_a_route_is_not_proven_optimal():
+    text = format_itinerary(make_plan(optimal=False))
+    assert "route quality: best found in 5 s, not proven optimal" in text
+    assert "--time-limit" in text
 
 
 def test_itinerary_says_when_a_tour_takes_more_than_a_day():

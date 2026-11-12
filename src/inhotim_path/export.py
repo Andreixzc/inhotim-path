@@ -59,10 +59,6 @@ def format_itinerary(plan: Plan, start_time: time | None = None) -> str:
         f"Inhotim route: {summary(plan)}",
         f"walking speed {request.speed_kmh:g} km/h · time at each stop: {dwell}",
     ]
-    if request.budget_min is not None:
-        lines.append(
-            f"time budget {duration(request.budget_min * 60)} · {len(plan.skipped)} stops left out"
-        )
     if plan.optimal:
         lines.append("route quality: proven optimal")
     else:
@@ -79,11 +75,6 @@ def format_itinerary(plan: Plan, start_time: time | None = None) -> str:
             f"{index:>3}  {clock(visit.arrive_s, start_time):>9}  {name:<46}  "
             f"{visit.poi.kind.value:<13}  {walk}"
         )
-    if plan.skipped:
-        ranked = sorted(plan.skipped, key=lambda p: (-request.dwell_min.get(p.kind, 0), p.name))
-        names = ", ".join(display_name(p) for p in ranked[:8])
-        more = f" (+{len(ranked) - 8} more)" if len(ranked) > 8 else ""
-        lines += ["", f"Left out ({len(ranked)}): {names}{more}"]
     if plan.unreachable:
         names = ", ".join(display_name(p) for p in plan.unreachable)
         lines += ["", f"Unreachable (too far from any known path): {names}"]

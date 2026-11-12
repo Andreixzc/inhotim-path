@@ -25,9 +25,8 @@ from inhotim_path.sources.osm import OsmPark
 DEFAULT_KINDS = (PoiKind.GALLERY, PoiKind.OUTDOOR_WORK, PoiKind.GARDEN)
 DEFAULT_START = "Recepção"
 DEFAULT_SPEED_KMH = 4.0
-#: Minutes spent at each kind of stop. Assumptions, to be refined (see docs/vision.md).
-#: When a time budget forces choices, a stop is worth its minutes: the route maximizes the time
-#: spent with art, then minimizes walking. Raising a kind's minutes also makes it more attractive.
+#: Minutes spent at each kind of stop, for the itinerary's times. Assumptions, to be refined (see
+#: docs/vision.md). They don't change the route: every stop chosen is visited.
 DEFAULT_DWELL_MIN: Mapping[PoiKind, float] = {
     PoiKind.GALLERY: 20,
     PoiKind.OUTDOOR_WORK: 8,
@@ -73,10 +72,9 @@ class ParkData:
 class PlanRequest:
     kinds: tuple[PoiKind, ...] = DEFAULT_KINDS
     must: tuple[str, ...] = ()
-    """Name/artist queries that must be visited (accent- and case-insensitive)."""
+    """Name/artist queries to visit whatever their kind (accent- and case-insensitive)."""
     exclude: tuple[str, ...] = ()
     start: str = DEFAULT_START
-    budget_min: float | None = None
     speed_kmh: float = DEFAULT_SPEED_KMH
     dwell_min: Mapping[PoiKind, float] = field(default_factory=lambda: dict(DEFAULT_DWELL_MIN))
     time_limit_s: float = 5.0
@@ -101,8 +99,6 @@ class Plan:
     """Start, stops in order, and back to the start."""
     legs: tuple[tuple[LatLng, ...], ...]
     """``legs[i]``: walking polyline from ``visits[i]`` to ``visits[i + 1]``."""
-    skipped: tuple[Poi, ...]
-    """Stops left out because of the time budget."""
     unreachable: tuple[Poi, ...]
     """Stops too far from any known path."""
     network_stats: Mapping[str, float]
@@ -157,24 +153,8 @@ def plan_route(data: ParkData, request: PlanRequest) -> Plan:
 
     matrix = walking_matrix(network, [start.id, *(p.id for p in reachable)])
     speed_mps = request.speed_kmh / 3.6
-    stops = [
-        Stop(
-            poi_id=p.id,
-            dwell_s=_dwell_s(p, request),
-            value=max(1, round(_dwell_s(p, request) / 60)),
-            mandatory=p.id in must_ids,
-        )
-        for p in reachable
-    ]
-    budget_s = round(request.budget_min * 60) if request.budget_min is not None else None
-    route = solve(
-        start.id,
-        stops,
-        matrix,
-        speed_mps=speed_mps,
-        budget_s=budget_s,
-        time_limit_s=request.time_limit_s,
-    )
+    stops = [Stop(poi_id=p.id, dwell_s=_dwell_s(p, request)) for p in reachable]
+    route = solve(start.id, stops, matrix, speed_mps=speed_mps, time_limit_s=request.time_limit_s)
 
     by_id = {p.id: p for p in [start, *reachable]}
     visits: list[Visit] = []
@@ -203,7 +183,6 @@ def plan_route(data: ParkData, request: PlanRequest) -> Plan:
         request=request,
         visits=tuple(visits),
         legs=tuple(legs),
-        skipped=tuple(by_id[i] for i in route.skipped),
         unreachable=unreachable,
         network_stats=network.stats,
         optimal=route.optimal,

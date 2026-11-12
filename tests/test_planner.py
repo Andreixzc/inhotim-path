@@ -4,6 +4,7 @@ import pytest
 
 from inhotim_path.models import PoiKind
 from inhotim_path.planner import (
+    DEFAULT_DWELL_MIN,
     ParkData,
     PlanningError,
     PlanRequest,
@@ -12,7 +13,6 @@ from inhotim_path.planner import (
     plan_route,
     search,
 )
-from inhotim_path.solver import InfeasibleRouteError
 from tests.synthetic_park import POIS, park_data
 
 
@@ -29,7 +29,6 @@ def test_full_tour_visits_every_reachable_stop_and_returns():
     assert plan.visits[0].poi.id == plan.visits[-1].poi.id == 1
     assert sorted(ids(plan.stops)) == [2, 3, 4, 5]  # 6 is inside a gallery, 7 is unreachable
     assert poi_ids(plan.unreachable) == [7]
-    assert plan.skipped == ()
     assert plan.optimal
 
 
@@ -50,13 +49,13 @@ def test_legs_run_from_stop_to_stop():
         assert leg[-1] == pytest.approx((target.poi.lat, target.poi.lng), abs=1e-7)
 
 
-def test_budget_keeps_the_stop_worth_the_most_minutes():
-    # 30 min: the nearby gallery (160 m away, 20 min) fits alone; any pair takes longer.
-    plan = plan_route(park_data(), PlanRequest(budget_min=30))
-    assert ids(plan.stops) == [2]
-    assert poi_ids(plan.skipped) == [3, 4, 5]
-    assert plan.stops[0].walk_m == pytest.approx(160, abs=1)
-    assert plan.total_s <= 30 * 60
+def test_minutes_per_stop_change_the_times_not_the_route():
+    default = plan_route(park_data(), PlanRequest())
+    hour_per_gallery = {**DEFAULT_DWELL_MIN, PoiKind.GALLERY: 60}
+    slow = plan_route(park_data(), PlanRequest(dwell_min=hour_per_gallery))
+    assert sorted(ids(slow.stops)) == sorted(ids(default.stops))
+    assert slow.walk_s == default.walk_s
+    assert slow.dwell_s == default.dwell_s + 2 * 40 * 60  # two galleries, 40 more minutes each
 
 
 def test_must_adds_stops_of_other_kinds():
@@ -64,14 +63,9 @@ def test_must_adds_stops_of_other_kinds():
     assert sorted(ids(plan.stops)) == [2, 3, 5]
 
 
-def test_must_is_kept_under_a_tight_budget():
-    plan = plan_route(park_data(), PlanRequest(budget_min=30, must=("amilcar",)))
-    assert 4 in ids(plan.stops)
-
-
-def test_must_that_cannot_fit_is_an_error():
-    with pytest.raises(InfeasibleRouteError):
-        plan_route(park_data(), PlanRequest(budget_min=10, must=("lago",)))
+def test_must_adds_stops_off_the_main_map():
+    plan = plan_route(park_data(), PlanRequest(must=("obra interna",)))
+    assert sorted(ids(plan.stops)) == [2, 3, 4, 5, 6]
 
 
 def test_exclude_drops_stops():

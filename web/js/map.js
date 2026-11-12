@@ -7,8 +7,11 @@
 // A new route can play a short animation first (ADR 0014): the search spreading along the paths,
 // then the route drawn from the start. It's drawn on a canvas above the map, which hands over to the
 // map's own layers at the end. Not for visitors who ask their system for less motion.
+//
+// A click or a tap opens the stop or point nearest to it, within a reach (pick.js, ADR 0017).
 
 import { t } from "./i18n.js";
+import { REACH, nearest, reachFor } from "./pick.js";
 import {
   FINISHED,
   HEAD,
@@ -26,6 +29,16 @@ const ROUTE_COLOR = "#e4572e";
 /** The search wave's blinking front: a lighter orange than the route. */
 const FRONT_COLOR = "#ff8f4a";
 const reducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+/** The dots for points off the route: radius 3 px at zoom 14 to 6 px at zoom 17, 1 px rim. */
+const DOT = { zoom: [14, 17], radius: [3, 6], rim: 1 };
+/** How big a dot is on screen (px), rim included, at `zoom`. */
+function dotRadius(zoom) {
+  const [low, high] = DOT.zoom;
+  const share = Math.min(Math.max((zoom - low) / (high - low), 0), 1);
+  return DOT.radius[0] + share * (DOT.radius[1] - DOT.radius[0]) + DOT.rim;
+}
+/** The dot a click would open, under the mouse: bigger and solid. */
+const NEAR = ["boolean", ["feature-state", "near"], false];
 // If the basemap can't load, the route still draws, on a plain background.
 const PLAIN = {
   version: 8,
@@ -111,7 +124,16 @@ export class RouteMap {
     this.fitted = null; // the plan framed last; null once the visitor moves the map
     this.following = false;
     this.locateFit = { maxZoom: 15 }; // the locate button's framing, kept clear of the sheet
-    this.popup = new maplibregl.Popup({ offset: 14, maxWidth: "290px", focusAfterOpen: false });
+    this.stops = []; // the route's stops on the map: their marker, visit and number
+    this.others = []; // the park's points off the route, drawn as dots
+    this.near = null; // what a click would open, under the mouse
+    // Closed by `click` below: a click that opens something else moves it instead.
+    this.popup = new maplibregl.Popup({
+      offset: 14,
+      maxWidth: "290px",
+      focusAfterOpen: false,
+      closeOnClick: false,
+    });
     /** Set by the page: what to show in a popup, what a stop is called, what a pick does. */
     this.describe = () => document.createElement("div");
     this.nameOf = (poi) => poi.name;
@@ -145,7 +167,7 @@ export class RouteMap {
       if (event.originalEvent || event.geolocateSource) this.following = false;
     });
     map.addSource("legs", { type: "geojson", data: EMPTY });
-    map.addSource("pois", { type: "geojson", data: EMPTY });
+    map.addSource("pois", { type: "geojson", data: EMPTY, promoteId: "id" });
     // Above the basemap's paths and areas but below its labels, so place names stay readable.
     // (Some styles put a label before the roads: start looking after the last line or area.)
     const layers = map.getStyle().layers;
@@ -189,19 +211,77 @@ export class RouteMap {
       type: "circle",
       source: "pois",
       paint: {
-        "circle-radius": ["interpolate", ["linear"], ["zoom"], 14, 3, 17, 6],
+        "circle-radius": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          DOT.zoom[0],
+          ["case", NEAR, DOT.radius[0] * 2, DOT.radius[0]],
+          DOT.zoom[1],
+          ["case", NEAR, DOT.radius[1] * 1.5, DOT.radius[1]],
+        ],
         "circle-color": ["get", "color"],
-        "circle-opacity": 0.75,
+        "circle-opacity": ["case", NEAR, 1, 0.75],
         "circle-stroke-color": "#ffffff",
-        "circle-stroke-width": 1,
+        "circle-stroke-width": DOT.rim,
       },
     });
-    map.on("click", "pois", (event) => {
-      const feature = event.features[0];
-      this.open(feature.geometry.coordinates, feature.properties.id, null);
+    // A click or a tap opens the stop or point nearest to it, or else closes the popup. The
+    // markers take their own clicks, so this is for the dots and for clicks just off a marker.
+    const coarse = matchMedia("(pointer: coarse)");
+    map.on("click", (event) => {
+      if (event.originalEvent.target.closest?.(".maplibregl-popup")) return;
+      const target = this.targetAt(event.point, reachFor(event.originalEvent, coarse.matches));
+      if (target) this.choose(target);
+      else this.close();
     });
-    map.on("mouseenter", "pois", () => (map.getCanvas().style.cursor = "pointer"));
-    map.on("mouseleave", "pois", () => (map.getCanvas().style.cursor = ""));
+    // With a mouse, what a click would open shows under it.
+    if (matchMedia("(hover: hover)").matches) {
+      map.on("mousemove", (event) => this.hover(this.targetAt(event.point, REACH.mouse)));
+      map.on("mouseout", () => this.hover(null));
+    }
+  }
+
+  /** What a click at `point` (px on the map) opens: a stop, a point, or nothing (pick.js). */
+  targetAt(point, reach) {
+    const targets = [];
+    for (const stop of this.stops) {
+      if (stop.element.classList.contains("marker--wait")) continue; // not drawn yet
+      const at = this.map.project(stop.visit.lnglat);
+      targets.push({ x: at.x, y: at.y, r: stop.element.offsetWidth / 2, stop });
+    }
+    const r = dotRadius(this.map.getZoom());
+    for (const poi of this.others) {
+      const at = this.map.project([poi.lng, poi.lat]);
+      targets.push({ x: at.x, y: at.y, r, poi });
+    }
+    return nearest(point, targets, reach);
+  }
+
+  /** Open a stop (and point it out in the list) or a point. */
+  choose({ stop, poi }) {
+    if (stop) {
+      this.open(stop.visit.lnglat, stop.visit.poi?.id ?? null, stop.index);
+      this.onPick(stop.index);
+    } else {
+      this.open([poi.lng, poi.lat], poi.id, null);
+    }
+  }
+
+  /** Show what a click would open: a pointer, and a bigger dot or a ringed marker. */
+  hover(target) {
+    const thing = target?.stop ?? target?.poi ?? null;
+    if (thing === this.near) return;
+    this.mark(this.near, false);
+    this.near = thing;
+    this.mark(thing, true);
+    this.map.getCanvas().style.cursor = thing ? "pointer" : "";
+  }
+
+  /** Point out a stop's marker or a point's dot, or stop pointing it out. */
+  mark(thing, on) {
+    if (thing?.element) thing.element.classList.toggle("marker--near", on);
+    else if (thing) this.map.setFeatureState({ source: "pois", id: thing.id }, { near: on });
   }
 
   /**
@@ -213,9 +293,11 @@ export class RouteMap {
   show(plan, others, { animate = false, onFrame = () => {} } = {}) {
     this.reveal?.stop();
     this.popup.remove();
+    this.hover(null);
     this.markers.forEach((marker) => marker.remove());
     this.markers = [];
-    const stops = []; // each marker's element, with the number of the visit it stands for
+    this.stops = [];
+    this.others = others;
     this.map.getSource("legs").setData({
       type: "FeatureCollection",
       features: plan.legs.map((coordinates) => ({
@@ -253,22 +335,22 @@ export class RouteMap {
         element.style.background = KIND_COLOR[visit.poi.kind] ?? KIND_COLOR.other;
         element.setAttribute("aria-label", `${index}. ${this.nameOf(visit.poi)}`);
       }
+      const stop = { element, visit, index };
       const pick = (event) => {
         event.stopPropagation();
-        this.open(visit.lnglat, visit.poi?.id ?? null, index);
-        this.onPick(index);
+        this.choose({ stop });
       };
       element.addEventListener("click", pick);
       element.addEventListener("keydown", (event) => {
         if (event.key === "Enter" || event.key === " ") pick(event);
       });
       this.markers.push(new maplibregl.Marker({ element }).setLngLat(visit.lnglat).addTo(this.map));
-      stops.push({ element, index });
+      this.stops.push(stop);
     });
     const previous = this.shown;
     this.shown = plan;
     if (animate && this.reveal && plan.legs.length > 0 && !reducedMotion()) {
-      this.reveal.play(plan, previous, stops, onFrame);
+      this.reveal.play(plan, previous, this.stops, onFrame);
     } else {
       onFrame(FINISHED);
     }

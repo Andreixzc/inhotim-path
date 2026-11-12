@@ -103,8 +103,32 @@
      open on clicks inside it. A click on empty map closes it, and the zoom buttons leave it alone.
 9. **Andrei's next idea** (2026-11-12): *"could see himself on the map? like a gps? and also enable him to mark the
    things he saw, so he wouldnt have to see redudnat stuff on the map?"* Seeing yourself already works: the map's
-   locate button shows a live dot. Marking stops as seen is the roadmap's live mode. A design was proposed in
-   the chat, and Andrei's choices are still to come (see the open questions).
+   locate button shows a live dot. Marking stops as seen is the roadmap's live mode. Asked how seen stops should
+   look, what the GPS should do, and how long marks last, Andrei chose: *"go with your picks: fade them, suggest
+   only, keep until cleared."*
+10. **Seen stops** → [ADR 0018](../decisions/0018-visitors-mark-stops-as-seen-on-their-phone.md):
+    - **`web/js/seen.js`** (8 node tests) keeps the marks on the phone, with when each was made, and says which
+      stop the visit goes on from. Its `Linger` suggests a stop once the visitor has stayed within 40 m of it for
+      two minutes. Walking off counts past 70 m, and fixes vaguer than 60 m don't count.
+    - **In the page:**
+      - "Já vi" in a stop's popup, and a check button on its row in the list.
+      - Seen stops stay on the map, faded with a check. A "Já vistas" section lists them, with a button that
+        unmarks each, and "Começar de novo" clears them all.
+      - The route goes on from the stop seen last that day, back to the Portaria. The start's choice then has
+        neither option selected, and a note names the stop. Choosing the Portaria starts there again.
+      - "Minha localização" now keeps watching the position, and a card at the top of the sheet suggests a stop.
+    - **Checked in Chrome,** in light and dark: 17 checks at 360 × 700 with touch and 16 on desktop. They cover
+      marking from the list and from a popup, a reload, the Portaria, unmarking, starting over, and a faked GPS
+      walk. On that walk the suggestion came after two minutes, only once, went away when dismissed, and the
+      watch stopped with the Portaria. The earlier checks (sheet, clicks, animation) still pass.
+11. **Popups that fit a phone** (found while checking the seen stops):
+    - **The bug:** near a side of the map, MapLibre puts a popup beside its place. On a 360 px phone, with
+      popups up to 290 px wide, that pushed one up to 87 px off the other side, its buttons too.
+    - **Now:** on a narrow map, a popup goes above its place, or below it near the top. The map then moves just
+      enough to show all of it, clear of the sheet, the credits and the map's buttons. A stop picked in the
+      list goes where its popup fits (`placePopup` and `focusPopup` in `web/js/pick.js`, 5 node tests).
+    - **Checked:** 25 checks of taps across the phone's map and picks from the list, 7 of which failed before the
+      fix. On desktop (35 checks), MapLibre still places popups and a click doesn't move the map.
 
 ## Decisions
 
@@ -114,13 +138,15 @@
   over a full-screen map.
 - [0017](../decisions/0017-a-click-opens-the-nearest-stop-or-point.md): a click opens the nearest stop or point
   within reach.
+- [0018](../decisions/0018-visitors-mark-stops-as-seen-on-their-phone.md): visitors mark stops as seen, on their
+  phone.
 
 ## Open questions
 
-- **Marking stops as seen:**
-  - Should seen stops stay on the map, faded with a check, or disappear?
-  - Should the GPS mark stops by itself, suggest them, or stay out of it?
-  - Should marks last for a two-day visit until cleared, or reset each day?
+- **Seen stops in the park:**
+  - Are two minutes within 40 m right for a suggestion? Only a visit will tell.
+  - Suggestions stop while the phone sleeps. Keep the screen on during a visit (the Wake Lock API), at some
+    cost in battery?
 - The command line still prints estimated times (4 km/h, minutes per kind of stop). Keep them, or show distances
   only, like the web app?
 - Keep a route's order stable when unticking a stop makes nothing shorter? Today the re-solve can renumber stops.
@@ -129,10 +155,8 @@
 
 ## Next steps (hand-off)
 
-- [ ] **Seen stops** (live mode, Phase 4), once Andrei has chosen:
-  - mark a stop as seen from its popup or the list;
-  - re-plan what's left from the last one seen, or from where you are, back to the Portaria;
-  - keep the marks on the phone.
+- [x] **Seen stops** (live mode, Phase 4): ADR 0018.
+- [ ] **Andrei tries the seen stops** on his S22, ideally in the park: marking, the faded stops, the suggestion.
 - [x] Andrei's review of the animation: *"pretty good"*.
 - [x] Andrei tried the sheet on his S22: it drags properly.
 - [ ] **Quiet the daily refresh:** ignore OSM changes that routing doesn't use.

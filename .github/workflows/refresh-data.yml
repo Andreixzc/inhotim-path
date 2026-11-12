@@ -49,7 +49,7 @@ jobs:
         if: steps.changes.outputs.changed == 'true'
         run: |
           uv run pytest -q
-          uv run inhotim-path route --budget 4h --time-limit 3
+          uv run inhotim-path route --time-limit 3
       - name: Commit and push
         if: steps.changes.outputs.changed == 'true'
         run: |

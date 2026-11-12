@@ -65,9 +65,11 @@ def test_itinerary_reports_budget_and_left_out_stops():
     assert "not proven optimal" in text
 
 
-def test_itinerary_suggests_a_budget_for_very_long_tours():
-    assert "--budget" in format_itinerary(make_plan(total_hours=12))
-    assert "--budget" not in format_itinerary(make_plan(total_hours=3))
+def test_itinerary_says_when_a_tour_takes_more_than_a_day():
+    long_tour = format_itinerary(make_plan(total_hours=12))
+    assert "more than a single visiting day" in long_tour
+    assert "--kinds or --exclude" in long_tour
+    assert "more than a single visiting day" not in format_itinerary(make_plan(total_hours=3))
 
 
 def test_geojson_has_legs_and_stops():

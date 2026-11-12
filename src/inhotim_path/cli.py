@@ -5,7 +5,6 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import re
 import sys
 from collections import Counter
 from collections.abc import Sequence
@@ -58,15 +57,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     route = commands.add_parser(
         "route",
-        help="compute the best walking route",
-        description="Shortest route through every stop (TSP), or the best route that fits a "
-        "time budget (orienteering) when --budget is given. Works offline from data/.",
-    )
-    route.add_argument(
-        "--budget",
-        type=parse_duration,
-        metavar="DURATION",
-        help="time you have, e.g. 4h, 5h30, 90m (default: see everything)",
+        help="compute the shortest walking route",
+        description="Shortest walking route from the start through every stop chosen and back "
+        "(TSP). Works offline from data/.",
     )
     route.add_argument(
         "--kinds",
@@ -83,7 +76,8 @@ def build_parser() -> argparse.ArgumentParser:
         nargs="+",
         default=[],
         metavar="NAME",
-        help="must-see stops: name or artist, accents/case optional (e.g. Kusama 'Beam Drop')",
+        help="stops to add whatever their kind: name or artist, accents/case optional "
+        "(e.g. Kusama 'Beam Drop')",
     )
     route.add_argument("--exclude", nargs="+", default=[], metavar="NAME", help="stops to skip")
     route.add_argument(
@@ -145,17 +139,6 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def parse_duration(text: str) -> float:
-    """'4h' -> 240, '5h30' -> 330, '1.5h' -> 90, '90m' / '90' -> 90 (minutes)."""
-    match = re.fullmatch(
-        r"\s*(?:(\d+(?:\.\d+)?)\s*h)?\s*(?:(\d+(?:\.\d+)?)\s*(?:m|min)?)?\s*", text
-    )
-    if not match or not any(match.groups()):
-        raise argparse.ArgumentTypeError(f"invalid duration {text!r} (try 4h, 5h30, 90m)")
-    hours, minutes = (float(g) if g else 0.0 for g in match.groups())
-    return hours * 60 + minutes
-
-
 def parse_clock(text: str) -> time:
     try:
         return datetime.strptime(text, "%H:%M").time()
@@ -182,7 +165,6 @@ def cmd_route(args: argparse.Namespace) -> int:
         must=tuple(args.must),
         exclude=tuple(args.exclude),
         start=args.start,
-        budget_min=args.budget,
         speed_kmh=args.speed,
         dwell_min={**planner.DEFAULT_DWELL_MIN, **dict(args.dwell)},
         time_limit_s=args.time_limit,

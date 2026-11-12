@@ -30,4 +30,4 @@ jobs:
       - name: Web app tests
         run: node --test tests/web/*.test.mjs
       - name: CLI smoke test on the committed snapshots
-        run: uv run inhotim-path route --budget 4h --time-limit 3
+        run: uv run inhotim-path route --time-limit 3

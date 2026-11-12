@@ -7,7 +7,7 @@ import httpx
 import pytest
 
 from inhotim_path import __version__, snapshots
-from inhotim_path.cli import main, parse_clock, parse_duration, parse_dwell
+from inhotim_path.cli import main, parse_clock, parse_dwell
 from inhotim_path.models import PoiKind
 from tests.synthetic_park import write_snapshots
 
@@ -22,29 +22,6 @@ def test_version(capsys):
         main(["--version"])
     assert exc.value.code == 0
     assert __version__ in capsys.readouterr().out
-
-
-@pytest.mark.parametrize(
-    ("text", "minutes"),
-    [
-        ("4h", 240),
-        ("5h30", 330),
-        ("1.5h", 90),
-        ("90m", 90),
-        ("90min", 90),
-        ("90", 90),
-        ("2h 15m", 135),
-        (" 3h ", 180),
-    ],
-)
-def test_parse_duration(text, minutes):
-    assert parse_duration(text) == minutes
-
-
-@pytest.mark.parametrize("text", ["", "abc", "h", "4x"])
-def test_parse_duration_rejects_garbage(text):
-    with pytest.raises(argparse.ArgumentTypeError):
-        parse_duration(text)
 
 
 def test_parse_clock():
@@ -75,25 +52,27 @@ def test_route_end_to_end(tmp_path, capsys):
     assert "Galeria Praça" in (out / "route.html").read_text()
 
 
-def test_route_with_budget_and_options(tmp_path, capsys):
+def test_route_with_options(tmp_path, capsys):
     write_snapshots(tmp_path)
-    args = ["--data-dir", str(tmp_path), "route", "--budget", "40m", "--kinds", "gallery"]
+    args = ["--data-dir", str(tmp_path), "route", "--kinds", "gallery"]
     args += ["--must", "jardim", "--dwell", "garden=5", "--speed", "5"]
     assert main(args) == 0
     text = capsys.readouterr().out
+    assert "Inhotim route: 3 stops" in text  # the 2 reachable galleries, and the garden added
     assert "Jardim Pictórico" in text
-    assert "time budget 40 min" in text
+    assert "walking speed 5 km/h" in text
+
+
+def test_route_has_no_time_budget(tmp_path, capsys):
+    write_snapshots(tmp_path)
+    with pytest.raises(SystemExit):
+        main(["--data-dir", str(tmp_path), "route", "--budget", "4h"])
+    assert "unrecognized arguments: --budget" in capsys.readouterr().err
 
 
 def test_route_without_snapshots_explains_how_to_fetch(tmp_path, capsys):
     assert main(["--data-dir", str(tmp_path), "route"]) == 2
     assert "inhotim-path fetch" in capsys.readouterr().err
-
-
-def test_route_with_must_that_cannot_fit(tmp_path, capsys):
-    write_snapshots(tmp_path)
-    assert main(["--data-dir", str(tmp_path), "route", "--budget", "10m", "--must", "lago"]) == 2
-    assert "no feasible route" in capsys.readouterr().err
 
 
 def test_fetch_reports_whats_new_in_the_collection(tmp_path, monkeypatch, capsys):

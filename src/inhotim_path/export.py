@@ -87,11 +87,11 @@ def format_itinerary(plan: Plan, start_time: time | None = None) -> str:
     if plan.unreachable:
         names = ", ".join(display_name(p) for p in plan.unreachable)
         lines += ["", f"Unreachable (too far from any known path): {names}"]
-    if request.budget_min is None and plan.total_s > LONG_DAY_S:
+    if plan.total_s > LONG_DAY_S:
         lines += [
             "",
             f"Seeing all of it takes {duration(plan.total_s)}, more than a single visiting day.",
-            "Try --budget 6h for the best route that fits your time.",
+            "Choose fewer stops with --kinds or --exclude.",
         ]
     return "\n".join(lines)
 

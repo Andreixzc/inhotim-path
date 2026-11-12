@@ -2,7 +2,7 @@
 
 Used for the figures in the README. Matplotlib is not a project dependency, so run it with:
 
-    uv run --with matplotlib python scripts/plot_route.py output/6h.geojson docs/img/route-6h.png
+    uv run --with matplotlib python scripts/plot_route.py output/galleries.geojson docs/img/route-galleries.png
 """
 
 from __future__ import annotations

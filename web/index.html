@@ -27,6 +27,7 @@
     <button id="lang" class="pill" type="button">PT</button>
   </header>
   <div id="alert" class="alert" role="alert" hidden></div>
+  <div id="suggestion" class="suggestion" role="status" hidden></div>
   <section class="hero" aria-live="polite">
     <p id="total" class="hero__total">—</p>
     <p id="meta" class="hero__meta">Loading the park map…</p>
@@ -39,6 +40,7 @@
           <label><input type="radio" name="from" value="gate"><span data-i18n="gate">Entrance</span></label>
           <label><input type="radio" name="from" value="here"><span data-i18n="myLocation">My location</span></label>
         </div>
+        <p id="from-note" class="control__note" hidden></p>
       </fieldset>
       <fieldset class="control">
         <legend data-i18n="see">What to see</legend>
@@ -52,6 +54,11 @@
     <h2 class="section-title" data-i18n="route">Route</h2>
     <div id="notices" aria-live="polite"></div>
     <ol id="itinerary" class="list"></ol>
+    <section id="seen" class="seen" aria-labelledby="seen-title" hidden>
+      <h2 id="seen-title" class="section-title" data-i18n="seenTitle">Seen</h2>
+      <ol id="seen-list" class="list"></ol>
+      <button id="start-over" class="text-button" type="button" data-i18n="startOver">Start over</button>
+    </section>
     <footer class="footer">
       <p><span id="data-date"></span> <span data-i18n="disclaimer">Check opening hours at inhotim.org.br.</span></p>
       <p><span data-i18n="notAffiliated">An independent project, not affiliated with Inhotim.</span>

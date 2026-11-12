@@ -67,6 +67,11 @@ export const KIND_COLOR = {
 export const FLAG =
   '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" ' +
   'd="M5 21V4h9l.4 2H20v10h-7l-.4-2H7v7z"/></svg>';
+/** The tick on a stop already seen (ADR 0018), on the map and in the list. */
+export const CHECK =
+  '<svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path fill="none" ' +
+  'stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" ' +
+  'd="M5.5 12.5l4 4L18.5 7.5"/></svg>';
 
 /**
  * Room around a framed route: clear of the map's controls and, on phones, of the sheet over the
@@ -125,6 +130,7 @@ export class RouteMap {
     this.following = false;
     this.locateFit = { maxZoom: 15 }; // the locate button's framing, kept clear of the sheet
     this.stops = []; // the route's stops on the map: their marker, visit and number
+    this.seen = []; // stops seen already (ADR 0018), faded with a check: their marker and POI
     this.others = []; // the park's points off the route, drawn as dots
     this.near = null; // what a click would open, under the mouse
     // Closed by `click` below: a click that opens something else moves it instead.
@@ -138,6 +144,8 @@ export class RouteMap {
     this.describe = () => document.createElement("div");
     this.nameOf = (poi) => poi.name;
     this.onPick = () => {};
+    /** Set by the page: each position from the locate button, while it's on. */
+    this.onLocate = () => {};
 
     // Short credits on the map (the sheet's footer has the full ones), so they don't hide it.
     this.map.addControl(
@@ -147,13 +155,13 @@ export class RouteMap {
       }),
     );
     this.map.addControl(new maplibregl.NavigationControl({ showCompass: false }));
-    this.map.addControl(
-      new maplibregl.GeolocateControl({
-        positionOptions: { enableHighAccuracy: true },
-        trackUserLocation: true,
-        fitBoundsOptions: this.locateFit,
-      }),
-    );
+    const locate = new maplibregl.GeolocateControl({
+      positionOptions: { enableHighAccuracy: true },
+      trackUserLocation: true,
+      fitBoundsOptions: this.locateFit,
+    });
+    locate.on("geolocate", (position) => this.onLocate(position));
+    this.map.addControl(locate);
     if (satelliteKey) {
       this.satellite = new SatelliteToggle(satelliteKey);
       this.map.addControl(this.satellite);
@@ -250,6 +258,10 @@ export class RouteMap {
       const at = this.map.project(stop.visit.lnglat);
       targets.push({ x: at.x, y: at.y, r: stop.element.offsetWidth / 2, stop });
     }
+    for (const seen of this.seen) {
+      const at = this.map.project([seen.poi.lng, seen.poi.lat]);
+      targets.push({ x: at.x, y: at.y, r: seen.element.offsetWidth / 2, seen });
+    }
     const r = dotRadius(this.map.getZoom());
     for (const poi of this.others) {
       const at = this.map.project([poi.lng, poi.lat]);
@@ -258,19 +270,20 @@ export class RouteMap {
     return nearest(point, targets, reach);
   }
 
-  /** Open a stop (and point it out in the list) or a point. */
-  choose({ stop, poi }) {
+  /** Open a stop (and point it out in the list), a stop seen already, or a point. */
+  choose({ stop, seen, poi }) {
     if (stop) {
       this.open(stop.visit.lnglat, stop.visit.poi?.id ?? null, stop.index);
       this.onPick(stop.index);
     } else {
-      this.open([poi.lng, poi.lat], poi.id, null);
+      const place = seen?.poi ?? poi;
+      this.open([place.lng, place.lat], place.id, null);
     }
   }
 
   /** Show what a click would open: a pointer, and a bigger dot or a ringed marker. */
   hover(target) {
-    const thing = target?.stop ?? target?.poi ?? null;
+    const thing = target?.stop ?? target?.seen ?? target?.poi ?? null;
     if (thing === this.near) return;
     this.mark(this.near, false);
     this.near = thing;
@@ -285,12 +298,12 @@ export class RouteMap {
   }
 
   /**
-   * Draw a plan: its walks, a numbered marker per stop, and the other points as dots. With
-   * `animate`, the search plays first and the route is drawn from the start (ADR 0014).
-   * `onFrame` follows along with each step of that animation (see reveal.js `frame`), or gets the
-   * end state at once when there's nothing to play.
+   * Draw a plan: its walks, a numbered marker per stop, the stops `seen` already faded with a
+   * check (ADR 0018), and the other points as dots. With `animate`, the search plays first and the
+   * route is drawn from the start (ADR 0014). `onFrame` follows along with each step of that
+   * animation (see reveal.js `frame`), or gets the end state at once when there's nothing to play.
    */
-  show(plan, others, { animate = false, onFrame = () => {} } = {}) {
+  show(plan, others, { animate = false, onFrame = () => {}, seen = [] } = {}) {
     this.reveal?.stop();
     this.popup.remove();
     this.hover(null);
@@ -298,6 +311,29 @@ export class RouteMap {
     this.markers = [];
     this.stops = [];
     this.others = others;
+    // First, so the route's markers are drawn over them.
+    this.seen = seen.map((poi) => {
+      const element = document.createElement("div");
+      element.className = "marker marker--seen";
+      element.innerHTML = CHECK;
+      element.style.background = KIND_COLOR[poi.kind] ?? KIND_COLOR.other;
+      element.tabIndex = 0;
+      element.setAttribute("role", "button");
+      element.setAttribute("aria-label", t("seenStop", { name: this.nameOf(poi) }));
+      const entry = { element, poi };
+      const pick = (event) => {
+        event.stopPropagation();
+        this.choose({ seen: entry });
+      };
+      element.addEventListener("click", pick);
+      element.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") pick(event);
+      });
+      this.markers.push(
+        new maplibregl.Marker({ element }).setLngLat([poi.lng, poi.lat]).addTo(this.map),
+      );
+      return entry;
+    });
     this.map.getSource("legs").setData({
       type: "FeatureCollection",
       features: plan.legs.map((coordinates) => ({
@@ -402,8 +438,9 @@ export class RouteMap {
     else this.map.panBy([0, change / 2], { duration: 280 });
   }
 
-  clear() {
-    this.show({ legs: [], visits: [] }, []);
+  /** No route: only the stops `seen` already, if any. */
+  clear(seen = []) {
+    this.show({ legs: [], visits: [] }, [], { seen });
   }
 
   /** Labels made by this module follow the page's language. */

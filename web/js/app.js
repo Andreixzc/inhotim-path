@@ -2,13 +2,16 @@
 // in a worker (worker.js) so the page stays responsive; where workers can't start, on the main
 // thread. No times anywhere (ADR 0010): the route is the shortest walk through what's chosen.
 // What's chosen: the museum's categories, and in a separate picker, each stop (ADR 0012) or
-// artist (ADR 0013).
+// artist (ADR 0013). Stops can be marked as seen (ADR 0018): they leave the route, which goes on
+// from the last one seen or from where the visitor is. While their position is known, a stop they
+// stay near is suggested.
 
 import { distance } from "./format.js";
 import { detect, lang, setLang, t } from "./i18n.js";
-import { FLAG, KIND_COLOR, RouteMap } from "./map.js";
+import { CHECK, FLAG, KIND_COLOR, RouteMap } from "./map.js";
 import { MAX_SNAP_M, Park, normalize } from "./plan.js";
 import { routeKey } from "./reveal.js";
+import * as seen from "./seen.js";
 import { Sheet } from "./sheet.js";
 import * as settings from "./state.js";
 
@@ -26,6 +29,12 @@ const CLOSE_ICON =
   '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">' +
   '<path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.2" ' +
   'stroke-linecap="round"/></svg>';
+/** The button that marks a stop as seen: a ring, filled with a tick once it's seen (style.css). */
+const TICK_ICON =
+  '<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">' +
+  '<circle class="ring" cx="12" cy="12" r="10"/><path class="tick" d="M7.5 12.5l3 3 6-6.5"/></svg>';
+/** The visitor's position counts for re-planning when it's at least this precise (m). */
+const PRECISE_M = 100;
 
 const $ = (selector) => document.querySelector(selector);
 
@@ -49,9 +58,10 @@ function icon(markup) {
   return template.content.firstChild;
 }
 
-/** A pill button that does `action` when pressed. */
-function chip(label, action) {
-  return h("button", { type: "button", class: "chip-button", onclick: action }, label);
+/** A pill button that does `action` when pressed; a `primary` one stands out. */
+function chip(label, action, primary = false) {
+  const style = primary ? "chip-button chip-button--primary" : "chip-button";
+  return h("button", { type: "button", class: style, onclick: action }, label);
 }
 
 function storage(key, value) {
@@ -128,6 +138,11 @@ const app = {
   timer: 0,
   open: {}, // which of the picker's groups are expanded
   picked: false, // the picker changed something since it opened
+  seen: seen.empty(), // stops marked as seen, kept on the phone (seen.js)
+  linger: new seen.Linger(), // suggests marking a stop the visitor stays near
+  fix: null, // the visitor's latest position, while it's known: {lnglat, accuracy, time}
+  watch: null, // the position watch while starting from "my location"
+  suggestion: null, // the id of the stop suggested as seen, on screen
 };
 
 // ----------------------------------------------------------------------------- start up
@@ -146,6 +161,7 @@ async function main() {
   }
   app.park = new Park(app.data);
   app.planner = new Planner(app.data, app.park);
+  app.seen = seen.load((id) => (app.park.byId.get(id)?.node ?? null) !== null);
   app.state = settings.load(location.hash);
   buildForm();
   renderFooter();
@@ -160,6 +176,7 @@ async function main() {
     map.describe = describe;
     map.nameOf = nameOf;
     map.onPick = highlight;
+    map.onLocate = onFix;
     showOnMap(true);
   });
   await replan({ fit: true });
@@ -172,6 +189,7 @@ function wireEvents() {
   const picker = $("#picker");
   $("#customize").addEventListener("click", openPicker);
   $("#picker-done").addEventListener("click", () => picker.close());
+  $("#start-over").addEventListener("click", startOver);
   picker.addEventListener("close", onPickerClose);
   picker.addEventListener("click", (event) => {
     // A click on the backdrop (beside the panel, on wide screens) closes it.
@@ -229,12 +247,41 @@ function wireEvents() {
 
 function request() {
   const s = app.state;
+  const start = startAt();
   return {
     kinds: s.kinds,
     must: s.must,
-    exclude: s.exclude,
-    start: s.from === "here" && app.here ? app.here : undefined,
+    exclude: [...s.exclude, ...seen.ids(app.seen)],
+    start: start.position ?? start.poi,
+    // From a stop seen, back to the Portaria (by default, a route from a stop goes back to it).
+    end: start.poi === undefined ? undefined : app.data.defaults.start,
   };
+}
+
+/**
+ * Where the route starts: the visitor's position, the stop they saw last today (ADR 0018), or the
+ * Portaria (`{}`, the planner's default).
+ */
+function startAt() {
+  if (app.state.from === "here") return app.here ? { position: app.here } : {};
+  const id = seen.continueFrom(app.seen, Date.now());
+  return id === null ? {} : { poi: id };
+}
+
+/** Whether something chosen has been seen: then "nothing left" means "all seen". */
+function seenSome() {
+  const gate = app.data.defaults.start;
+  return app.data.pois.some(
+    (poi) => poi.id !== gate && seen.has(app.seen, poi.id) && settings.isChosen(app.state, poi),
+  );
+}
+
+/** The stops seen that the map can show, oldest first. */
+function seenPois() {
+  return seen
+    .ids(app.seen)
+    .map((id) => app.park.byId.get(id))
+    .filter((poi) => poi && poi.node !== null);
 }
 
 /** The settings changed: remember them, and plan again shortly (a burst of taps plans once). */
@@ -258,7 +305,8 @@ async function replan({ fit = false } = {}) {
       return;
     }
     app.plan = null;
-    app.error = error.code === "no-stops" ? t("noStops") : t("planFailed");
+    if (error.code === "no-stops") app.error = seenSome() ? t("allSeen") : t("noStops");
+    else app.error = t("planFailed");
     if (!error.code) console.error(error);
   } finally {
     clearTimeout(busy);
@@ -276,9 +324,13 @@ async function replan({ fit = false } = {}) {
  */
 function showOnMap(fit, from = null) {
   if (!app.map) return;
+  const done = seenPois();
   if (app.plan) {
     const visited = new Set(app.plan.visits.map((visit) => visit.poi?.id));
-    const others = app.data.pois.filter((poi) => poi.node !== null && !visited.has(poi.id));
+    const marked = new Set(seen.ids(app.seen));
+    const others = app.data.pois.filter(
+      (poi) => poi.node !== null && !visited.has(poi.id) && !marked.has(poi.id),
+    );
     const key = routeKey(app.plan);
     const animate = key !== app.shownKey && !$("#picker").open;
     if (animate) app.shownKey = key;
@@ -286,10 +338,11 @@ function showOnMap(fit, from = null) {
     app.map.show(app.plan, others, {
       animate,
       onFrame: (state) => renderHero({ ...state, from: start }),
+      seen: done.filter((poi) => !visited.has(poi.id)), // the last one seen may be the start
     });
   } else {
     app.shownKey = null;
-    app.map.clear();
+    app.map.clear(done);
   }
   if (fit) app.map.fit(app.plan);
 }
@@ -299,10 +352,16 @@ function locate() {
     locationFailed({ kind: "geo" });
     return;
   }
+  stopWatching();
   app.locating = true;
   renderHero();
-  navigator.geolocation.getCurrentPosition(
+  // Watched while starting from here: the first position plans, later ones can suggest stops.
+  let first = true;
+  app.watch = navigator.geolocation.watchPosition(
     (position) => {
+      onFix(position);
+      if (!first) return;
+      first = false;
       app.locating = false;
       if (app.state.from !== "here") return; // changed their mind while we waited
       const here = [position.coords.longitude, position.coords.latitude];
@@ -315,6 +374,9 @@ function locate() {
       changed({ fit: true, now: true });
     },
     () => {
+      if (!first) return; // a later position failed: the last one stands
+      first = false;
+      stopWatching();
       app.locating = false;
       if (app.state.from === "here") locationFailed({ kind: "geo" });
       else renderHero();
@@ -323,12 +385,18 @@ function locate() {
   );
 }
 
+function stopWatching() {
+  if (app.watch !== null) navigator.geolocation.clearWatch(app.watch);
+  app.watch = null;
+}
+
 /** Starting from the visitor's position didn't work: say why, and start at the gate. */
 function locationFailed(alert) {
+  stopWatching();
   app.here = null;
   app.alert = alert;
   app.state.from = "gate";
-  $('#from input[value="gate"]').checked = true;
+  syncFrom();
   renderAlert();
   changed({ fit: true, now: true });
 }
@@ -341,6 +409,45 @@ function setStop(id, on) {
   settings.setStop(app.state, app.park.byId.get(id), on);
   syncKinds();
   changed({ fit: on, now: true });
+}
+
+/** Mark a stop as seen, or not: the route goes on with what's left (ADR 0018). */
+function setSeen(id, on) {
+  app.map?.close();
+  app.seen = on ? seen.mark(app.seen, id, Date.now()) : seen.unmark(app.seen, id);
+  seen.save(app.seen);
+  // Starting from where the visitor is: from where they are now.
+  const fix = app.fix;
+  const precise = fix !== null && fix.accuracy <= PRECISE_M;
+  if (on && app.state.from === "here" && app.here && precise) app.here = fix.lnglat;
+  if (app.suggestion === id) app.suggestion = null;
+  renderSuggestion();
+  changed({ fit: app.map?.following ?? false, now: true });
+}
+
+/** Forget every stop marked as seen, once the visitor confirms. */
+function startOver() {
+  if (!confirm(t("startOverConfirm"))) return;
+  app.seen = seen.empty();
+  seen.save(app.seen);
+  app.linger = new seen.Linger();
+  app.suggestion = null;
+  renderSuggestion();
+  changed({ fit: true, now: true });
+}
+
+/** A new position, from "my location" or the locate button: maybe a stop to suggest as seen. */
+function onFix(position) {
+  const { longitude, latitude, accuracy } = position.coords;
+  app.fix = { lnglat: [longitude, latitude], accuracy, time: position.timestamp || Date.now() };
+  if (!app.plan) return;
+  const stops = app.plan.visits
+    .slice(1, -1)
+    .map((visit) => ({ id: visit.poi.id, lnglat: visit.lnglat }));
+  const id = app.linger.update(app.fix, stops);
+  if (id === null) return;
+  app.suggestion = id;
+  renderSuggestion();
 }
 
 function pick(index) {
@@ -370,9 +477,14 @@ function onFormChange(event) {
     if (s.from === "here") {
       locate();
     } else {
+      stopWatching();
       app.here = null;
+      // The Portaria, chosen: the stops seen so far no longer move the start (ADR 0018).
+      app.seen = seen.restart(app.seen, Date.now());
+      seen.save(app.seen);
       changed({ fit: true });
     }
+    syncFrom();
   } else if (target.name === "kind") {
     settings.setKind(s, target.value, target.checked, app.data.pois);
     renderCustomNote();
@@ -412,8 +524,24 @@ function nameOf(poi) {
   return poi.id === app.data.defaults.start ? t("gate") : poi.name;
 }
 
+/**
+ * Where the route starts, in the form: nothing ticked while the visit goes on from the stop seen
+ * last, with a note that says so (ADR 0018).
+ */
+function syncFrom() {
+  const start = startAt();
+  const from = start.poi === undefined ? app.state.from : null;
+  for (const input of document.querySelectorAll("#from input")) {
+    input.checked = input.value === from;
+  }
+  const poi = start.poi === undefined ? null : app.park.byId.get(start.poi);
+  const note = $("#from-note");
+  note.textContent = poi ? t("continuingFrom", { name: nameOf(poi) }) : "";
+  note.hidden = !poi;
+}
+
 function buildForm() {
-  $(`#from input[value="${app.state.from}"]`).checked = true;
+  syncFrom();
   // A chip per category, in the map's color for it.
   const chips = settings.KINDS.map((kind) =>
     h(
@@ -469,6 +597,7 @@ function pickerGroups() {
     const name = normalize(poi.name);
     const artists = poi.artists.filter((artist) => !name.includes(normalize(artist)));
     const about = withKind ? [t(`kind.${poi.kind}`), ...artists] : artists;
+    if (seen.has(app.seen, poi.id)) about.push(t("seenTag"));
     return { label: poi.name, about, text: [poi.name, ...poi.artists], stops: [poi] };
   };
   const artistRow = ([artist, stops]) => ({
@@ -648,6 +777,9 @@ function render() {
   renderHero();
   renderNotices(app.plan);
   renderPickerNote();
+  syncFrom();
+  renderSeen();
+  renderSuggestion();
   if (!app.plan) {
     $("#itinerary").replaceChildren();
     return;
@@ -675,8 +807,14 @@ function renderHero(reveal = null) {
     return;
   }
   setTotal(playing ? reveal.from + (plan.walkM - reveal.from) * reveal.drawn : plan.walkM);
+  const count = seen.ids(app.seen).length;
+  const stops = t("stops", { n: plan.visits.length - 2 });
   $("#meta").textContent =
-    playing && reveal.searching ? t("searching") : t("stops", { n: plan.visits.length - 2 });
+    playing && reveal.searching
+      ? t("searching")
+      : count
+        ? `${stops} · ${t("seenN", { n: count })}`
+        : stops;
 }
 
 /** The big number, remembered so that the next route can count from it. */
@@ -722,13 +860,14 @@ function renderNotices(plan) {
 
 function renderItinerary(plan) {
   const last = plan.visits.length - 1;
+  const goingOn = startAt().poi !== undefined; // from the stop seen last
   const items = plan.visits.map((visit, index) => {
     const ends = index === 0 || index === last;
     let name;
     let meta;
     if (ends) {
       name = visit.poi ? nameOf(visit.poi) : t("youAreHere");
-      meta = index === 0 ? t("start") : t("finish");
+      meta = index === 0 ? t(goingOn ? "leftOff" : "start") : t("finish");
     } else {
       name = [h("span", { class: "visually-hidden" }, `${index}. `), visit.poi.name];
       meta = [t(`kind.${visit.poi.kind}`), ...visit.poi.artists].join(" · ");
@@ -755,10 +894,91 @@ function renderItinerary(plan) {
         h("span", { class: "stop__meta" }, meta),
       ),
     );
+    const check = ends
+      ? null
+      : h(
+          "button",
+          {
+            type: "button",
+            class: "stop__check",
+            "aria-label": t("markSeen", { name: visit.poi.name }),
+            onclick: () => setSeen(visit.poi.id, true),
+          },
+          icon(TICK_ICON),
+        );
     const walk = index > 0 ? h("p", { class: "walk" }, walkLabel(visit)) : null;
-    return h("li", { class: "stop", "data-index": String(index) }, walk, row);
+    return h(
+      "li",
+      { class: "stop", "data-index": String(index) },
+      walk,
+      h("div", { class: "stop__line" }, row, check),
+    );
   });
   $("#itinerary").replaceChildren(...items);
+}
+
+/** The stops seen, the latest first, each with a button that unmarks it (ADR 0018). */
+function renderSeen() {
+  const pois = seenPois().reverse();
+  $("#seen").hidden = pois.length === 0;
+  const items = pois.map((poi) => {
+    const color = KIND_COLOR[poi.kind] ?? KIND_COLOR.other;
+    const lnglat = [poi.lng, poi.lat];
+    const show = () => {
+      app.map?.open(lnglat, poi.id, null);
+      app.map?.focus(lnglat);
+    };
+    const row = h(
+      "button",
+      { type: "button", class: "stop__row", onclick: show },
+      h(
+        "span",
+        { class: "badge badge--seen", style: `background: ${color}`, "aria-hidden": "true" },
+        icon(CHECK),
+      ),
+      h(
+        "span",
+        { class: "stop__text" },
+        h("span", { class: "stop__name" }, poi.name),
+        h("span", { class: "stop__meta" }, [t(`kind.${poi.kind}`), ...poi.artists].join(" · ")),
+      ),
+    );
+    const unmark = h(
+      "button",
+      {
+        type: "button",
+        class: "stop__check stop__check--on",
+        "aria-label": t("unmarkSeen", { name: poi.name }),
+        onclick: () => setSeen(poi.id, false),
+      },
+      icon(TICK_ICON),
+    );
+    return h("li", { class: "stop" }, h("div", { class: "stop__line" }, row, unmark));
+  });
+  $("#seen-list").replaceChildren(...items);
+}
+
+/** "You're at …: seen it?", for a stop on the route the visitor has stayed near (ADR 0018). */
+function renderSuggestion() {
+  const box = $("#suggestion");
+  const id = app.suggestion;
+  const onRoute = app.plan?.visits.slice(1, -1).some((visit) => visit.poi.id === id) ?? false;
+  if (id === null || !onRoute || seen.has(app.seen, id)) {
+    app.suggestion = null;
+    box.hidden = true;
+    box.replaceChildren();
+    return;
+  }
+  const dismiss = () => {
+    app.suggestion = null;
+    renderSuggestion();
+  };
+  box.replaceChildren(
+    h("p", { class: "suggestion__text" }, t("suggest", { name: nameOf(app.park.byId.get(id)) })),
+    chip(t("seenIt"), () => setSeen(id, true), true),
+    h("button", { type: "button", "aria-label": t("dismiss"), onclick: dismiss }, icon(CLOSE_ICON)),
+  );
+  box.hidden = false;
 }
 
 /** How far it is from the stop before. */
@@ -788,15 +1008,22 @@ function describe(poiId, index) {
   const visit = at >= 0 ? visits[at] : null;
   const ends = visit !== null && (at === 0 || at === visits.length - 1);
   const isStop = visit !== null && !ends;
+  const isSeen = seen.has(app.seen, poi.id);
   box.append(h("strong", {}, isStop ? `${at}. ${nameOf(poi)}` : nameOf(poi)));
-  box.append(h("p", {}, [t(`kind.${poi.kind}`), ...poi.artists].join(" · ")));
+  const about = [t(`kind.${poi.kind}`), ...poi.artists, isSeen ? t("seenTag") : null];
+  box.append(h("p", {}, about.filter(Boolean).join(" · ")));
   const actions = h("div", { class: "popup__actions" });
   if (!ends && poi.id !== app.data.defaults.start) {
-    actions.append(
-      isStop
-        ? chip(t("skip"), () => setStop(poi.id, false))
-        : chip(t("add"), () => setStop(poi.id, true)),
-    );
+    if (isStop) {
+      actions.append(
+        chip(t("seenIt"), () => setSeen(poi.id, true), true),
+        chip(t("skip"), () => setStop(poi.id, false)),
+      );
+    } else if (isSeen) {
+      actions.append(chip(t("unmark"), () => setSeen(poi.id, false)));
+    } else {
+      actions.append(chip(t("add"), () => setStop(poi.id, true)));
+    }
   }
   const link = officialLink(poi);
   if (link) actions.append(link);

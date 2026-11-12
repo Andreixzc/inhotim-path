@@ -55,11 +55,16 @@ export const FLAG =
   '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" ' +
   'd="M5 21V4h9l.4 2H20v10h-7l-.4-2H7v7z"/></svg>';
 
-/** Room around a route when framing it: clear of the controls, the credits and the sheet. */
-function fitPadding() {
-  return matchMedia("(max-width: 899px)").matches
-    ? { top: 24, right: 60, bottom: 64, left: 24 }
-    : { top: 48, right: 64, bottom: 48, left: 48 };
+/**
+ * Room around a framed route: clear of the map's controls and, on phones, of the sheet over the
+ * map's bottom (`sheet` px) and the credits just above it, leaving at least 100 px for the route.
+ */
+function fitPadding(sheet, height) {
+  if (!matchMedia("(max-width: 899px)").matches) {
+    return { top: 48, right: 64, bottom: 48, left: 48 };
+  }
+  const bottom = Math.min(64 + sheet, Math.max(24, height - 24 - 100));
+  return { top: 24, right: 60, bottom, left: 24 };
 }
 
 async function loadStyle() {
@@ -102,6 +107,10 @@ export class RouteMap {
     this.markers = [];
     this.shown = null; // the plan on the map
     this.reveal = null;
+    this.sheet = 0; // how much of the map's bottom the plan's sheet covers (phones, px)
+    this.fitted = null; // the plan framed last; null once the visitor moves the map
+    this.following = false;
+    this.locateFit = { maxZoom: 15 }; // the locate button's framing, kept clear of the sheet
     this.popup = new maplibregl.Popup({ offset: 14, maxWidth: "290px", focusAfterOpen: false });
     /** Set by the page: what to show in a popup, what a stop is called, what a pick does. */
     this.describe = () => document.createElement("div");
@@ -120,6 +129,7 @@ export class RouteMap {
       new maplibregl.GeolocateControl({
         positionOptions: { enableHighAccuracy: true },
         trackUserLocation: true,
+        fitBoundsOptions: this.locateFit,
       }),
     );
     if (satelliteKey) {
@@ -130,6 +140,10 @@ export class RouteMap {
 
   setup() {
     const map = this.map;
+    // Once the visitor moves the map (or the locate button does), stop keeping the route framed.
+    map.on("movestart", (event) => {
+      if (event.originalEvent || event.geolocateSource) this.following = false;
+    });
     map.addSource("legs", { type: "geojson", data: EMPTY });
     map.addSource("pois", { type: "geojson", data: EMPTY });
     // Above the basemap's paths and areas but below its labels, so place names stay readable.
@@ -271,17 +285,39 @@ export class RouteMap {
 
   /** Frame the whole route, or the park when there's no route. */
   fit(plan) {
+    this.fitted = plan;
+    this.following = true;
     const bounds = new maplibregl.LngLatBounds();
     for (const leg of plan?.legs ?? []) for (const point of leg) bounds.extend(point);
     this.map.fitBounds(bounds.isEmpty() ? this.parkBounds : bounds, {
-      padding: fitPadding(),
+      padding: fitPadding(this.sheet, this.map.getContainer().clientHeight),
       maxZoom: 17,
       duration: 500,
     });
   }
 
+  /** Center a place in the part of the map that the sheet leaves in view. */
   focus(lnglat) {
-    this.map.easeTo({ center: lnglat, zoom: Math.max(this.map.getZoom(), 16), duration: 500 });
+    this.following = false;
+    this.map.easeTo({
+      center: lnglat,
+      zoom: Math.max(this.map.getZoom(), 16),
+      offset: [0, -this.sheet / 2],
+      duration: 500,
+    });
+  }
+
+  /**
+   * The plan's sheet now covers `sheet` px of the map's bottom (phones). Keep the route framed
+   * above it, or, once the visitor has moved the map, keep the middle of their view in view.
+   */
+  inset(sheet, move = true) {
+    const change = sheet - this.sheet;
+    this.sheet = sheet;
+    this.locateFit.padding = fitPadding(sheet, this.map.getContainer().clientHeight);
+    if (!move || Math.abs(change) < 1) return;
+    if (this.following) this.fit(this.fitted);
+    else this.map.panBy([0, change / 2], { duration: 280 });
   }
 
   clear() {
@@ -291,10 +327,6 @@ export class RouteMap {
   /** Labels made by this module follow the page's language. */
   translate() {
     this.satellite?.translate();
-  }
-
-  resize() {
-    this.map.resize();
   }
 }
 

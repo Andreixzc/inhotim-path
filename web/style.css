@@ -1,5 +1,6 @@
 /* Inhotim route planner: a quiet page, big numbers, few controls.
-   Phones: the map on top and the plan in a sheet below it (collapsible to its summary).
+   Phones: the map fills the screen and the plan is a sheet over it, which a finger drags down to
+   its summary and back up (sheet.js, ADR 0016).
    Wider screens: the plan in a sidebar on the left, the map filling the rest. */
 
 :root {
@@ -98,25 +99,32 @@ button {
 /* ------------------------------------------------------------------ layout */
 
 .map {
-  order: -1; /* phones: the map goes on top */
-  flex: 1 1 auto;
-  min-height: 30dvh;
+  flex: 1 1 auto; /* phones: the whole screen, under the sheet */
+  min-height: 0;
   position: relative;
 }
 
 .sheet {
-  position: relative;
+  position: fixed;
+  inset: auto 0 0;
   z-index: 2;
   display: flex;
   flex-direction: column;
-  flex: 0 1 auto;
   max-height: 60dvh;
-  min-height: 0;
-  margin-top: -24px; /* over the map, so the rounded corners show */
   padding-bottom: env(safe-area-inset-bottom);
   background: var(--bg);
   border-radius: 24px 24px 0 0;
   box-shadow: 0 -6px 28px rgb(15 20 16 / 12%);
+  transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Where a drag can start: a finger there moves the sheet, not the page. */
+.sheet__handle,
+.top,
+.hero {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .sheet__handle {
@@ -138,7 +146,7 @@ button {
   height: 5px;
   margin-left: -20px;
   border-radius: 3px;
-  background: var(--surface-strong);
+  background: var(--faint);
 }
 
 .sheet__body {
@@ -147,15 +155,20 @@ button {
   padding: 4px var(--gutter) 28px;
 }
 
-.collapsed .sheet__body {
-  display: none;
-}
-
 @media (max-width: 899px) {
-  /* Map controls clear of the sheet's rounded corners. */
+  /* The map's corner controls ride just above the sheet. */
   .maplibregl-ctrl-bottom-left,
   .maplibregl-ctrl-bottom-right {
-    bottom: 24px;
+    bottom: var(--sheet-visible, 0px);
+    transition: bottom 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  /* While a finger drags the sheet, everything follows it at once. */
+  .sheet-dragging .sheet,
+  .sheet-dragging .maplibregl-ctrl-bottom-left,
+  .sheet-dragging .maplibregl-ctrl-bottom-right,
+  .sheet-dragging .maptiler-logo {
+    transition: none;
   }
 }
 
@@ -170,27 +183,31 @@ button {
 
   .map {
     order: 1;
-    min-height: 0;
   }
 
   .sheet {
+    position: relative;
+    inset: auto;
     flex: 0 0 420px;
     max-height: none;
     height: 100%;
-    margin: 0;
     padding-top: 20px;
     border-radius: 0;
     box-shadow:
       1px 0 0 var(--line),
       8px 0 32px rgb(15 20 16 / 6%);
+    transition: none;
   }
 
   .sheet__handle {
     display: none;
   }
 
-  .collapsed .sheet__body {
-    display: block;
+  .top,
+  .hero {
+    touch-action: auto;
+    user-select: auto;
+    -webkit-user-select: auto;
   }
 }
 
@@ -884,6 +901,13 @@ h1 {
   .marker--ping {
     animation: none;
   }
+
+  .sheet,
+  .maplibregl-ctrl-bottom-left,
+  .maplibregl-ctrl-bottom-right,
+  .maptiler-logo {
+    transition: none;
+  }
 }
 
 .maplibregl-popup-content {
@@ -942,6 +966,7 @@ h1 {
 
 @media (max-width: 899px) {
   .maptiler-logo {
-    bottom: 34px;
+    bottom: calc(var(--sheet-visible, 0px) + 10px);
+    transition: bottom 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
   }
 }

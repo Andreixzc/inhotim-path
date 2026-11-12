@@ -9,6 +9,7 @@ import { detect, lang, setLang, t } from "./i18n.js";
 import { FLAG, KIND_COLOR, RouteMap } from "./map.js";
 import { MAX_SNAP_M, Park, normalize } from "./plan.js";
 import { routeKey } from "./reveal.js";
+import { Sheet } from "./sheet.js";
 import * as settings from "./state.js";
 
 const DATA_URL = "data/park.json";
@@ -155,6 +156,7 @@ async function main() {
     network: app.park.network,
   }).then((map) => {
     app.map = map;
+    map.inset(app.sheet.visible, false);
     map.describe = describe;
     map.nameOf = nameOf;
     map.onPick = highlight;
@@ -203,10 +205,17 @@ function wireEvents() {
     (event) => document.body.classList.toggle("scrolled", event.target.scrollTop > 4),
     { passive: true },
   );
-  $("#sheet").addEventListener("click", () => {
-    document.body.classList.toggle("collapsed");
-    labelSheetToggle();
-    requestAnimationFrame(() => app.map?.resize());
+  // Phones: the plan's sheet, over the map, follows a finger (ADR 0016).
+  app.sheet = new Sheet({
+    sheet: $(".sheet"),
+    handle: $("#sheet"),
+    grips: [$("#sheet"), $(".top"), $(".hero")],
+    body: $("#sheet-body"),
+    onSettle: (sheet) => {
+      document.body.classList.toggle("collapsed", sheet.collapsed);
+      labelSheetToggle();
+      app.map?.inset(sheet.visible);
+    },
   });
   addEventListener("hashchange", () => {
     if (location.hash === `#${settings.toHash(app.state)}`) return;

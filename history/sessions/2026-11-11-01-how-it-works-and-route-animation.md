@@ -42,7 +42,7 @@
    - **Budgets:** the command line's budget routes (`--budget 4h`, `6h`) are not proven optimal within 5 s.
 4. **The time budget.** Andrei: *"i tought we removed the time budget, didint we?"* It's gone from the web app
    ([ADR 0010](../decisions/0010-web-app-without-times.md)). The command line still has `--budget`, which is what
-   was run above. `plan.js` keeps the option to mirror `planner.py`. Whether the CLI should drop it is open.
+   was run above. `plan.js` kept the option to mirror `planner.py`. Andrei then had it removed everywhere (item 6).
 5. **The route animation** (Andrei: *"some blinking paths to simulate that we are actually calculating the
    path? could be a fixed animation"*) → [ADR 0014](../decisions/0014-map-shows-the-search-then-the-route.md):
    - **Code:** `web/js/reveal.js` holds the geometry and timing, with no DOM, and is tested under node (7 tests).
@@ -60,15 +60,28 @@
      - 60 fps with the CPU slowed 4×, and one dropped frame at 6×.
    - **Live:** `pages.yml` deployed it on 2026-11-11 (run 43107157804). The first-load, language, picker,
      rapid-tap, reduce-motion and GPS checks pass on the live site too, with no console errors.
+6. **No time budget in the command line either** (Andrei: *"yes remove the budget from the cli too"*) →
+   [ADR 0015](../decisions/0015-no-time-budget-in-the-command-line.md):
+   - **Removed from the top down**, in commits that each pass the tests: the `--budget` flag, then the planner's
+     budget fields, then CP-SAT's orienteering mode, then the browser's. About 600 lines fewer, tests included.
+     `--must` now just adds stops.
+   - **The benchmark** now plans each of the 15 mixes of the four categories, with CP-SAT and with five seeds in
+     the browser planner, in about 10 s. CP-SAT proved every mix optimal (0.1 to 2.6 s). The browser matched it in
+     73 of 75 runs; the other two (80 stops, seeds 1 and 3) walk 1.3 m more, out of 12.4 km.
+   - **No route changed on the page:** the browser's walks were identical before and after, in all 75 runs.
+   - **README:** the 6-hour figure became the galleries route (23 stops, 8.4 km), and both figures were redrawn
+     with distance-only titles.
 
 ## Decisions
 
 - [0014](../decisions/0014-map-shows-the-search-then-the-route.md): the map shows the search, then draws the route.
+- [0015](../decisions/0015-no-time-budget-in-the-command-line.md): no time budget in the command line either.
 
 ## Open questions
 
 - Does Andrei like the animation's look and length (about 1.3 s)? `TIMING` in `reveal.js` sets it.
-- Should the command line drop `--budget` too, or keep it as its "best route for N hours" mode?
+- The command line still prints estimated times (4 km/h, minutes per kind of stop). Keep them, or show distances
+  only, like the web app?
 - Keep a route's order stable when unticking a stop makes nothing shorter? Today the re-solve can renumber stops.
 - The noisy OSM refresh: commit only changes that matter for routing (walkable ways, `access`/`foot`, geometry), or
   stick to one Overpass mirror?
@@ -77,7 +90,7 @@
 
 - [ ] **Andrei's review of the animation**, live at <https://andreixzc.github.io/inhotim-path/>.
 - [ ] **Quiet the daily refresh:** ignore OSM changes that routing doesn't use.
-- [ ] Decide on the CLI's `--budget` (above).
+- [x] The CLI's `--budget`: removed (ADR 0015).
 - Still open from [2026-11-01](2026-11-01-01-kickoff.md):
   - [ ] Andrei's review of the chips and the picker.
   - [ ] A MapTiler key restricted to the site's domain.

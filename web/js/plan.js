@@ -42,14 +42,14 @@ export class Park {
   /**
    * @param {object} [request]
    * @param {string[]} [request.kinds]  kinds of stop to visit (their POIs on the main map)
-   * @param {number[]} [request.must]  POI ids to visit whatever the budget
+   * @param {number[]} [request.must]  POI ids to visit too, whatever their kind
    * @param {number[]} [request.exclude]  POI ids to leave out
    * @param {number | number[]} [request.start]  a POI id, or a `[lng, lat]` position
    * @param {number} [request.end]  POI id: by default the start POI, or the reception when
    *   starting from a position
-   * @param {number | null} [request.budgetMin]  minutes for the whole visit; null visits every stop
    * @param {number} [request.speedKmh]
-   * @param {Record<string, number>} [request.dwellMin]  minutes at each kind of stop
+   * @param {Record<string, number>} [request.dwellMin]  minutes at each kind of stop, for the
+   *   timeline only: every stop is visited, so they don't change the route
    * @param {number} [request.seed]
    * @param {number} [request.effort]
    */
@@ -60,7 +60,6 @@ export class Park {
     const exclude = new Set(request.exclude ?? []);
     const speedKmh = request.speedKmh ?? defaults.speed_kmh;
     const dwellMin = { ...defaults.dwell_min, ...request.dwellMin };
-    const budgetMin = request.budgetMin ?? null;
 
     const start = this.place(request.start ?? defaults.start);
     const end = this.place(request.end ?? (start.poi ? start.poi.id : defaults.start));
@@ -82,17 +81,8 @@ export class Park {
     const places = [start, ...reachable.map((poi) => this.place(poi.id)), end];
     const meters = places.map((a) => places.map((b) => this.meters(a, b)));
     const seconds = meters.map((row) => row.map((m) => Math.round(m / speed)));
-    const stops = reachable.map((poi) => {
-      const dwell = Math.round((dwellMin[poi.kind] ?? 0) * 60);
-      return { dwell, value: Math.max(1, Math.round(dwell / 60)), mandatory: must.has(poi.id) };
-    });
-    const solution = solve({
-      cost: seconds,
-      stops,
-      budget: budgetMin === null ? null : Math.round(budgetMin * 60),
-      seed: request.seed ?? 1,
-      effort: request.effort ?? 1,
-    });
+    const dwell = reachable.map((poi) => Math.round((dwellMin[poi.kind] ?? 0) * 60));
+    const solution = solve({ cost: seconds, seed: request.seed ?? 1, effort: request.effort ?? 1 });
 
     const route = [0, ...solution.order.map((i) => i + 1), places.length - 1];
     const visits = [];
@@ -107,7 +97,7 @@ export class Park {
         visit.walkM = meters[from][k];
         visit.walkS = seconds[from][k];
         visit.arriveS = previous.arriveS + previous.dwellS + visit.walkS;
-        visit.dwellS = position < route.length - 1 ? stops[k - 1].dwell : 0;
+        visit.dwellS = position < route.length - 1 ? dwell[k - 1] : 0;
         legs.push(this.leg(places[from], place));
       }
       visits.push(visit);
@@ -115,12 +105,10 @@ export class Park {
     const walkS = visits.reduce((total, v) => total + v.walkS, 0);
     const dwellS = visits.reduce((total, v) => total + v.dwellS, 0);
     return {
-      request: { kinds: [...kinds], must: [...must], exclude: [...exclude], budgetMin, speedKmh },
+      request: { kinds: [...kinds], must: [...must], exclude: [...exclude], speedKmh },
       visits,
       legs,
-      skipped: solution.skipped.map((i) => reachable[i]),
       unreachable,
-      feasible: solution.feasible,
       walkM: visits.reduce((total, v) => total + v.walkM, 0),
       walkS,
       dwellS,

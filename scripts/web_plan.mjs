@@ -1,10 +1,10 @@
 // Plan routes with the web app's JavaScript planner from the command line. Used by the Python tests
 // and by scripts/benchmark_web_solver.py to compare it with the CP-SAT planner.
 //
-//   node scripts/web_plan.mjs web/data/park.json '{"budgetMin": 240}'
-//   node scripts/web_plan.mjs web/data/park.json '[{}, {"budgetMin": 120}]'
+//   node scripts/web_plan.mjs web/data/park.json '{"kinds": ["gallery"]}'
+//   node scripts/web_plan.mjs web/data/park.json '[{}, {"kinds": ["garden"], "seed": 2}]'
 //
-// Prints one JSON summary per request: POI ids in order, what was left out, times in seconds.
+// Prints one JSON summary per request: POI ids in order, the unreachable ones, walks and times.
 
 import { readFileSync } from "node:fs";
 
@@ -22,9 +22,7 @@ const summaries = (Array.isArray(parsed) ? parsed : [parsed]).map((request) => {
   const plan = park.plan(request);
   return {
     order: plan.visits.map((visit) => visit.poi?.id ?? null),
-    skipped: plan.skipped.map((poi) => poi.id),
     unreachable: plan.unreachable.map((poi) => poi.id),
-    feasible: plan.feasible,
     walk_m: plan.walkM,
     walk_s: plan.walkS,
     dwell_s: plan.dwellS,

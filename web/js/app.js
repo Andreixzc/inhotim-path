@@ -224,7 +224,6 @@ function request() {
     kinds: s.kinds,
     must: s.must,
     exclude: s.exclude,
-    budgetMin: null, // no time limit: every stop, by the shortest walk
     start: s.from === "here" && app.here ? app.here : undefined,
   };
 }

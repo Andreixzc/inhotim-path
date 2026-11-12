@@ -18,9 +18,7 @@ test("by default: every main-map stop of the default kinds, from the reception a
   assert.equal(ids(plan)[0], 1);
   assert.equal(ids(plan).at(-1), 1);
   assert.deepEqual(ids(plan).slice(1, -1).sort(), [2, 3, 4, 5]);
-  assert.deepEqual(plan.skipped, []);
   assert.deepEqual(plan.unreachable.map((poi) => poi.id), [7]);
-  assert.equal(plan.feasible, true);
 });
 
 test("the timeline adds up, and each leg joins its two visits", () => {
@@ -41,27 +39,18 @@ test("the timeline adds up, and each leg joins its two visits", () => {
   assert.equal(plan.visits[2].walkS, Math.round(plan.visits[2].walkM / (4 / 3.6)));
 });
 
-test("a budget leaves stops out, but must-sees stay in", () => {
-  const short = park().plan({ budgetMin: 40 });
-  assert.ok(short.totalS <= 40 * 60);
-  assert.ok(short.skipped.length > 0);
-  assert.deepEqual(
-    [...ids(short).slice(1, -1), ...short.skipped.map((poi) => poi.id)].sort(),
-    [2, 3, 4, 5],
-  );
-  const withMust = park().plan({ budgetMin: 40, must: [5] });
-  assert.ok(ids(withMust).includes(5));
-
-  const impossible = park().plan({ budgetMin: 5, must: [3] });
-  assert.equal(impossible.feasible, false);
-  assert.deepEqual(ids(impossible), [1, 3, 1]);
+test("minutes per stop change the timeline, not the route", () => {
+  const normal = park().plan();
+  const slow = park().plan({ dwellMin: { gallery: 60 } });
+  assert.deepEqual(ids(slow), ids(normal));
+  assert.equal(slow.walkS, normal.walkS);
+  assert.equal(slow.dwellS, normal.dwellS + 2 * 40 * 60);
 });
 
-test("must-sees can be off the main map, and excluded stops disappear", () => {
+test("stops added can be off the main map, and excluded stops disappear", () => {
   const plan = park().plan({ must: [6], exclude: [3] });
   assert.ok(ids(plan).includes(6));
   assert.ok(!ids(plan).includes(3));
-  assert.ok(!plan.skipped.some((poi) => poi.id === 3));
 });
 
 test("kinds, pace and minutes per stop change the plan", () => {

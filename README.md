@@ -133,6 +133,10 @@ the search spreading along the paths from the start, then the route drawn stop b
 ([ADR 0014](history/decisions/0014-map-shows-the-search-then-the-route.md)). It's skipped when your system asks
 for less motion.
 
+On a phone, the map fills the screen and the plan lies over it in a sheet. Drag the sheet down to see the map,
+with only the distance and the number of stops left showing, and up to get the plan back
+([ADR 0016](history/decisions/0016-on-phones-the-plan-is-a-sheet-over-the-map.md)).
+
 Run it locally:
 
 ```bash

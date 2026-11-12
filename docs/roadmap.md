@@ -53,6 +53,8 @@ session-by-session story lives in [`history/`](../history/).
       (ADR 0012). Botanical highlights start off
 - [x] The museum's own words for the categories, and choosing by artist in the picker (ADR 0013)
 - [x] The map shows the search spreading along the paths, then draws the route stop by stop (ADR 0014)
+- [x] On phones, the map fills the screen and the plan is a sheet over it, dragged down to its summary and
+      back up (ADR 0016)
 - [x] Scheduled data refresh (GitHub Actions cron) + "what's new" diff of the collection (ADR 0007)
 - [x] Satellite view on the map, with a MapTiler key (ADR 0008)
 - [x] Deploy workflow for GitHub Pages (`pages.yml`), republished after each data refresh

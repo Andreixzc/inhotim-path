@@ -3,17 +3,15 @@
 ## One-liner
 
 A route planner for Inhotim that reads the museum's **live map** and tells you **in which order to visit**:
-the whole collection, or the best of it for the time you have.
+the whole collection, or whatever part of it you choose.
 
 ## The goal: a simple web app
 
 Andrei (2026-11-01): *"make this a simple webapp to help people plan their routes before or when they are
 already there."* That means two moments, both on a phone:
 
-- **Before the visit**, at home: pick the time you have and your must-sees, then see the route on a map or on
-  satellite imagery.
-- **During the visit**, in the park: see where you are, tick off what you've seen, and re-plan with the time
-  left. Mobile signal may be patchy in a big park, so the app should keep working offline once it's loaded.
+- **Before the visit**, at home: pick what you want to see, then see the route on a map or on satellite imagery.
+- **During the visit**, in the park: see where you are, tick off what you've seen, and re-plan the rest. Mobile signal may be patchy in a big park, so the app should keep working offline once it's loaded.
 
 ## The problem
 
@@ -54,33 +52,37 @@ The engine's answer (2026-11-01 data): the optimal tour has **58 stops: 12h38 at
 (2h57) = 15h35**. The dwell times are assumptions, but the conclusion holds: seeing everything takes about two
 days.
 
-### 3. So the useful question is "I have N hours: what should I see, and in what order?"
+### 3. So the visitor chooses what to see
 
-That's the **Orienteering Problem** (also called the prize-collecting TSP). Every stop has a *value*, and the goal
-is to maximize the total value within a time budget, starting and ending at the reception. Two days means two
-tours that never repeat a stop: the **Team Orienteering Problem**.
+The first answer was "I have N hours: what should I see?", the **Orienteering Problem**: a time budget, and the
+stops worth the most that fit in it, a stop being worth its viewing minutes
+([ADR 0005](../history/decisions/0005-stop-value-is-viewing-time.md)). It rested on guesses about the visitor: a
+walking pace, and minutes per kind of stop. Andrei took it out of the web app
+([ADR 0010](../history/decisions/0010-web-app-without-times.md)), then out of the command line
+([ADR 0015](../history/decisions/0015-no-time-budget-in-the-command-line.md)).
 
-A stop is worth its viewing minutes ([ADR 0005](../history/decisions/0005-stop-value-is-viewing-time.md)), so the
-best route spends the most time with art and then walks the least. Per-category weights were tried first, and
-they flipped between "all outdoor works" and "all galleries". Visitors steer with must-sees today (in the web
-app, by category, stop or artist); "only what's new" can come later.
+Now the visitor chooses what to see: by the museum's categories, stop by stop, or by artist
+([ADR 0012](../history/decisions/0012-choose-what-to-see-by-category.md),
+[ADR 0013](../history/decisions/0013-inhotim-words-and-choosing-by-artist.md)). The planner finds the shortest walk
+through all of it. Someone with an afternoon picks less: the galleries alone, say. "Only what's new" can come
+later.
 
-### 4. One engine for all of it
+### 4. One engine
 
-One CP-SAT circuit model covers both modes: optional stops take a self-loop, and a constraint caps the total time
-([ADR 0004](../history/decisions/0004-cp-sat-circuit-solver.md)). The original "see everything" TSP is the
-special case with no optional stops. Time windows (opening hours) and one circuit per day (multi-day plans) fit
-the same model.
+One CP-SAT circuit model solves the TSP over the chosen stops
+([ADR 0004](../history/decisions/0004-cp-sat-circuit-solver.md)), and the web app mirrors it in the browser
+([ADR 0009](../history/decisions/0009-web-app-plans-in-the-browser.md)). Time windows (opening hours) and one
+circuit per day (multi-day plans) could extend the same model.
 
 ## Who it's for
 
 | Visitor | What they ask | Mode |
 |---|---|---|
 | Completionist | "Everything, shortest route." | TSP |
-| First-timer, one day | "Best route for 6 hours?" | Orienteering |
-| Two-day visitor | "Split everything into two balanced days." | Team orienteering |
+| First-timer, one day | "The galleries, and Beam Drop." | Filtered TSP |
+| Two-day visitor | "Split everything into two balanced days." | Multi-day *(planned)* |
 | Returning visitor | "Only what's new since my last visit." | Filtered TSP |
-| Art or botany lover | "Only galleries." / "Gardens and botanical highlights." | Filtered TSP / orienteering |
+| Art or botany lover | "Only galleries." / "Gardens and botanical highlights." | Filtered TSP |
 | Limited mobility *(later)* | "Avoid steep paths." | Slope-aware costs |
 
 ## Product principles
@@ -98,7 +100,7 @@ the same model.
    electric carts, a lunch stop.
 3. **Web app (PWA):** mobile-first map with a satellite view, offline support and a "what's new" feed. The data
    already refreshes itself daily ([ADR 0007](../history/decisions/0007-daily-data-refresh.md)).
-4. **Live mode:** GPS "you are here", check off visited stops, re-route on the fly, time-left alerts before closing.
+4. **Live mode:** GPS "you are here", check off visited stops, re-route on the fly.
 5. **Smart extras:** crowd/queue heuristics, weather-aware ordering (outdoor works while it's sunny), shareable plans.
 
 The checklist lives in [roadmap.md](roadmap.md).

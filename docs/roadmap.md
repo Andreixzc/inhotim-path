@@ -19,7 +19,8 @@ session-by-session story lives in [`history/`](../history/).
 - [x] Walking graph (OSM + SVG gap fill, clipped to the park) and POI snapping
 - [x] Walking-time matrix
 - [x] `route`: TSP over all stops from the reception (58 stops: 14h47, proven optimal)
-- [x] `route --budget 4h`: orienteering (CP-SAT; a stop is worth its viewing minutes)
+- ~~`route --budget 4h`: orienteering (CP-SAT; a stop is worth its viewing minutes)~~: removed on 2026-11-11, every
+  route visits all the stops chosen (ADR 0015)
 - [x] Filters: `--must`, `--exclude`, `--kinds`, `--botanical`; settings: `--dwell`, `--speed`, `--start-time`
 - [x] Outputs: itinerary text, GeoJSON, HTML map
 - [x] CI (lint + tests + a CLI smoke run)
@@ -32,7 +33,8 @@ session-by-session story lives in [`history/`](../history/).
 - [ ] Multi-day plans (`--days 2`)
 - [ ] Electric carts as optional faster edges
 - [ ] Lunch stop (restaurants)
-- [ ] Preferences on top of viewing minutes (e.g. favorite artists, "galleries first")
+- ~~Preferences on top of viewing minutes (e.g. favorite artists, "galleries first")~~: no route chooses between
+  stops anymore (ADR 0015); visitors pick by category, stop or artist (ADR 0012, 0013)
 - [ ] Calibrate the dwell defaults (visitor input, gallery sizes)
 
 ## Phase 3: Web app

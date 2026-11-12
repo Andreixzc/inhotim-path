@@ -17,7 +17,7 @@ flowchart LR
   N --> S["Snap POIs to the graph"]
   W --> S
   S --> M["Walking-time matrix<br/>Dijkstra from every stop"]
-  M --> R["Solver (OR-Tools CP-SAT)<br/>TSP · orienteering"]
+  M --> R["Solver (OR-Tools CP-SAT)<br/>TSP"]
   R --> X["Outputs<br/>itinerary · GeoJSON · HTML map"]
 ```
 
@@ -43,7 +43,7 @@ The work is split into two stages with very different rhythms:
 | `sources/osm.py` | Overpass queries: park boundary and walkable ways |
 | `network.py` | Build the walking graph: clip, fuse, node, snap POIs |
 | `matrix.py` | All-pairs walking times (and paths) between stops |
-| `solver.py` | CP-SAT circuit model: TSP and orienteering (time budget), with must-sees |
+| `solver.py` | CP-SAT circuit model: the shortest tour through every stop chosen (TSP) |
 | `planner.py` | Glue: pick stops from a request, build graph + matrix, solve, lay out the timeline |
 | `export.py` | Itinerary text, GeoJSON, standalone HTML map (MapLibre GL on OpenFreeMap tiles; optional MapTiler satellite view) |
 | `webdata.py` | The park for the web app: every POI plus the walking network, as one compact JSON file |
@@ -60,7 +60,7 @@ Plain ES modules with no build step; MapLibre GL comes from cdnjs, pinned with S
 | Module (`web/js/`) | Responsibility |
 |---|---|
 | `network.js` | Dijkstra over the exported paths, walk shapes for the map, snapping a GPS position onto the paths |
-| `solver.js` | Exact (Held-Karp) up to 12 stops; iterated local search beyond: TSP and orienteering, with must-sees |
+| `solver.js` | The shortest walk through every stop: exact (Held-Karp) up to 12 stops, iterated local search beyond |
 | `plan.js` | Mirror of `planner.py`: pick stops, walking-time matrix, solve, timeline, legs |
 | `worker.js` | Runs `plan.js` off the main thread |
 | `map.js` | OpenFreeMap liberty basemap with a plain fallback (light in dark mode too), route, stops and other POIs in kind colors, locate button, satellite toggle, and the canvas that plays a new route's animation |
@@ -78,9 +78,9 @@ with the Python one, and `scripts/benchmark_web_solver.py` compares it with CP-S
 - **Dwell time** by POI kind (defaults, all configurable with `--dwell`): gallery 20 min, outdoor work 8 min,
   garden 10 min, exhibition 20 min, work inside a gallery 5 min, botanical highlight 3 min.
 - **Arc cost** i → j = dwell(i) + walk(i, j). The total route time is the sum of its arcs.
-- **Value** of a stop, used when a time budget forces choices = its dwell minutes. The best route is the one that
-  spends the most time with art, then the one that walks the least
-  ([ADR 0005](../history/decisions/0005-stop-value-is-viewing-time.md)).
+- **No time limit** ([ADR 0015](../history/decisions/0015-no-time-budget-in-the-command-line.md)): every stop
+  chosen is visited, so the time at stops is the same in any order. Speed and dwell times set the itinerary's
+  clock, never the route.
 - **v2:** slope-aware speed with [Tobler's hiking function](https://en.wikipedia.org/wiki/Tobler%27s_hiking_function),
   `v = 6·e^(−3.5·|tan θ + 0.05|)` km/h, using elevation from a DEM. Uphill and downhill get different costs, so
   the graph becomes directed.
@@ -90,17 +90,9 @@ with the Python one, and `scripts/benchmark_web_solver.py` compares it with CP-S
 Why CP-SAT rather than the OR-Tools routing library: [ADR 0004](../history/decisions/0004-cp-sat-circuit-solver.md).
 
 - **Model:** one circuit through the depot (the reception: start and end) and the stops, using CP-SAT's
-  `AddCircuit`. There is a boolean per arc i → j, and a stop that is left out takes its self-loop instead.
-  The chosen arcs add up to the route's total time.
-- **TSP (`route`, default):** no self-loops, so every stop is in; minimize total time. The 58 default stops are
-  proven optimal in about 0.2 s.
-- **Orienteering (`route --budget 4h`):** total time ≤ budget; leaving stop i out costs
-  `value(i) × (budget + 1)`. That penalty per value unit exceeds any route's time, so the objective is
-  lexicographic: collect the most value, then take the least time.
-- **Must-sees:** no self-loop, so they are mandatory even with a budget. If they can't fit, CP-SAT proves the
-  model infeasible and the CLI says so.
-- **Polish:** when a budget solve isn't proven optimal, the order of the chosen stops is re-solved as a small TSP,
-  warm-started from the order found.
+  `AddCircuit`, with a boolean per arc i → j. The chosen arcs add up to the route's total time.
+- **TSP (`route`):** every stop is in, so minimizing the total time means walking the least. The 58 default stops
+  are proven optimal in about 0.3 s, and all 89 with the botanical highlights in about 1 s.
 - **Search:** 8 parallel workers under a time limit (`--time-limit`, default 5 s). The itinerary says whether
   the route is proven optimal.
 - **Multi-day (planned):** one circuit per day with each stop in at most one of them.

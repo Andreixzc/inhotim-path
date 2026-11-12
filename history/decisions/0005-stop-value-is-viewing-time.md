@@ -1,6 +1,7 @@
 # 0005: A stop is worth its viewing minutes
 
-- **Status:** accepted
+- **Status:** superseded by [0015](0015-no-time-budget-in-the-command-line.md): no route chooses between stops
+  anymore
 - **Date:** 2026-11-01
 
 ## Context

@@ -1,6 +1,7 @@
 # 0004: CP-SAT circuit model instead of the OR-Tools routing library
 
-- **Status:** accepted. Supersedes the "routing solver" part of [0003](0003-python-uv-ortools.md).
+- **Status:** accepted. Supersedes the "routing solver" part of [0003](0003-python-uv-ortools.md). Its budget mode is
+  gone since [0015](0015-no-time-budget-in-the-command-line.md).
 - **Date:** 2026-11-01
 
 ## Context

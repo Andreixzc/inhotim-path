@@ -1,7 +1,8 @@
 # 0010: The web app shows no times and sets no time limit
 
 - **Status:** accepted; what to see is set by [0011](0011-what-galleries-and-everything-cover.md) and
-  [0012](0012-choose-what-to-see-by-category.md)
+  [0012](0012-choose-what-to-see-by-category.md). The command line dropped its budget too:
+  [0015](0015-no-time-budget-in-the-command-line.md)
 - **Date:** 2026-11-01
 
 ## Context

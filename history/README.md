@@ -45,3 +45,4 @@ Code shows *what* the project is. This folder explains *how it got there* and *w
 - [0013: The museum's words for the categories, and choosing by artist](decisions/0013-inhotim-words-and-choosing-by-artist.md)
 - [0014: The map shows the search, then draws the route](decisions/0014-map-shows-the-search-then-the-route.md)
 - [0015: No time budget in the command line either](decisions/0015-no-time-budget-in-the-command-line.md)
+- [0016: On phones, the plan is a sheet dragged over a full-screen map](decisions/0016-on-phones-the-plan-is-a-sheet-over-the-map.md)
